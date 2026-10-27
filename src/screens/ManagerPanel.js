@@ -5952,39 +5952,7 @@ export default function ManagerPanel({
               </TouchableOpacity>
             </View>
           </View>
-        ) : (
-          <View
-            style={{
-              backgroundColor: '#F0FDF4',
-              borderColor: '#BBF7D0',
-              borderWidth: 1,
-              borderRadius: 10,
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              marginBottom: 12,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 8,
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ fontSize: 14 }}>🛡️</Text>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#166534' }}>
-                {lang ? 'ভেরিফাইড বুকিং ডাটাবেজ (সক্রিয় ও নিরীক্ষিত)' : 'Verified Booking Database (Active & Audited)'}
-              </Text>
-            </View>
-            <TouchableOpacity
-              activeOpacity={0.6}
-              onPress={handleVaultAccessClick}
-              style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: '#DCFCE7' }}
-            >
-              <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#15803D' }}>
-                {lang ? 'পরিদর্শন স্ট্যাটাস ✓' : 'Audit Verified ✓'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        ) : null}
 
         {/* Search Bar with clear query button */}
         <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: 6, borderWidth: 1, borderColor: '#CBD5E1', marginBottom: 12, flexDirection: 'row', alignItems: 'center' }}>
@@ -12666,35 +12634,49 @@ export default function ManagerPanel({
             </TouchableOpacity>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              {/* Dual-Vault Quick Access Button (Mobile Header: 10-clicks to trigger Database 2) */}
-              <TouchableOpacity
-                onPress={handleVaultAccessClick}
-                activeOpacity={0.75}
-                accessibilityRole="button"
-                accessibilityLabel={lang ? 'ডাটাবেজ ভল্ট মোড' : 'Database Vault'}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 4,
-                  paddingHorizontal: 9,
-                  paddingVertical: 7,
-                  borderRadius: 10,
-                  backgroundColor: isMasterVaultActive ? '#FFF1F2' : '#F0FDF4',
-                  borderWidth: 1.5,
-                  borderColor: isMasterVaultActive ? '#FECDD3' : '#BBF7D0',
-                }}
-              >
-                <Text style={{ fontSize: 13 }}>{isMasterVaultActive ? '🔐' : '🛡️'}</Text>
-                <Text
+              {/* Dual-Vault Quick Access (Mobile Header: stealth faint text) */}
+              {isMasterVaultActive ? (
+                <TouchableOpacity
+                  onPress={handleVaultAccessClick}
+                  activeOpacity={0.75}
                   style={{
-                    fontSize: 11,
-                    fontWeight: '800',
-                    color: isMasterVaultActive ? '#BE123C' : '#15803D',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    paddingHorizontal: 8,
+                    paddingVertical: 5,
+                    borderRadius: 8,
+                    backgroundColor: '#FFF1F2',
+                    borderWidth: 1.5,
+                    borderColor: '#FECDD3',
                   }}
                 >
-                  {isMasterVaultActive ? 'DB-2' : 'DB-1'}
-                </Text>
-              </TouchableOpacity>
+                  <Text style={{ fontSize: 12 }}>🔐</Text>
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: '#BE123C' }}>
+                    DB-2
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={handleVaultAccessClick}
+                  activeOpacity={0.8}
+                  style={{
+                    paddingHorizontal: 4,
+                    paddingVertical: 4,
+                    backgroundColor: 'transparent',
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontWeight: '500',
+                      color: '#94A3B8',
+                    }}
+                  >
+                    db
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {/* Top Prominent Notification Bell Button (Mobile Dashboard Header) */}
               {(() => {
@@ -12860,37 +12842,58 @@ export default function ManagerPanel({
             </View>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            {/* Dual-Vault Quick Access Button (Desktop Header: 10-clicks to trigger Database 2) */}
-            <TouchableOpacity
-              onPress={handleVaultAccessClick}
-              activeOpacity={0.75}
-              accessibilityRole="button"
-              accessibilityLabel={lang ? 'ডাটাবেজ ভল্ট মোড' : 'Database Vault'}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-                paddingHorizontal: 12,
-                paddingVertical: 8,
-                borderRadius: 9,
-                backgroundColor: isMasterVaultActive ? '#FFF1F2' : '#F0FDF4',
-                borderWidth: 1.5,
-                borderColor: isMasterVaultActive ? '#FECDD3' : '#BBF7D0',
-              }}
-            >
-              <Text style={{ fontSize: 14 }}>{isMasterVaultActive ? '🔐' : '🛡️'}</Text>
-              <Text
+            {/* Dual-Vault Quick Access (Stealth faint text: 10-clicks to trigger Database 2) */}
+            {isMasterVaultActive ? (
+              <TouchableOpacity
+                onPress={handleVaultAccessClick}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel={lang ? 'ডাটাবেজ ভল্ট মোড' : 'Database Vault'}
                 style={{
-                  fontSize: 12,
-                  fontWeight: '800',
-                  color: isMasterVaultActive ? '#BE123C' : '#15803D',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 8,
+                  backgroundColor: '#FFF1F2',
+                  borderWidth: 1.5,
+                  borderColor: '#FECDD3',
                 }}
               >
-                {isMasterVaultActive
-                  ? (lang ? 'মাস্টার ভল্ট (DB-2)' : 'Master Vault (DB-2)')
-                  : (lang ? 'ডাটাবেজ ১ (Active)' : 'Auditor DB-1')}
-              </Text>
-            </TouchableOpacity>
+                <Text style={{ fontSize: 13 }}>🔐</Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '800',
+                    color: '#BE123C',
+                  }}
+                >
+                  {lang ? 'মাস্টার ভল্ট (DB-2)' : 'Master Vault (DB-2)'}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={handleVaultAccessClick}
+                activeOpacity={0.8}
+                style={{
+                  paddingHorizontal: 6,
+                  paddingVertical: 4,
+                  backgroundColor: 'transparent',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '500',
+                    color: '#94A3B8',
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  db
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* Top Prominent Notification Bell Button (Desktop Dashboard Header) */}
             {(() => {

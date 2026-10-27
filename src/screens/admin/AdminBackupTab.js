@@ -580,18 +580,15 @@ export default function AdminBackupTab({
               ) : (
                 <TouchableOpacity
                   onPress={handleVaultAccessClick}
-                  activeOpacity={0.7}
+                  activeOpacity={0.8}
                   style={{
-                    backgroundColor: '#F0FDF4',
-                    borderWidth: 1.5,
-                    borderColor: '#86EFAC',
-                    paddingHorizontal: 12,
-                    paddingVertical: 7,
-                    borderRadius: 8,
+                    backgroundColor: 'transparent',
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
                   }}
                 >
-                  <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#166534' }}>
-                    🛡️ {lang ? 'অডিট ভেরিফিকেশন সক্রিয়' : 'Audit Verified ✓'}
+                  <Text style={{ fontSize: 12, fontWeight: '500', color: '#94A3B8' }}>
+                    db
                   </Text>
                 </TouchableOpacity>
               )}
