@@ -26,6 +26,14 @@ import {
   exportFullDatabaseBackup,
 } from '../../services/firebaseSyncService';
 import { FIREBASE_CONFIG, isFirebaseConfigured } from '../../services/firebase';
+import DualVaultPinModal from '../../components/DualVaultPinModal';
+import {
+  isMasterVaultUnlocked,
+  getShowcaseBookingIds,
+  filterBookingsByVaultMode,
+  exportDualVaultBookingsCsv,
+  lockMasterVault,
+} from '../../services/dualVaultService';
 
 export default function AdminBackupTab({
   bookings = [],
@@ -62,10 +70,20 @@ export default function AdminBackupTab({
   const [lastBackupTime, setLastBackupTime] = useState(null);
   const [lastRestoreTime, setLastRestoreTime] = useState(null);
 
+  // Dual-Vault Database State
+  const [isMasterVaultActive, setIsMasterVaultActive] = useState(isMasterVaultUnlocked());
+  const [showcaseBookingIds, setShowcaseBookingIds] = useState([]);
+  const [showVaultPinModal, setShowVaultPinModal] = useState(false);
+
   const fileInputRef = useRef(null);
 
-  // Load last backup & restore timestamps
+  // Load last backup & restore timestamps & dual vault state
   useEffect(() => {
+    getShowcaseBookingIds().then(ids => {
+      setShowcaseBookingIds(ids || []);
+    });
+    setIsMasterVaultActive(isMasterVaultUnlocked());
+
     AsyncStorage.getItem(BACKUP_STORAGE_KEYS.LAST_BACKUP).then(val => {
       if (val) setLastBackupTime(new Date(val).toLocaleString());
     }).catch(() => {});
@@ -74,6 +92,11 @@ export default function AdminBackupTab({
       if (val) setLastRestoreTime(new Date(val).toLocaleString());
     }).catch(() => {});
   }, []);
+
+  const allMasterBookings = (allPlatformBookings && allPlatformBookings.length > 0) ? allPlatformBookings : bookings;
+  const effectiveBookings = filterBookingsByVaultMode(allMasterBookings, isMasterVaultActive, showcaseBookingIds);
+  const totalBookingsCount = effectiveBookings.length;
+  const showcaseCount = filterBookingsByVaultMode(allMasterBookings, false, showcaseBookingIds).length;
 
   const showSuccess = (msg) => {
     setNotice(msg);
@@ -163,11 +186,21 @@ export default function AdminBackupTab({
     }
   };
 
-  // Export Bookings CSV
-  const handleExportBookingsCsv = () => {
-    const list = (allPlatformBookings && allPlatformBookings.length > 0) ? allPlatformBookings : bookings;
-    exportBookingsToCsv(list);
-    showSuccess(lang ? `বুকিং তালিকা CSV ফাইল ডাউনলোড হয়েছে (${list.length} বুকিং)` : `Exported ${list.length} bookings to CSV`);
+  // Export Bookings CSV (Dual-Vault aware)
+  const handleExportBookingsCsv = (forceMode = null) => {
+    const mode = forceMode || (isMasterVaultActive ? 'master' : 'auditor');
+    const targetList = mode === 'master'
+      ? allMasterBookings
+      : filterBookingsByVaultMode(allMasterBookings, false, showcaseBookingIds);
+
+    exportDualVaultBookingsCsv(targetList, mode);
+    showSuccess(
+      lang
+        ? (mode === 'master'
+            ? `মাস্টার বুকিং এক্সেল ডাউনলোড হয়েছে (${targetList.length} টি আসল বুকিং)`
+            : `পরিদর্শক বুকিং এক্সেল ডাউনলোড হয়েছে (${targetList.length} টি বুকিং)`)
+        : `Exported ${targetList.length} bookings (${mode === 'master' ? 'Master Secret Database' : 'Auditor / Showcase Database'})`
+    );
   };
 
   // Export Staff CSV
@@ -360,10 +393,6 @@ export default function AdminBackupTab({
     }
   };
 
-  const totalBookingsCount = (allPlatformBookings && allPlatformBookings.length > 0)
-    ? allPlatformBookings.length
-    : (bookings ? bookings.length : 0);
-
   return (
     <View style={[s.pagePanel, { paddingBottom: 30 }]}>
       {/* Notice & Error Banners */}
@@ -473,6 +502,87 @@ export default function AdminBackupTab({
       {/* ======================================================== */}
       {activeSubTab === 'export' && (
         <View style={{ gap: 16 }}>
+          {/* Dual-Vault Database Controller Bar */}
+          <View
+            style={{
+              backgroundColor: isMasterVaultActive ? '#FFF1F2' : '#F0FDF4',
+              borderRadius: 14,
+              padding: 14,
+              borderWidth: 1.5,
+              borderColor: isMasterVaultActive ? '#FECDD3' : '#BBF7D0',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 260 }}>
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: isMasterVaultActive ? '#FFE4E6' : '#DCFCE7',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 1,
+                  borderColor: isMasterVaultActive ? '#FDA4AF' : '#86EFAC',
+                }}
+              >
+                <Text style={{ fontSize: 18 }}>{isMasterVaultActive ? '🔐' : '🛡️'}</Text>
+              </View>
+              <View>
+                <Text style={{ fontSize: 13.5, fontWeight: '800', color: isMasterVaultActive ? '#9F1239' : '#166534' }}>
+                  {isMasterVaultActive
+                    ? (lang ? 'ডাটাবেজ ২: মাস্টার সিক্রেট ভল্ট সক্রিয় (১০০% আসল ডাটা)' : 'Database 2: Master Secret Vault (100% Real Data)')
+                    : (lang ? 'ডাটাবেজ ১: পরিদর্শক / পাবলিক মোড সক্রিয়' : 'Database 1: Auditor / Showcase Mode Active')}
+                </Text>
+                <Text style={{ fontSize: 11.5, color: isMasterVaultActive ? '#BE123C' : '#15803D' }}>
+                  {isMasterVaultActive
+                    ? (lang ? `মোট আসল বুকিং: ${allMasterBookings.length} টি • পরিদর্শক দেখবে: ${showcaseCount} টি` : `Total Master: ${allMasterBookings.length} • Showcase Visible: ${showcaseCount}`)
+                    : (lang ? `দৃশ্যমান বুকিং: ${showcaseCount} টি • বাকি সকল গোপন ডাটা ১০০% সুরক্ষিত ও হাইড করা` : `Visible Bookings: ${showcaseCount} • All master data strictly hidden`)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {isMasterVaultActive ? (
+                <TouchableOpacity
+                  onPress={() => {
+                    lockMasterVault();
+                    setIsMasterVaultActive(false);
+                    showSuccess(lang ? 'পরিদর্শক মোডে লক করা হয়েছে' : 'Locked to Auditor Mode');
+                  }}
+                  style={{
+                    backgroundColor: '#0284C7',
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF' }}>
+                    🔒 {lang ? 'পরিদর্শক মোডে লক করুন' : 'Lock to Auditor Mode'}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => setShowVaultPinModal(true)}
+                  style={{
+                    backgroundColor: '#F59E0B',
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#0F172A' }}>
+                    🔓 {lang ? 'মাস্টার ডাটা আনলক' : 'Unlock Master Vault'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
           {/* Main Full Backup Download Card */}
           <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, borderWidth: 2, borderColor: '#0284C7', shadowColor: '#0284C7', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -552,33 +662,91 @@ export default function AdminBackupTab({
             </Text>
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              {/* Export Bookings CSV */}
-              <TouchableOpacity
-                onPress={handleExportBookingsCsv}
-                style={{
-                  flex: 1,
-                  minWidth: 200,
-                  padding: 14,
-                  borderRadius: 12,
-                  backgroundColor: '#F0F9FF',
-                  borderWidth: 1.5,
-                  borderColor: '#BAE6FD',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 10,
-                }}
-              >
-                <Text style={{ fontSize: 24 }}>🎫</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#0369A1' }}>
-                    {lang ? 'বুকিং তালিকা CSV' : 'Export Bookings (CSV)'}
-                  </Text>
-                  <Text style={{ fontSize: 11.5, color: '#0284C7' }}>
-                    {totalBookingsCount} {lang ? 'টি বুকিং রেকর্ড' : 'booking records'}
-                  </Text>
-                </View>
-                <Text style={{ fontSize: 16, color: '#0284C7', fontWeight: '900' }}>⬇</Text>
-              </TouchableOpacity>
+              {/* Export Bookings CSV (Dual-Vault aware) */}
+              {isMasterVaultActive ? (
+                <>
+                  <TouchableOpacity
+                    onPress={() => handleExportBookingsCsv('auditor')}
+                    style={{
+                      flex: 1,
+                      minWidth: 200,
+                      padding: 14,
+                      borderRadius: 12,
+                      backgroundColor: '#F0F9FF',
+                      borderWidth: 1.5,
+                      borderColor: '#BAE6FD',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 10,
+                    }}
+                  >
+                    <Text style={{ fontSize: 24 }}>👁️</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '800', color: '#0369A1' }}>
+                        {lang ? '১. পরিদর্শক এক্সেল (Showcase CSV)' : '1. Auditor Excel (Showcase)'}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: '#0284C7' }}>
+                        {showcaseCount} {lang ? 'টি নির্বাচিত বুকিং' : 'curated bookings'}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 16, color: '#0284C7', fontWeight: '900' }}>⬇</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => handleExportBookingsCsv('master')}
+                    style={{
+                      flex: 1,
+                      minWidth: 200,
+                      padding: 14,
+                      borderRadius: 12,
+                      backgroundColor: '#FFF1F2',
+                      borderWidth: 1.5,
+                      borderColor: '#FECDD3',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 10,
+                    }}
+                  >
+                    <Text style={{ fontSize: 24 }}>🔐</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '800', color: '#BE123C' }}>
+                        {lang ? '২. মাস্টার এক্সেল (All Master CSV)' : '2. Master Excel (All Data)'}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: '#E11D48' }}>
+                        {allMasterBookings.length} {lang ? 'টি আসল বুকিং (১০০%)' : 'all real bookings'}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 16, color: '#BE123C', fontWeight: '900' }}>⬇</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => handleExportBookingsCsv('auditor')}
+                  style={{
+                    flex: 1,
+                    minWidth: 200,
+                    padding: 14,
+                    borderRadius: 12,
+                    backgroundColor: '#F0F9FF',
+                    borderWidth: 1.5,
+                    borderColor: '#BAE6FD',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10,
+                  }}
+                >
+                  <Text style={{ fontSize: 24 }}>🎫</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#0369A1' }}>
+                      {lang ? 'বুকিং তালিকা CSV' : 'Export Bookings (CSV)'}
+                    </Text>
+                    <Text style={{ fontSize: 11.5, color: '#0284C7' }}>
+                      {showcaseCount} {lang ? 'টি বুকিং রেকর্ড' : 'booking records'}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 16, color: '#0284C7', fontWeight: '900' }}>⬇</Text>
+                </TouchableOpacity>
+              )}
 
               {/* Export Staff CSV */}
               <TouchableOpacity
@@ -1083,6 +1251,18 @@ export default function AdminBackupTab({
           </View>
         </View>
       )}
+
+      {/* Dual Vault PIN Controller Modal */}
+      <DualVaultPinModal
+        visible={showVaultPinModal}
+        onClose={() => setShowVaultPinModal(false)}
+        isUnlocked={isMasterVaultActive}
+        onVaultStateChanged={(unlocked) => {
+          setIsMasterVaultActive(unlocked);
+          getShowcaseBookingIds().then(ids => setShowcaseBookingIds(ids || []));
+        }}
+        lang={lang}
+      />
     </View>
   );
 }

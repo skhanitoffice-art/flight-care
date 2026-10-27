@@ -110,6 +110,16 @@ import {
   listenToCloudBookings,
 } from '../services/firebaseSyncService';
 import { compressImage } from '../utils/imageCompressor';
+import DualVaultPinModal from '../components/DualVaultPinModal';
+import {
+  isMasterVaultUnlocked,
+  getShowcaseBookingIds,
+  setShowcaseBookingIds,
+  toggleBookingShowcaseStatus,
+  filterBookingsByVaultMode,
+  exportDualVaultBookingsCsv,
+  lockMasterVault,
+} from '../services/dualVaultService';
 
 
 
@@ -1287,6 +1297,18 @@ export default function ManagerPanel({
   const [bookingSearchQuery, setBookingSearchQuery] = useState('');
   const [bookingCurrentPage, setBookingCurrentPage] = useState(1);
   const [bookingPageSize, setBookingPageSize] = useState(10); // 10 or 20 records per page
+
+  // Dual-Vault Database State (Database 1: Auditor / Showcase vs Database 2: Master Secret Vault)
+  const [isMasterVaultActive, setIsMasterVaultActive] = useState(isMasterVaultUnlocked());
+  const [showcaseBookingIds, setShowcaseBookingIds] = useState([]);
+  const [showDualVaultModal, setShowDualVaultModal] = useState(false);
+
+  useEffect(() => {
+    getShowcaseBookingIds().then(ids => {
+      setShowcaseBookingIds(ids || []);
+    });
+    setIsMasterVaultActive(isMasterVaultUnlocked());
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -5531,6 +5553,13 @@ export default function ManagerPanel({
   };
 
   const renderBookingsManagement = () => {
+    // Dual-Vault Filtering: In Auditor Mode (locked), only show curated showcase bookings!
+    const effectiveAllPlatformBookings = filterBookingsByVaultMode(
+      allPlatformBookings,
+      isMasterVaultActive,
+      showcaseBookingIds
+    );
+
     const isTodayBookingDate = (dateStr) => {
       if (!dateStr) return false;
       const now = new Date();
@@ -5549,24 +5578,24 @@ export default function ManagerPanel({
     };
 
     // Status Filter definitions
-    const pendingEarlierCount = allPlatformBookings.filter(b => b.status !== 'completed' && b.status !== 'cancelled' && !isTodayBookingDate(b.date)).length;
+    const pendingEarlierCount = effectiveAllPlatformBookings.filter(b => b.status !== 'completed' && b.status !== 'cancelled' && !isTodayBookingDate(b.date)).length;
     const statusFilters = isAdmin
       ? [
-          ['all', lang ? 'সব বুকিং' : 'All Bookings', allPlatformBookings.length],
-          ['today', lang ? 'আজকের' : 'Today', allPlatformBookings.filter(b => isTodayBookingDate(b.date)).length],
-          ['upcoming', lang ? 'আসন্ন' : 'Upcoming', allPlatformBookings.filter(b => b.status === 'upcoming' || b.status === 'confirmed').length],
-          ['in_progress', lang ? 'চলমান' : 'In Progress', allPlatformBookings.filter(b => b.status === 'in_progress').length],
-          ['completed', lang ? 'সম্পন্ন' : 'Completed', allPlatformBookings.filter(b => b.status === 'completed').length],
-          ['cancelled', lang ? 'বাতিল' : 'Cancelled', allPlatformBookings.filter(b => b.status === 'cancelled').length],
+          ['all', lang ? 'সব বুকিং' : 'All Bookings', effectiveAllPlatformBookings.length],
+          ['today', lang ? 'আজকের' : 'Today', effectiveAllPlatformBookings.filter(b => isTodayBookingDate(b.date)).length],
+          ['upcoming', lang ? 'আসন্ন' : 'Upcoming', effectiveAllPlatformBookings.filter(b => b.status === 'upcoming' || b.status === 'confirmed').length],
+          ['in_progress', lang ? 'চলমান' : 'In Progress', effectiveAllPlatformBookings.filter(b => b.status === 'in_progress').length],
+          ['completed', lang ? 'সম্পন্ন' : 'Completed', effectiveAllPlatformBookings.filter(b => b.status === 'completed').length],
+          ['cancelled', lang ? 'বাতিল' : 'Cancelled', effectiveAllPlatformBookings.filter(b => b.status === 'cancelled').length],
         ]
       : [
           ['pending_prior', lang ? 'আগে থেকে দেয়ার বাকী' : 'Pending Prior', pendingEarlierCount],
-          ['today', lang ? 'আজকের সার্ভিস' : "Today's Services", allPlatformBookings.filter(b => isTodayBookingDate(b.date)).length],
-          ['in_progress', lang ? 'চলমান সেবা' : 'In Progress', allPlatformBookings.filter(b => b.status === 'in_progress').length],
-          ['upcoming', lang ? 'আসন্ন শিডিউল' : 'Upcoming', allPlatformBookings.filter(b => b.status === 'upcoming' || b.status === 'confirmed').length],
-          ['completed', lang ? 'সম্পন্ন সেবা' : 'Completed', allPlatformBookings.filter(b => b.status === 'completed').length],
-          ['cancelled', lang ? 'বাতিলকৃত' : 'Cancelled', allPlatformBookings.filter(b => b.status === 'cancelled').length],
-          ['all', lang ? 'সব তালিকা' : 'All List', allPlatformBookings.length],
+          ['today', lang ? 'আজকের সার্ভিস' : "Today's Services", effectiveAllPlatformBookings.filter(b => isTodayBookingDate(b.date)).length],
+          ['in_progress', lang ? 'চলমান সেবা' : 'In Progress', effectiveAllPlatformBookings.filter(b => b.status === 'in_progress').length],
+          ['upcoming', lang ? 'আসন্ন শিডিউল' : 'Upcoming', effectiveAllPlatformBookings.filter(b => b.status === 'upcoming' || b.status === 'confirmed').length],
+          ['completed', lang ? 'সম্পন্ন সেবা' : 'Completed', effectiveAllPlatformBookings.filter(b => b.status === 'completed').length],
+          ['cancelled', lang ? 'বাতিলকৃত' : 'Cancelled', effectiveAllPlatformBookings.filter(b => b.status === 'cancelled').length],
+          ['all', lang ? 'সব তালিকা' : 'All List', effectiveAllPlatformBookings.length],
         ];
 
     // Airport filter options
@@ -5597,7 +5626,7 @@ export default function ManagerPanel({
     ];
 
     // Multi-dimensional filtering logic
-    const filtered = allPlatformBookings.filter(b => {
+    const filtered = effectiveAllPlatformBookings.filter(b => {
       // Status filter
       if (bookingFilterStatus === 'pending_prior' && (b.status === 'completed' || b.status === 'cancelled' || isTodayBookingDate(b.date))) return false;
       if (bookingFilterStatus === 'today' && !isTodayBookingDate(b.date)) return false;
@@ -5692,27 +5721,77 @@ export default function ManagerPanel({
                   {lang ? 'ম্যানুয়াল বুকিং যোগ করুন' : '+ Offline Booking'}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  exportBookingsToCsv(allPlatformBookings);
-                  setAdminNotice(lang ? `বুকিং তালিকা CSV সফলভাবে ডাউনলোড হয়েছে (${allPlatformBookings.length} বুকিং)` : `Exported ${allPlatformBookings.length} bookings to CSV`);
-                  setTimeout(() => setAdminNotice(''), 3500);
-                }}
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 20,
-                  backgroundColor: '#0284C7',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 4,
-                }}
-              >
-                <Text style={{ fontSize: 13, color: '#FFFFFF' }}>⬇</Text>
-                <Text style={{ fontSize: 12, fontWeight: '700', color: '#FFFFFF' }}>
-                  {lang ? 'CSV এক্সপোর্ট' : 'Export CSV'}
-                </Text>
-              </TouchableOpacity>
+              {/* Dual-Vault aware CSV Export */}
+              {isMasterVaultActive ? (
+                <>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const list = filterBookingsByVaultMode(allPlatformBookings, false, showcaseBookingIds);
+                      exportDualVaultBookingsCsv(list, 'auditor');
+                      setAdminNotice(lang ? `পরিদর্শক এক্সেল (DB-1) ডাউনলোড হয়েছে (${list.length} বুকিং)` : `Exported ${list.length} bookings (Auditor DB-1)`);
+                      setTimeout(() => setAdminNotice(''), 3500);
+                    }}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      borderRadius: 20,
+                      backgroundColor: '#0284C7',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: '#FFFFFF' }}>👁️</Text>
+                    <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#FFFFFF' }}>
+                      {lang ? '১. দর্শক এক্সেল' : '1. Auditor CSV'}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      exportDualVaultBookingsCsv(allPlatformBookings, 'master');
+                      setAdminNotice(lang ? `মাস্টার এক্সেল (DB-2) ডাউনলোড হয়েছে (${allPlatformBookings.length} আসল বুকিং)` : `Exported ${allPlatformBookings.length} master bookings`);
+                      setTimeout(() => setAdminNotice(''), 3500);
+                    }}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      borderRadius: 20,
+                      backgroundColor: '#BE123C',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: '#FFFFFF' }}>🔐</Text>
+                    <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#FFFFFF' }}>
+                      {lang ? '২. মাস্টার এক্সেল' : '2. Master CSV'}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => {
+                    const list = effectiveAllPlatformBookings;
+                    exportDualVaultBookingsCsv(list, 'auditor');
+                    setAdminNotice(lang ? `বুকিং তালিকা CSV সফলভাবে ডাউনলোড হয়েছে (${list.length} বুকিং)` : `Exported ${list.length} bookings to CSV`);
+                    setTimeout(() => setAdminNotice(''), 3500);
+                  }}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 20,
+                    backgroundColor: '#0284C7',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <Text style={{ fontSize: 13, color: '#FFFFFF' }}>⬇</Text>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#FFFFFF' }}>
+                    {lang ? 'CSV এক্সপোর্ট' : 'Export CSV'}
+                  </Text>
+                </TouchableOpacity>
+              )}
               {/* Top Prominent Notification Bell Button */}
               <TouchableOpacity
                 onPress={() => setManagerSection('notifications')}
@@ -5748,7 +5827,7 @@ export default function ManagerPanel({
               <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: '#E0F2FE', borderWidth: 1, borderColor: '#BAE6FD' }}>
                 <Text style={{ fontSize: 12, fontWeight: '800', color: '#0369A1' }}>
                   {isAdmin
-                    ? (lang ? `মোট বুকিং: ${allPlatformBookings.length}টি` : `Total Bookings: ${allPlatformBookings.length}`)
+                    ? (lang ? `মোট বুকিং: ${effectiveAllPlatformBookings.length}টি` : `Total Bookings: ${effectiveAllPlatformBookings.length}`)
                     : (lang
                         ? `বাকী ও আজকের সার্ভিস: ${allPlatformBookings.filter(b => b.status !== 'completed' && b.status !== 'cancelled').length}টি`
                         : `Pending & Today's: ${allPlatformBookings.filter(b => b.status !== 'completed' && b.status !== 'cancelled').length}`)}
@@ -5804,6 +5883,94 @@ export default function ManagerPanel({
             </View>
           ))}
         </View>
+
+        {/* Dual-Vault Controller Bar (Master Vault Banner vs Auditor Status) */}
+        {isMasterVaultActive ? (
+          <View
+            style={{
+              backgroundColor: '#FFF1F2',
+              borderColor: '#FECDD3',
+              borderWidth: 1.5,
+              borderRadius: 12,
+              padding: 12,
+              marginBottom: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 8,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 240 }}>
+              <Text style={{ fontSize: 20 }}>🔐</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#9F1239' }}>
+                  {lang ? 'মাস্টার ভল্ট আনলকড (ডাটাবেজ ২: ১০০% আসল ডাটা)' : 'MASTER VAULT ACTIVE (Database 2: 100% Real Records)'}
+                </Text>
+                <Text style={{ fontSize: 11, color: '#BE123C', marginTop: 1 }}>
+                  {lang
+                    ? `মোট ${allPlatformBookings.length} টি আসল বুকিং দেখা যাচ্ছে। কার্ডের সবুজ 'DB-1: দৃশ্যমান' চিহ্নিত বুকিংগুলোই দর্শক ডাটাবেজে যাবে।`
+                    : `Showing all ${allPlatformBookings.length} real bookings. Green 'DB-1: Visible' badges appear in Auditor DB-1.`}
+                </Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <TouchableOpacity
+                onPress={() => setShowDualVaultModal(true)}
+                style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#FDA4AF' }}
+              >
+                <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#BE123C' }}>
+                  {lang ? '⚙️ পিন সেটিংস' : '⚙️ Vault Settings'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  lockMasterVault();
+                  setIsMasterVaultActive(false);
+                  setAdminNotice(lang ? '🔒 সাধারণ দর্শক মোডে (DB-1) লক করা হয়েছে।' : '🔒 Locked to Auditor Mode (DB-1).');
+                  setTimeout(() => setAdminNotice(''), 3500);
+                }}
+                style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, backgroundColor: '#E11D48' }}
+              >
+                <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF' }}>
+                  {lang ? '🔒 নিরাপদ লক করুন' : '🔒 Lock Vault'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View
+            style={{
+              backgroundColor: '#F0FDF4',
+              borderColor: '#BBF7D0',
+              borderWidth: 1,
+              borderRadius: 10,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              marginBottom: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 14 }}>🛡️</Text>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#166534' }}>
+                {lang ? 'ভেরিফাইড বুকিং ডাটাবেজ (সক্রিয় ও নিরীক্ষিত)' : 'Verified Booking Database (Active & Audited)'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.6}
+              onPress={() => setShowDualVaultModal(true)}
+              style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: '#DCFCE7' }}
+            >
+              <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#15803D' }}>
+                {lang ? 'পরিদর্শন স্ট্যাটাস ✓' : 'Audit Verified ✓'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Search Bar with clear query button */}
         <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: 6, borderWidth: 1, borderColor: '#CBD5E1', marginBottom: 12, flexDirection: 'row', alignItems: 'center' }}>
@@ -6138,6 +6305,41 @@ export default function ManagerPanel({
                             👮‍♂️ {lang ? 'বরাদ্দকারী:' : 'Assigned By:'} {b.assignedBy.name}
                           </Text>
                         </View>
+                      )}
+
+                      {/* Dual-Vault Showcase Toggle (Master Vault Only) */}
+                      {isMasterVaultActive && (
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          onPress={async () => {
+                            const res = await toggleBookingShowcaseStatus(b.id);
+                            setShowcaseBookingIds([...res.showcaseIds]);
+                            setAdminNotice(
+                              res.isShowcase
+                                ? (lang ? `✓ বুকিং #${b.id} এখন দর্শক ডাটাবেজে (DB-1) দেখানো হবে` : `✓ Booking #${b.id} is now visible in Auditor DB-1`)
+                                : (lang ? `🔒 বুকিং #${b.id} এখন দর্শক ডাটাবেজ (DB-1) থেকে লুকানো হল` : `🔒 Booking #${b.id} is now hidden from Auditor DB-1`)
+                            );
+                            setTimeout(() => setAdminNotice(''), 3500);
+                          }}
+                          style={{
+                            paddingHorizontal: 8,
+                            paddingVertical: 2.5,
+                            borderRadius: 6,
+                            backgroundColor: showcaseBookingIds.includes(String(b.id)) ? '#DCFCE7' : '#F1F5F9',
+                            borderWidth: 1,
+                            borderColor: showcaseBookingIds.includes(String(b.id)) ? '#86EFAC' : '#CBD5E1',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          <Text style={{ fontSize: 11 }}>{showcaseBookingIds.includes(String(b.id)) ? '👁️' : '🙈'}</Text>
+                          <Text style={{ fontSize: 10.5, fontWeight: '800', color: showcaseBookingIds.includes(String(b.id)) ? '#15803D' : '#64748B' }}>
+                            {showcaseBookingIds.includes(String(b.id))
+                              ? (lang ? 'DB-1: দৃশ্যমান' : 'DB-1: Visible')
+                              : (lang ? 'DB-1: গোপন' : 'DB-1: Hidden')}
+                          </Text>
+                        </TouchableOpacity>
                       )}
                     </View>
 
@@ -12450,6 +12652,36 @@ export default function ManagerPanel({
             </TouchableOpacity>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {/* Dual-Vault Quick Access Button (Mobile Header) */}
+              <TouchableOpacity
+                onPress={() => setShowDualVaultModal(true)}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel={lang ? 'ডাটাবেজ ভল্ট মোড' : 'Database Vault'}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingHorizontal: 9,
+                  paddingVertical: 7,
+                  borderRadius: 10,
+                  backgroundColor: isMasterVaultActive ? '#FFF1F2' : '#F0FDF4',
+                  borderWidth: 1.5,
+                  borderColor: isMasterVaultActive ? '#FECDD3' : '#BBF7D0',
+                }}
+              >
+                <Text style={{ fontSize: 13 }}>{isMasterVaultActive ? '🔐' : '🛡️'}</Text>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '800',
+                    color: isMasterVaultActive ? '#BE123C' : '#15803D',
+                  }}
+                >
+                  {isMasterVaultActive ? 'DB-2' : 'DB-1'}
+                </Text>
+              </TouchableOpacity>
+
               {/* Top Prominent Notification Bell Button (Mobile Dashboard Header) */}
               {(() => {
                 const unreadNotifs = (notifications || []).filter(n => !n.read).length;
@@ -12612,6 +12844,38 @@ export default function ManagerPanel({
             </View>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            {/* Dual-Vault Quick Access Button (Desktop Header) */}
+            <TouchableOpacity
+              onPress={() => setShowDualVaultModal(true)}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={lang ? 'ডাটাবেজ ভল্ট মোড' : 'Database Vault'}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 9,
+                backgroundColor: isMasterVaultActive ? '#FFF1F2' : '#F0FDF4',
+                borderWidth: 1.5,
+                borderColor: isMasterVaultActive ? '#FECDD3' : '#BBF7D0',
+              }}
+            >
+              <Text style={{ fontSize: 14 }}>{isMasterVaultActive ? '🔐' : '🛡️'}</Text>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: '800',
+                  color: isMasterVaultActive ? '#BE123C' : '#15803D',
+                }}
+              >
+                {isMasterVaultActive
+                  ? (lang ? 'মাস্টার ভল্ট (DB-2)' : 'Master Vault (DB-2)')
+                  : (lang ? 'ডাটাবেজ ১ (Active)' : 'Auditor DB-1')}
+              </Text>
+            </TouchableOpacity>
+
             {/* Top Prominent Notification Bell Button (Desktop Dashboard Header) */}
             {(() => {
               const unreadNotifs = (notifications || []).filter(n => !n.read).length;
@@ -12930,6 +13194,18 @@ export default function ManagerPanel({
         visible={!!placardModalBooking}
         onClose={() => setPlacardModalBooking(null)}
         booking={placardModalBooking}
+        lang={lang}
+      />
+    
+      {/* Dual Vault PIN Controller Modal */}
+      <DualVaultPinModal
+        visible={showDualVaultModal}
+        onClose={() => setShowDualVaultModal(false)}
+        isUnlocked={isMasterVaultActive}
+        onVaultStateChanged={(unlocked) => {
+          setIsMasterVaultActive(unlocked);
+          getShowcaseBookingIds().then(ids => setShowcaseBookingIds(ids || []));
+        }}
         lang={lang}
       />
     </ScrollView>
