@@ -268,6 +268,7 @@ export default function DesktopHomeScreen({
         setLang={setLang}
         customerSession={customerSession}
         setTab={setTab}
+        tab="home"
         setWiz={setWiz}
         setDetail={setDetail}
         mode="home"

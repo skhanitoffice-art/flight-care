@@ -36,6 +36,8 @@ node_modules/
 dist/
 build/
 web-build/
+android/.gradle/
+android/app/build/
 android/app/src/main/assets/public/
 android/app/src/main/assets/capacitor.config.json
 *.apk

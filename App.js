@@ -4979,6 +4979,7 @@ export default function App() {
             setLang={setLang}
             customerSession={customerSession}
             setTab={setTab}
+            tab={tab}
             setWiz={setWiz}
             setDetail={setDetail}
             mode="nav"

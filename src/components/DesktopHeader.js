@@ -7,6 +7,7 @@ export default function DesktopHeader({
   setLang,
   customerSession,
   setTab,
+  tab,
   setWiz,
   setDetail,
   mode = 'home', // 'home' | 'wizard' | 'confirmation' | 'nav'
@@ -65,6 +66,19 @@ export default function DesktopHeader({
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={() => {
+                if (setWiz) setWiz(null);
+                if (setDetail) setDetail(null);
+                if (setTab) setTab('home');
+              }}
+            >
+              <Text style={{ fontSize: 14.5, fontWeight: tab === 'home' ? '700' : '600', color: tab === 'home' ? '#0284C7' : '#1E293B' }}>
+                {lang ? 'হোম' : 'Home'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
                 if (navigateToSubPage) {
                   navigateToSubPage('additional_services');
                 } else if (setShowServicesModal) {
@@ -74,7 +88,7 @@ export default function DesktopHeader({
               style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
             >
               <Text style={{ fontSize: 14.5, fontWeight: '600', color: '#1E293B' }}>
-                {lang ? 'অতিরিক্ত সার্ভিস' : 'Services'}
+                {lang ? 'সার্ভিস' : 'Services'}
               </Text>
               <Text style={{ fontSize: 11, color: '#64748B' }}>▾</Text>
             </TouchableOpacity>
@@ -99,26 +113,8 @@ export default function DesktopHeader({
                 if (setTab) setTab('bookings');
               }}
             >
-              <Text style={{ fontSize: 14.5, fontWeight: '600', color: '#1E293B' }}>
+              <Text style={{ fontSize: 14.5, fontWeight: tab === 'bookings' ? '700' : '600', color: tab === 'bookings' ? '#0284C7' : '#1E293B' }}>
                 {lang ? 'আমার বুকিংস' : 'My Bookings'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => {
-                if (navigateToSubPage) {
-                  navigateToSubPage('protocol_ranks');
-                } else if (typeof onPressOfficers === 'function') {
-                  onPressOfficers();
-                } else {
-                  if (setWiz) setWiz(null);
-                  if (setTab) setTab('manager');
-                }
-              }}
-            >
-              <Text style={{ fontSize: 14.5, fontWeight: '600', color: '#1E293B' }}>
-                {lang ? 'প্রোটোকল অফিসার' : 'Officers'}
               </Text>
             </TouchableOpacity>
 
@@ -129,11 +125,10 @@ export default function DesktopHeader({
                 if (setTab) setTab('help');
               }}
             >
-              <Text style={{ fontSize: 14.5, fontWeight: '600', color: '#1E293B' }}>
+              <Text style={{ fontSize: 14.5, fontWeight: tab === 'help' ? '700' : '600', color: tab === 'help' ? '#0284C7' : '#1E293B' }}>
                 {lang ? 'সাপোর্ট' : 'Support'}
               </Text>
             </TouchableOpacity>
-
           </View>
         )}
 
