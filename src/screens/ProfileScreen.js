@@ -1627,69 +1627,6 @@ export default function ProfileScreen({
           <Text style={[s.btnT, { color: C.ink }]}>{t('createAccount')}</Text>
         </TouchableOpacity>
 
-        {/* Social Login Divider & Buttons for Guests */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 14 }}>
-          <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
-          <Text style={{ marginHorizontal: 10, fontSize: 11.5, fontWeight: '700', color: '#94A3B8' }}>
-            {lang ? 'অথবা ১-ক্লিক সাইন ইন' : 'OR 1-CLICK SIGN IN'}
-          </Text>
-          <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
-        </View>
-
-        <View style={{ gap: 8, marginBottom: 10 }}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: 12,
-              paddingVertical: 12,
-              paddingHorizontal: 16,
-              borderWidth: 1.5,
-              borderColor: '#EA4335',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-              shadowColor: '#EA4335',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 3,
-              elevation: 2,
-            }}
-            onPress={handleOpenGmailModal}
-          >
-            <Text style={{ fontSize: 16 }}>🔴</Text>
-            <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#B91C1C' }}>
-              {lang ? 'Google / Gmail দিয়ে সহজে সাইন আপ ও লগইন করুন' : 'Log in / Sign up with Gmail'}
-            </Text>
-            <View style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-              <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#DC2626' }}>
-                {lang ? '১-ক্লিক' : '1-Click'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={{
-              backgroundColor: '#000000',
-              borderRadius: 12,
-              paddingVertical: 11,
-              paddingHorizontal: 16,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-            }}
-            onPress={() => handleSocialLogin('apple')}
-          >
-            <Text style={{ fontSize: 16, color: '#FFFFFF' }}></Text>
-            <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#FFFFFF' }}>
-              {lang ? 'Apple আইডি দিয়ে সাইন ইন করুন' : 'Continue with Apple'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Language Preference Card for Guests */}
         <View style={[s.profileSectionCard, { marginTop: 20 }]}>
           <View style={s.profileSectionHeader}>
@@ -2085,28 +2022,6 @@ export default function ProfileScreen({
               </TouchableOpacity>
             ) : null}
 
-            {/* Apple login option */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={{
-                backgroundColor: '#000000',
-                borderRadius: 12,
-                paddingVertical: 11,
-                paddingHorizontal: 16,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                marginTop: 10,
-              }}
-              onPress={() => handleSocialLogin('apple')}
-            >
-              <Text style={{ fontSize: 16, color: '#FFFFFF' }}></Text>
-              <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#FFFFFF' }}>
-                {lang ? 'Apple আইডি দিয়ে সাইন ইন করুন' : 'Continue with Apple'}
-              </Text>
-            </TouchableOpacity>
-
             {/* Firebase cloud sync badge */}
             <View style={{
               flexDirection: 'row',
@@ -2212,28 +2127,6 @@ export default function ProfileScreen({
             {field('passwordConfirmation', t('confirmPassword'), { secureTextEntry: true })}
             {authError ? <Text style={s.managerError}>{authError}</Text> : null}
             {authButton(authMode === 'gmail' ? (lang ? '📧 জিমেইল দিয়ে অ্যাকাউন্ট তৈরি করুন' : 'Create Account with Gmail') : (lang ? '📱 মোবাইল দিয়ে অ্যাকাউন্ট তৈরি করুন' : 'Create Account with Mobile'), submitCustomerRegistration)}
-
-            {/* Apple login option */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={{
-                backgroundColor: '#000000',
-                borderRadius: 12,
-                paddingVertical: 11,
-                paddingHorizontal: 16,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                marginTop: 10,
-              }}
-              onPress={() => handleSocialLogin('apple')}
-            >
-              <Text style={{ fontSize: 16, color: '#FFFFFF' }}></Text>
-              <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#FFFFFF' }}>
-                {lang ? 'Apple আইডি দিয়ে সাইন ইন করুন' : 'Continue with Apple'}
-              </Text>
-            </TouchableOpacity>
 
             {/* Firebase cloud sync badge */}
             <View style={{
