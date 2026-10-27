@@ -215,6 +215,22 @@ export default function DesktopFooter({
             {lang ? 'যোগাযোগ ও নিবন্ধিত ঠিকানা (Contact Us)' : 'Contact Us'}
           </Text>
         </TouchableOpacity>
+
+        <Text style={{ fontSize: 10, color: '#475569' }}>•</Text>
+
+        <TouchableOpacity onPress={() => setComplianceTab('license')} activeOpacity={0.75} style={{ paddingVertical: 2 }}>
+          <Text style={{ fontSize: 11.5, color: '#FCD34D', fontWeight: '700' }}>
+            📜 {lang ? 'ট্রেড লাইসেন্স (Trade License)' : 'Trade License'}
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={{ fontSize: 10, color: '#475569' }}>•</Text>
+
+        <TouchableOpacity onPress={() => setComplianceTab('tin')} activeOpacity={0.75} style={{ paddingVertical: 2 }}>
+          <Text style={{ fontSize: 11.5, color: '#38BDF8', fontWeight: '700' }}>
+            📋 {lang ? 'টিআইএন সনদ (TIN Copy)' : 'TIN Copy'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Row 3: Official SSLCommerz Payment Gateway Trust Banner (Compact & Elegant) */}
@@ -295,6 +311,58 @@ export default function DesktopFooter({
           <Text style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 3 }}>
             📍 {lang ? 'নিবন্ধিত কার্যালয়: টার্মিনাল ১ ও ২, হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দর (HSIA), কুর্মিটোলা, ঢাকা-১২২৯' : 'Registered Office: Terminal 1 & 2, Hazrat Shahjalal International Airport (HSIA), Kurmitola, Dhaka-1229'}
           </Text>
+
+          {/* Trade License & TIN Badges */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setComplianceTab('license')}
+              style={{
+                backgroundColor: 'rgba(245, 158, 11, 0.12)',
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 4,
+                borderWidth: 0.8,
+                borderColor: 'rgba(245, 158, 11, 0.35)',
+              }}
+            >
+              <Text style={{ fontSize: 10, color: '#FDE68A', fontWeight: '600' }}>
+                📜 {lang ? 'ট্রেড লাইসেন্স:' : 'Trade License:'} <Text style={{ color: '#F59E0B', fontWeight: '800' }}>TRAD/DNCC/004721/2024</Text>
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setComplianceTab('tin')}
+              style={{
+                backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 4,
+                borderWidth: 0.8,
+                borderColor: 'rgba(56, 189, 248, 0.35)',
+              }}
+            >
+              <Text style={{ fontSize: 10, color: '#BAE6FD', fontWeight: '600' }}>
+                📋 {lang ? 'ই-টিআইএন:' : 'e-TIN:'} <Text style={{ color: '#38BDF8', fontWeight: '800' }}>287613602651</Text>
+              </Text>
+            </TouchableOpacity>
+
+            <View
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 4,
+                borderWidth: 0.8,
+                borderColor: 'rgba(255, 255, 255, 0.12)',
+              }}
+            >
+              <Text style={{ fontSize: 10, color: '#CBD5E1', fontWeight: '600' }}>
+                🏢 {lang ? 'বিআইএন:' : 'BIN/VAT:'} <Text style={{ color: '#E2E8F0', fontWeight: '800' }}>005829146-0101</Text>
+              </Text>
+            </View>
+          </View>
         </View>
 
         <View style={{ alignItems: 'flex-end' }}>

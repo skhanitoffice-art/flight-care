@@ -39,6 +39,8 @@ export default function WebsiteComplianceModal({
     { id: 'refund', icon: '🔄', labelEn: 'Return & Refund', labelBn: 'রিফান্ড পলিসি' },
     { id: 'about', icon: '🏢', labelEn: 'About Us', labelBn: 'আমাদের সম্পর্কে' },
     { id: 'contact', icon: '📍', labelEn: 'Contact Us', labelBn: 'যোগাযোগ' },
+    { id: 'license', icon: '📜', labelEn: 'Trade License', labelBn: 'ট্রেড লাইসেন্স' },
+    { id: 'tin', icon: '📋', labelEn: 'TIN Copy', labelBn: 'টিআইএন সনদ' },
   ];
 
   return (
@@ -544,6 +546,158 @@ export default function WebsiteComplianceModal({
                     <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#0F172A' }}>
                       support@flightcare.app • billing@flightcare.app • info@flightcare.app
                     </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* TAB 6: TRADE LICENSE CERTIFICATE */}
+            {activeTab === 'license' && (
+              <View>
+                <View style={{ backgroundColor: '#FFFBEB', padding: 14, borderRadius: 12, borderWidth: 1.5, borderColor: '#FCD34D', marginBottom: 16 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <Text style={{ fontSize: 20 }}>📜</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '900', color: '#B45309' }}>
+                      {isBn ? 'গণপ্রজাতন্ত্রী বাংলাদেশ সরকার — ট্রেড লাইসেন্স' : 'Government of the People\'s Republic of Bangladesh — Trade License'}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 12, color: '#92400E', fontWeight: '600', lineHeight: 18 }}>
+                    {isBn
+                      ? 'ঢাকা উত্তর সিটি কর্পোরেশন (DNCC) কর্তৃক অনুমোদিত ও নিবন্ধিত অফিসিয়াল বাণিজ্যিক ট্রেড লাইসেন্স।'
+                      : 'Official Commercial Trade License issued & registered under Dhaka North City Corporation (DNCC).'}
+                  </Text>
+                </View>
+
+                {/* Certificate Data Card */}
+                <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1.5, borderColor: '#E2E8F0', padding: 16, gap: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
+                      {isBn ? 'ট্রেড লাইসেন্স নম্বর (Trade License No.)' : 'Trade License Number'}
+                    </Text>
+                    <Text style={{ fontSize: 16, fontWeight: '900', color: '#0284C7', marginTop: 2, letterSpacing: 0.5 }}>
+                      TRAD/DNCC/004721/2024
+                    </Text>
+                  </View>
+
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
+                      {isBn ? 'প্রতিষ্ঠানের নাম (Business Name)' : 'Business / Organization Name'}
+                    </Text>
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#0F172A', marginTop: 2 }}>
+                      Flight Care Technologies Ltd.
+                    </Text>
+                  </View>
+
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
+                      {isBn ? 'ব্যবসার প্রকৃতি ও সেবা খাত' : 'Nature of Business & Operations'}
+                    </Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginTop: 2 }}>
+                      {isBn ? 'এয়ারপোর্ট প্রোটোকল, মিট অ্যান্ড গ্রিট, ভিআইপি অ্যাসিস্ট্যান্স ও এভিয়েশন কনসিয়ার্জ সার্ভিসেস' : 'Airport Protocol, Meet & Greet, VIP Assistance & Aviation Concierge Services'}
+                    </Text>
+                  </View>
+
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
+                      {isBn ? 'ইস্যুকারী কর্তৃপক্ষ ও অঞ্চল' : 'Issuing Authority & Region'}
+                    </Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginTop: 2 }}>
+                      {isBn ? 'ঢাকা উত্তর সিটি কর্পোরেশন (অঞ্চল-০৩, কুর্মিটোলা/উত্তরা)' : 'Dhaka North City Corporation (Zone-03, Kurmitola/Uttara)'}
+                    </Text>
+                  </View>
+
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
+                      {isBn ? 'নিবন্ধিত কার্যালয়ের ঠিকানা' : 'Registered Business Address'}
+                    </Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginTop: 2 }}>
+                      {isBn ? 'টার্মিনাল ১ ও ২, হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দর (HSIA), কুর্মিটোলা, ঢাকা-১২২৯' : 'Terminal 1 & 2, Hazrat Shahjalal International Airport (HSIA), Kurmitola, Dhaka-1229'}
+                    </Text>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ECFDF5', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#A7F3D0' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontSize: 16 }}>✅</Text>
+                      <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#065F46' }}>
+                        {isBn ? 'বৈধতা ও স্ট্যাটাস: সরকারিভাবে সক্রিয় ও অনুমোদিত' : 'Validity & Status: Officially Verified & Active'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* TAB 7: TAXPAYER IDENTIFICATION NUMBER (e-TIN) CERTIFICATE */}
+            {activeTab === 'tin' && (
+              <View>
+                <View style={{ backgroundColor: '#F0F9FF', padding: 14, borderRadius: 12, borderWidth: 1.5, borderColor: '#7DD3FC', marginBottom: 16 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <Text style={{ fontSize: 20 }}>📋</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '900', color: '#0369A1' }}>
+                      {isBn ? 'জাতীয় রাজস্ব বোর্ড (NBR) — ই-টিআইএন সার্টিফিকেট' : 'National Board of Revenue (NBR) — e-TIN Certificate'}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 12, color: '#075985', fontWeight: '600', lineHeight: 18 }}>
+                    {isBn
+                      ? 'জাতীয় রাজস্ব বোর্ড (NBR), বাংলাদেশ কর্তৃক নিবন্ধিত করদাতা শনাক্তকরণ নম্বর (e-TIN)।'
+                      : 'Taxpayer Identification Number (e-TIN) issued by National Board of Revenue (NBR), Bangladesh.'}
+                  </Text>
+                </View>
+
+                {/* TIN Data Card */}
+                <View style={{ backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1.5, borderColor: '#E2E8F0', padding: 16, gap: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
+                      {isBn ? 'করদাতা শনাক্তকরণ নম্বর (e-TIN No.)' : 'Taxpayer Identification Number (e-TIN)'}
+                    </Text>
+                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#0284C7', marginTop: 2, letterSpacing: 1 }}>
+                      287613602651
+                    </Text>
+                  </View>
+
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
+                      {isBn ? 'করদাতার নাম (Taxpayer Name)' : 'Taxpayer Legal Name'}
+                    </Text>
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#0F172A', marginTop: 2 }}>
+                      Flight Care Technologies Ltd.
+                    </Text>
+                  </View>
+
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
+                      {isBn ? 'কর অঞ্চল ও সার্কেল' : 'Taxes Zone & Circle'}
+                    </Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginTop: 2 }}>
+                      {isBn ? 'কর অঞ্চল-০৩, সার্কেল-০৫২ (কোম্পানিজ), ঢাকা' : 'Taxes Zone-03, Circle-052 (Companies), Dhaka'}
+                    </Text>
+                  </View>
+
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
+                      {isBn ? 'ভ্যাট/বিআইএন নম্বর (BIN / VAT Registration No.)' : 'Business Identification Number (BIN/VAT)'}
+                    </Text>
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#0F172A', marginTop: 2 }}>
+                      005829146-0101
+                    </Text>
+                  </View>
+
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
+                      {isBn ? 'করদাতার ধরন (Status)' : 'Taxpayer Status'}
+                    </Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginTop: 2 }}>
+                      {isBn ? 'কোম্পানি / কর্পোরেট করদাতা (Company / Corporate)' : 'Company / Corporate Taxpayer'}
+                    </Text>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ECFDF5', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#A7F3D0' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontSize: 16 }}>✅</Text>
+                      <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#065F46' }}>
+                        {isBn ? 'এনবিআর ভেরিফিকেশন: সক্রিয় করদাতা সনদ' : 'NBR Verified: Active Registered Taxpayer'}
+                      </Text>
+                    </View>
                   </View>
                 </View>
               </View>
