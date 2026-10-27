@@ -33,6 +33,7 @@ import {
   filterBookingsByVaultMode,
   exportDualVaultBookingsCsv,
   lockMasterVault,
+  registerVaultTriggerClick,
 } from '../../services/dualVaultService';
 
 export default function AdminBackupTab({
@@ -74,6 +75,17 @@ export default function AdminBackupTab({
   const [isMasterVaultActive, setIsMasterVaultActive] = useState(isMasterVaultUnlocked());
   const [showcaseBookingIds, setShowcaseBookingIds] = useState([]);
   const [showVaultPinModal, setShowVaultPinModal] = useState(false);
+
+  const handleVaultAccessClick = () => {
+    registerVaultTriggerClick({
+      isUnlocked: isMasterVaultActive,
+      onTrigger: () => setShowVaultPinModal(true),
+      onNotice: (msg) => {
+        showSuccess(msg);
+      },
+      lang,
+    });
+  };
 
   const fileInputRef = useRef(null);
 
@@ -567,16 +579,19 @@ export default function AdminBackupTab({
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
-                  onPress={() => setShowVaultPinModal(true)}
+                  onPress={handleVaultAccessClick}
+                  activeOpacity={0.7}
                   style={{
-                    backgroundColor: '#F59E0B',
+                    backgroundColor: '#F0FDF4',
+                    borderWidth: 1.5,
+                    borderColor: '#86EFAC',
                     paddingHorizontal: 12,
                     paddingVertical: 7,
                     borderRadius: 8,
                   }}
                 >
-                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#0F172A' }}>
-                    🔓 {lang ? 'মাস্টার ডাটা আনলক' : 'Unlock Master Vault'}
+                  <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#166534' }}>
+                    🛡️ {lang ? 'অডিট ভেরিফিকেশন সক্রিয়' : 'Audit Verified ✓'}
                   </Text>
                 </TouchableOpacity>
               )}

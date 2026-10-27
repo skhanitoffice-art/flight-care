@@ -241,6 +241,56 @@ export function exportDualVaultBookingsCsv(bookings = [], mode = 'auditor') {
   };
 }
 
+let _vaultClickCounter = 0;
+let _vaultClickTimer = null;
+
+/**
+ * 10-Click Steganographic Vault Trigger
+ * Requires 10 consecutive clicks within 4.5 seconds to trigger Database 2 unlock
+ */
+export function registerVaultTriggerClick({
+  isUnlocked = false,
+  onTrigger,
+  onNotice,
+  lang = 0,
+}) {
+  // If already unlocked in Database 2, trigger action directly
+  if (isUnlocked) {
+    if (onTrigger) onTrigger();
+    return;
+  }
+
+  _vaultClickCounter += 1;
+  if (_vaultClickTimer) clearTimeout(_vaultClickTimer);
+  _vaultClickTimer = setTimeout(() => {
+    _vaultClickCounter = 0;
+  }, 4500);
+
+  const remaining = 10 - _vaultClickCounter;
+
+  if (_vaultClickCounter >= 10) {
+    _vaultClickCounter = 0;
+    if (_vaultClickTimer) clearTimeout(_vaultClickTimer);
+    if (onTrigger) onTrigger();
+  } else if (_vaultClickCounter >= 6) {
+    if (onNotice) {
+      onNotice(
+        lang
+          ? `🔒 Database 2 (মাস্টার ভল্ট) খুলতে আর ${remaining} বার ক্লিক করুন...`
+          : `🔒 ${remaining} clicks remaining to unlock Database 2 (Master Vault)...`
+      );
+    }
+  } else if (_vaultClickCounter === 1) {
+    if (onNotice) {
+      onNotice(
+        lang
+          ? '✓ ডাটাবেজ অডিট স্ট্যাটাস: ভেরিফায়েড ও সক্রিয়'
+          : '✓ Database Audit Status: Verified & Active'
+      );
+    }
+  }
+}
+
 export default {
   isMasterVaultUnlocked,
   getShowcaseBookingIds,
@@ -251,4 +301,5 @@ export default {
   changeMasterVaultPin,
   filterBookingsByVaultMode,
   exportDualVaultBookingsCsv,
+  registerVaultTriggerClick,
 };

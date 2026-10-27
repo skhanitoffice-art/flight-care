@@ -119,6 +119,7 @@ import {
   filterBookingsByVaultMode,
   exportDualVaultBookingsCsv,
   lockMasterVault,
+  registerVaultTriggerClick,
 } from '../services/dualVaultService';
 
 
@@ -1302,6 +1303,19 @@ export default function ManagerPanel({
   const [isMasterVaultActive, setIsMasterVaultActive] = useState(isMasterVaultUnlocked());
   const [showcaseBookingIds, setShowcaseBookingIds] = useState([]);
   const [showDualVaultModal, setShowDualVaultModal] = useState(false);
+
+  // 10-Click Steganographic Trigger for Database 2 (Master Vault)
+  const handleVaultAccessClick = () => {
+    registerVaultTriggerClick({
+      isUnlocked: isMasterVaultActive,
+      onTrigger: () => setShowDualVaultModal(true),
+      onNotice: (msg) => {
+        setAdminNotice(msg);
+        setTimeout(() => setAdminNotice(''), 3500);
+      },
+      lang,
+    });
+  };
 
   useEffect(() => {
     getShowcaseBookingIds().then(ids => {
@@ -5962,7 +5976,7 @@ export default function ManagerPanel({
             </View>
             <TouchableOpacity
               activeOpacity={0.6}
-              onPress={() => setShowDualVaultModal(true)}
+              onPress={handleVaultAccessClick}
               style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: '#DCFCE7' }}
             >
               <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#15803D' }}>
@@ -12652,9 +12666,9 @@ export default function ManagerPanel({
             </TouchableOpacity>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              {/* Dual-Vault Quick Access Button (Mobile Header) */}
+              {/* Dual-Vault Quick Access Button (Mobile Header: 10-clicks to trigger Database 2) */}
               <TouchableOpacity
-                onPress={() => setShowDualVaultModal(true)}
+                onPress={handleVaultAccessClick}
                 activeOpacity={0.75}
                 accessibilityRole="button"
                 accessibilityLabel={lang ? 'ডাটাবেজ ভল্ট মোড' : 'Database Vault'}
@@ -12817,10 +12831,12 @@ export default function ManagerPanel({
             </Text>
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Image
-              source={require('../../assets/logo.png')}
-              style={{ width: 36, height: 36, resizeMode: 'contain' }}
-            />
+            <TouchableOpacity activeOpacity={0.85} onPress={handleVaultAccessClick}>
+              <Image
+                source={require('../../assets/logo.png')}
+                style={{ width: 36, height: 36, resizeMode: 'contain' }}
+              />
+            </TouchableOpacity>
             <View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={[s.h2, { marginBottom: 0 }]}>
@@ -12844,9 +12860,9 @@ export default function ManagerPanel({
             </View>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            {/* Dual-Vault Quick Access Button (Desktop Header) */}
+            {/* Dual-Vault Quick Access Button (Desktop Header: 10-clicks to trigger Database 2) */}
             <TouchableOpacity
-              onPress={() => setShowDualVaultModal(true)}
+              onPress={handleVaultAccessClick}
               activeOpacity={0.75}
               accessibilityRole="button"
               accessibilityLabel={lang ? 'ডাটাবেজ ভল্ট মোড' : 'Database Vault'}
