@@ -1,0 +1,675 @@
+rules_version = '2';
+
+// ===============================================================
+// Flight Care Airport Protocol Booking Platform - Security Rules
+// ===============================================================
+//
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: {userId} (matching Firebase Auth UID)
+// Fields:
+//   - uid: string (required, 1..128 chars, immutable, matches document ID and request.auth.uid)
+//   - email: string (required, valid email, <= 100 chars)
+//   - phone: string (required, 6..25 chars)
+//   - role: string (required, 'customer' | 'staff' | 'admin', immutable for non-admin)
+//   - name: string (optional, 1..100 chars)
+//   - displayName: string (optional, 1..100 chars)
+//   - photoURL: string (optional, <= 500 chars)
+//   - language: string (optional, <= 10 chars)
+//   - notificationPreferences: map (optional, <= 10 keys)
+//   - savedTravelers: list (optional, <= 20 maps)
+//   - createdAt: timestamp or ISO string (optional, immutable)
+//   - updatedAt: timestamp or ISO string (optional)
+//
+// Collection: bookings
+// Document ID: {bookingId}
+// Fields:
+//   - bookingId: string (required, 1..64 chars, immutable)
+//   - userId: string (required, 1..128 chars, matches customer auth.uid on customer create, immutable)
+//   - passenger: map (required, passenger details, <= 20 keys)
+//   - flight: map (required, flight details, <= 20 keys)
+//   - servicePackage: map or string (required, service package tier/details)
+//   - addons: list or map (optional, supplementary airport services)
+//   - pricing: map (required, breakdown, taxes, total, <= 25 keys)
+//   - payment: map (required, status, method, transaction reference, <= 25 keys)
+//   - status: string (required, 'confirmed' | 'assigned' | 'in_progress' | 'completed' | 'cancelled')
+//   - assignedOfficer: map (optional/nullable, protocol officer details, <= 20 keys)
+//   - milestones: list or map (optional, execution checkpoints)
+//   - serviceProgress: list or map (optional, live stage tracking)
+//   - statusHistory: list (optional, audit trail of status changes, <= 30 items)
+//   - cancellationReason: string (optional, <= 500 chars)
+//   - handoverNotes: string (optional, <= 1000 chars)
+//   - notes: string (optional, <= 1000 chars)
+//   - handoverOtp: string (optional, <= 10 chars)
+//   - airport: string (optional, <= 20 chars)
+//   - airportName: string (optional, <= 150 chars)
+//   - dir: string (optional, 'arr' | 'dep')
+//   - createdAt: timestamp or ISO string (optional, immutable)
+//   - updatedAt: timestamp or ISO string (optional)
+//   - cancelledAt: timestamp or ISO string (optional)
+//   - completedAt: timestamp or ISO string (optional)
+//
+// Collection: airport_services
+// Document ID: {serviceId}
+// Fields:
+//   - id: string (required, 1..64 chars)
+//   - nameEn: string (optional, 1..150 chars)
+//   - nameBn: string (optional, 1..150 chars)
+//   - name: string or list (optional, <= 150 chars)
+//   - basePrice: number (required, >= 0, <= 1000000)
+//   - price: number (optional, >= 0, <= 1000000)
+//   - icon: string (optional, <= 50 chars)
+//   - category: string (optional, <= 50 chars)
+//   - serviceCategory: string (optional, <= 50 chars)
+//   - activeAirports: list of strings (optional, <= 20 items)
+//   - isActive: bool (optional)
+//   - active: bool (optional)
+//   - description: string (optional, <= 1000 chars)
+//   - operationalSteps: list of maps/strings (optional, <= 20 items)
+//   - updatedAt: timestamp or ISO string (optional)
+//   - createdAt: timestamp or ISO string (optional)
+//
+// Collection: packages
+// Document ID: {packageId}
+// Fields:
+//   - id: string (optional, 1..64 chars)
+//   - name: string or list or map (optional, <= 150 chars)
+//   - basePrice: number (required, >= 0, <= 1000000)
+//   - active: bool (optional)
+//   - features: list (optional, <= 50 items)
+//   - description: string (optional, <= 1000 chars)
+//   - tier: string (optional, <= 50 chars)
+//   - icon: string (optional, <= 50 chars)
+//   - updatedAt: timestamp or ISO string (optional)
+//   - createdAt: timestamp or ISO string (optional)
+//
+// Collection: promo_codes
+// Document ID: {codeId} (coupon code)
+// Fields:
+//   - code: string (required, 1..32 chars)
+//   - type: string (required, 'flat' | 'percentage')
+//   - value: number (required, > 0, <= 100000)
+//   - minAmount: number (required, >= 0, <= 1000000)
+//   - maxDiscount: number (optional, >= 0, <= 1000000)
+//   - active: bool (required)
+//   - label: string (optional, <= 100 chars)
+//   - expiryDate: timestamp or ISO string (optional, <= 40 chars)
+//   - usageLimit: number (optional, >= 0)
+//   - timesUsed: number (optional, >= 0)
+//   - updatedAt: timestamp or ISO string (optional)
+//   - createdAt: timestamp or ISO string (optional)
+//
+// Collection: staff_roster
+// Document ID: {staffId}
+// Fields:
+//   - id: string (required, 1..64 chars)
+//   - name: string (required, 1..100 chars)
+//   - email: string (required, valid email, <= 100 chars)
+//   - phone: string (required, 6..25 chars)
+//   - role: string (required, 1..50 chars)
+//   - active: bool (required)
+//   - airport: string (optional, <= 20 chars)
+//   - station: string (optional, <= 100 chars)
+//   - shift: string (optional, <= 50 chars)
+//   - status: string (optional, <= 50 chars)
+//   - rating: number (optional, 0..5)
+//   - completedServices: number (optional, >= 0)
+//   - joinedDate: string (optional, <= 50 chars)
+//   - pin: string (optional, <= 10 chars)
+//   - notes: string (optional, <= 1000 chars)
+//   - photoUrl: string (optional, <= 500 chars)
+//   - currentLocation: map (optional, lat, lng, updatedAt, <= 10 keys)
+//   - updatedAt: timestamp or ISO string (optional)
+//   - createdAt: timestamp or ISO string (optional)
+//
+// Collection: notifications
+// Document ID: {notificationId}
+// Fields:
+//   - targetUserId: string (required, 1..128 chars, matches recipient auth.uid)
+//   - title: string or map (required, bilingual or single string, <= 200 chars)
+//   - body: string or map (required, bilingual or single string, <= 1000 chars)
+//   - category: string (required, 'booking' | 'payment' | 'service' | 'announcement' | 'promotion')
+//   - read: bool (required)
+//   - readAt: timestamp or ISO string (optional)
+//   - channels: list (optional, <= 10 items)
+//   - bookingId: string (optional, <= 64 chars)
+//   - source: string (optional, <= 50 chars)
+//   - type: string (optional, <= 50 chars)
+//   - createdAt: timestamp or ISO string (optional)
+//   - updatedAt: timestamp or ISO string (optional)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Global Helper Functions
+    // ===============================================================
+
+    // Check if client is authenticated via Firebase Auth
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if client is the document owner by matching user ID
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Administrator verification:
+    // Derives authority only from trusted sources (auth token custom claims or verified bootstrap email)
+    function isAdmin() {
+      return isAuthenticated() && (
+        ('role' in request.auth.token && request.auth.token.role == 'admin') ||
+        ('admin' in request.auth.token && request.auth.token.admin == true) ||
+        (
+          request.auth.token.email_verified == true &&
+          ('email' in request.auth.token) &&
+          (request.auth.token.email == 'admin@flightcare.app' || request.auth.token.email == 'admin@flightcare.com')
+        )
+      );
+    }
+
+    // Manager / Operations Lead verification
+    function isManager() {
+      return isAdmin() || (
+        isAuthenticated() && (
+          ('role' in request.auth.token && request.auth.token.role == 'manager') ||
+          ('manager' in request.auth.token && request.auth.token.manager == true)
+        )
+      );
+    }
+
+    // Protocol Staff / Airport Officer verification
+    function isStaff() {
+      return isManager() || (
+        isAuthenticated() && (
+          ('role' in request.auth.token && (request.auth.token.role == 'staff' || request.auth.token.role == 'agent')) ||
+          ('staff' in request.auth.token && request.auth.token.staff == true)
+        )
+      );
+    }
+
+    // Schema validation helpers
+    function hasRequiredFields(data, fields) {
+      return data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(data, fields) {
+      return data.keys().hasOnly(fields);
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // Type & Format validators
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() <= 100 &&
+        email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidTimestampOrString(val) {
+      return val is timestamp || (val is string && val.size() <= 40);
+    }
+
+    function isValidOptionalTimestampOrString(data, field) {
+      return !(field in data) || isValidTimestampOrString(data[field]);
+    }
+
+    function isValidOptionalString(data, field, minLen, maxLen) {
+      return !(field in data) ||
+        (data[field] is string && data[field].size() >= minLen && data[field].size() <= maxLen);
+    }
+
+    function isValidOptionalNumber(data, field, minVal, maxVal) {
+      return !(field in data) ||
+        ((data[field] is int || data[field] is float || data[field] is number) &&
+         data[field] >= minVal && data[field] <= maxVal);
+    }
+
+    // GPS location object validator
+    function isValidLocation(loc) {
+      return loc is map &&
+        loc.keys().hasAll(['lat', 'lng']) &&
+        loc.keys().hasOnly(['lat', 'lng', 'updatedAt', 'accuracy', 'heading', 'speed']) &&
+        (loc.lat is int || loc.lat is float || loc.lat is number) && loc.lat >= -90 && loc.lat <= 90 &&
+        (loc.lng is int || loc.lng is float || loc.lng is number) && loc.lng >= -180 && loc.lng <= 180 &&
+        (!('updatedAt' in loc) || isValidTimestampOrString(loc.updatedAt)) &&
+        (!('accuracy' in loc) || ((loc.accuracy is int || loc.accuracy is float || loc.accuracy is number) && loc.accuracy >= 0)) &&
+        (!('heading' in loc) || ((loc.heading is int || loc.heading is float || loc.heading is number) && loc.heading >= 0 && loc.heading <= 360)) &&
+        (!('speed' in loc) || ((loc.speed is int || loc.speed is float || loc.speed is number) && loc.speed >= 0));
+    }
+
+
+    // ===============================================================
+    // Domain Validators (MANDATORY: Evaluated on BOTH create & update)
+    // ===============================================================
+
+    // 1. User Profile Validator
+    function isValidUser(data) {
+      return hasRequiredFields(data, ['uid', 'email', 'phone', 'role']) &&
+        hasOnlyAllowedFields(data, [
+          'uid', 'email', 'phone', 'role', 'name', 'displayName',
+          'photoURL', 'language', 'notificationPreferences', 'savedTravelers',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+        isValidEmail(data.email) &&
+        data.phone is string && data.phone.size() >= 6 && data.phone.size() <= 25 &&
+        data.role is string && data.role in ['customer', 'staff', 'admin'] &&
+        isValidOptionalString(data, 'name', 1, 100) &&
+        isValidOptionalString(data, 'displayName', 1, 100) &&
+        isValidOptionalString(data, 'photoURL', 1, 500) &&
+        isValidOptionalString(data, 'language', 1, 10) &&
+        (!('notificationPreferences' in data) || (data.notificationPreferences is map && data.notificationPreferences.size() <= 10)) &&
+        (!('savedTravelers' in data) || (data.savedTravelers is list && data.savedTravelers.size() <= 20)) &&
+        isValidOptionalTimestampOrString(data, 'createdAt') &&
+        isValidOptionalTimestampOrString(data, 'updatedAt');
+    }
+
+    // 2. Booking Validator
+    function isValidBooking(data) {
+      return hasRequiredFields(data, [
+          'bookingId', 'userId', 'passenger', 'flight', 'servicePackage', 'pricing', 'payment', 'status'
+        ]) &&
+        hasOnlyAllowedFields(data, [
+          'bookingId', 'userId', 'passenger', 'flight', 'servicePackage', 'addons',
+          'pricing', 'payment', 'status', 'assignedOfficer', 'id', 'name', 'phone',
+          'date', 'airport', 'airportName', 'dir', 'fno', 'amount', 'confirmedId',
+          'passengerName', 'passengerPhone', 'handoverOtp', 'milestones',
+          'serviceProgress', 'statusHistory', 'cancellationReason', 'cancelledAt',
+          'completedAt', 'handoverNotes', 'notes', 'createdAt', 'updatedAt', 'cancelled'
+        ]) &&
+        data.bookingId is string && data.bookingId.size() >= 1 && data.bookingId.size() <= 64 &&
+        data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+        data.status is string && data.status in ['confirmed', 'assigned', 'in_progress', 'completed', 'cancelled'] &&
+        data.passenger is map && data.passenger.size() <= 20 &&
+        data.flight is map && data.flight.size() <= 20 &&
+        ((data.servicePackage is map && data.servicePackage.size() <= 20) ||
+         (data.servicePackage is string && data.servicePackage.size() <= 100)) &&
+        (!('addons' in data) || (data.addons is list && data.addons.size() <= 30) || (data.addons is map && data.addons.size() <= 30)) &&
+        data.pricing is map && data.pricing.size() <= 25 &&
+        data.payment is map && data.payment.size() <= 25 &&
+        (!('assignedOfficer' in data) || data.assignedOfficer == null || (data.assignedOfficer is map && data.assignedOfficer.size() <= 20)) &&
+        isValidOptionalString(data, 'cancellationReason', 1, 500) &&
+        isValidOptionalString(data, 'handoverNotes', 1, 1000) &&
+        isValidOptionalString(data, 'notes', 1, 1000) &&
+        isValidOptionalString(data, 'handoverOtp', 1, 10) &&
+        isValidOptionalString(data, 'airport', 1, 20) &&
+        isValidOptionalString(data, 'airportName', 1, 150) &&
+        isValidOptionalString(data, 'dir', 1, 10) &&
+        isValidOptionalString(data, 'date', 1, 30) &&
+        isValidOptionalString(data, 'fno', 1, 30) &&
+        (!('milestones' in data) || (data.milestones is list && data.milestones.size() <= 30) || (data.milestones is map && data.milestones.size() <= 30)) &&
+        (!('serviceProgress' in data) || (data.serviceProgress is list && data.serviceProgress.size() <= 30) || (data.serviceProgress is map && data.serviceProgress.size() <= 30)) &&
+        (!('statusHistory' in data) || (data.statusHistory is list && data.statusHistory.size() <= 30)) &&
+        (!('cancelled' in data) || data.cancelled is bool) &&
+        isValidOptionalTimestampOrString(data, 'createdAt') &&
+        isValidOptionalTimestampOrString(data, 'updatedAt') &&
+        isValidOptionalTimestampOrString(data, 'cancelledAt') &&
+        isValidOptionalTimestampOrString(data, 'completedAt');
+    }
+
+    // 3. Airport Service Validator
+    function isValidAirportService(data) {
+      return hasRequiredFields(data, ['id', 'basePrice']) &&
+        hasOnlyAllowedFields(data, [
+          'id', 'nameEn', 'nameBn', 'name', 'basePrice', 'price', 'icon',
+          'category', 'serviceCategory', 'activeAirports', 'isActive', 'active',
+          'description', 'operationalSteps', 'updatedAt', 'createdAt'
+        ]) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 64 &&
+        (data.basePrice is int || data.basePrice is float || data.basePrice is number) &&
+        data.basePrice >= 0 && data.basePrice <= 1000000 &&
+        isValidOptionalNumber(data, 'price', 0, 1000000) &&
+        isValidOptionalString(data, 'nameEn', 1, 150) &&
+        isValidOptionalString(data, 'nameBn', 1, 150) &&
+        (!('name' in data) || (data.name is string && data.name.size() <= 150) || (data.name is list && data.name.size() <= 5)) &&
+        isValidOptionalString(data, 'icon', 1, 50) &&
+        isValidOptionalString(data, 'category', 1, 50) &&
+        isValidOptionalString(data, 'serviceCategory', 1, 50) &&
+        (!('activeAirports' in data) || (data.activeAirports is list && data.activeAirports.size() <= 20)) &&
+        (!('isActive' in data) || data.isActive is bool) &&
+        (!('active' in data) || data.active is bool) &&
+        isValidOptionalString(data, 'description', 1, 1000) &&
+        (!('operationalSteps' in data) || (data.operationalSteps is list && data.operationalSteps.size() <= 20)) &&
+        isValidOptionalTimestampOrString(data, 'createdAt') &&
+        isValidOptionalTimestampOrString(data, 'updatedAt');
+    }
+
+    // 4. Package Validator
+    function isValidPackage(data) {
+      return hasRequiredFields(data, ['basePrice']) &&
+        hasOnlyAllowedFields(data, [
+          'id', 'name', 'basePrice', 'active', 'features', 'description',
+          'tier', 'icon', 'updatedAt', 'createdAt'
+        ]) &&
+        (data.basePrice is int || data.basePrice is float || data.basePrice is number) &&
+        data.basePrice >= 0 && data.basePrice <= 1000000 &&
+        isValidOptionalString(data, 'id', 1, 64) &&
+        (!('name' in data) || (data.name is string && data.name.size() <= 150) ||
+         (data.name is list && data.name.size() <= 5) || (data.name is map && data.name.size() <= 5)) &&
+        (!('active' in data) || data.active is bool) &&
+        (!('features' in data) || (data.features is list && data.features.size() <= 50)) &&
+        isValidOptionalString(data, 'description', 1, 1000) &&
+        isValidOptionalString(data, 'tier', 1, 50) &&
+        isValidOptionalString(data, 'icon', 1, 50) &&
+        isValidOptionalTimestampOrString(data, 'createdAt') &&
+        isValidOptionalTimestampOrString(data, 'updatedAt');
+    }
+
+    // 5. Promo Code Validator
+    function isValidPromoCode(data) {
+      return hasRequiredFields(data, ['code', 'type', 'value', 'minAmount', 'active']) &&
+        hasOnlyAllowedFields(data, [
+          'code', 'type', 'value', 'minAmount', 'maxDiscount', 'active',
+          'label', 'expiryDate', 'usageLimit', 'timesUsed', 'updatedAt', 'createdAt'
+        ]) &&
+        data.code is string && data.code.size() >= 1 && data.code.size() <= 32 &&
+        data.type is string && data.type in ['flat', 'percentage'] &&
+        (data.value is int || data.value is float || data.value is number) &&
+        data.value > 0 && data.value <= 100000 &&
+        (data.minAmount is int || data.minAmount is float || data.minAmount is number) &&
+        data.minAmount >= 0 && data.minAmount <= 1000000 &&
+        data.active is bool &&
+        isValidOptionalNumber(data, 'maxDiscount', 0, 1000000) &&
+        isValidOptionalString(data, 'label', 1, 100) &&
+        isValidOptionalTimestampOrString(data, 'expiryDate') &&
+        isValidOptionalNumber(data, 'usageLimit', 0, 1000000) &&
+        isValidOptionalNumber(data, 'timesUsed', 0, 1000000) &&
+        isValidOptionalTimestampOrString(data, 'createdAt') &&
+        isValidOptionalTimestampOrString(data, 'updatedAt');
+    }
+
+    // 6. Staff Member Validator
+    function isValidStaffMember(data) {
+      return hasRequiredFields(data, ['id', 'name', 'email', 'phone', 'role', 'active']) &&
+        hasOnlyAllowedFields(data, [
+          'id', 'name', 'email', 'phone', 'role', 'airport', 'station', 'shift',
+          'status', 'active', 'rating', 'completedServices', 'joinedDate', 'pin',
+          'notes', 'photoUrl', 'currentLocation', 'updatedAt', 'createdAt'
+        ]) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 64 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        isValidEmail(data.email) &&
+        data.phone is string && data.phone.size() >= 6 && data.phone.size() <= 25 &&
+        data.role is string && data.role.size() >= 1 && data.role.size() <= 50 &&
+        data.active is bool &&
+        isValidOptionalString(data, 'airport', 1, 20) &&
+        isValidOptionalString(data, 'station', 1, 100) &&
+        isValidOptionalString(data, 'shift', 1, 50) &&
+        isValidOptionalString(data, 'status', 1, 50) &&
+        isValidOptionalNumber(data, 'rating', 0, 5) &&
+        isValidOptionalNumber(data, 'completedServices', 0, 100000) &&
+        isValidOptionalString(data, 'joinedDate', 1, 50) &&
+        isValidOptionalString(data, 'pin', 1, 10) &&
+        isValidOptionalString(data, 'notes', 1, 1000) &&
+        isValidOptionalString(data, 'photoUrl', 1, 500) &&
+        (!('currentLocation' in data) || isValidLocation(data.currentLocation)) &&
+        isValidOptionalTimestampOrString(data, 'createdAt') &&
+        isValidOptionalTimestampOrString(data, 'updatedAt');
+    }
+
+    // 7. Notification Validator
+    function isValidNotification(data) {
+      return hasRequiredFields(data, ['targetUserId', 'title', 'body', 'category', 'read']) &&
+        hasOnlyAllowedFields(data, [
+          'id', 'targetUserId', 'title', 'body', 'category', 'read', 'readAt',
+          'channels', 'bookingId', 'source', 'type', 'createdAt', 'updatedAt'
+        ]) &&
+        data.targetUserId is string && data.targetUserId.size() >= 1 && data.targetUserId.size() <= 128 &&
+        ((data.title is string && data.title.size() >= 1 && data.title.size() <= 200) ||
+         (data.title is map && data.title.size() <= 5)) &&
+        ((data.body is string && data.body.size() >= 1 && data.body.size() <= 1000) ||
+         (data.body is map && data.body.size() <= 5)) &&
+        data.category is string &&
+        data.category in ['booking', 'payment', 'service', 'announcement', 'promotion'] &&
+        data.read is bool &&
+        isValidOptionalString(data, 'id', 1, 64) &&
+        isValidOptionalTimestampOrString(data, 'readAt') &&
+        (!('channels' in data) || (data.channels is list && data.channels.size() <= 10)) &&
+        isValidOptionalString(data, 'bookingId', 1, 64) &&
+        isValidOptionalString(data, 'source', 1, 50) &&
+        isValidOptionalString(data, 'type', 1, 50) &&
+        isValidOptionalTimestampOrString(data, 'createdAt') &&
+        isValidOptionalTimestampOrString(data, 'updatedAt');
+    }
+
+    // Staff GPS coordinate update check
+    function isStaffLocationUpdate(staffId) {
+      return isAuthenticated() &&
+        request.auth.uid == staffId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentLocation', 'updatedAt']) &&
+        isValidLocation(request.resource.data.currentLocation) &&
+        (!('updatedAt' in request.resource.data) || isValidTimestampOrString(request.resource.data.updatedAt));
+    }
+
+
+    // ===============================================================
+    // Collection Security Rules
+    // ===============================================================
+
+    // ---------------------------------------------------------------
+    // 1. users: Profiles with PII (email, phone, role)
+    // ---------------------------------------------------------------
+    match /users/{userId} {
+      // PII Protection: Strictly limited to document owner or bootstrapped admin
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Create: Owner can create their own profile with 'customer' role.
+      // Admin can provision or bootstrap profiles with any valid role.
+      allow create: if isValidUser(request.resource.data) && (
+        (isOwner(userId) && request.resource.data.uid == userId && request.resource.data.role == 'customer') ||
+        isAdmin()
+      );
+
+      // Update: Owner can update their profile but CANNOT escalate their role or modify UID.
+      // Admin can update any profile.
+      allow update: if isValidUser(request.resource.data) && (
+        isAdmin() ||
+        (
+          isOwner(userId) &&
+          request.resource.data.uid == resource.data.uid &&
+          request.resource.data.role == resource.data.role &&
+          areImmutableFieldsUnchanged(['uid', 'role', 'createdAt'])
+        )
+      );
+
+      // Delete: Admin only
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // 2. bookings: Passenger flight protocol reservations
+    // ---------------------------------------------------------------
+    match /bookings/{bookingId} {
+      // Check if current user is the customer who created the booking
+      function isBookingOwner() {
+        return isAuthenticated() && resource.data.userId == request.auth.uid;
+      }
+
+      // Check if current user is an assigned staff member
+      function isAssignedOfficer() {
+        return isAuthenticated() && (
+          isStaff() ||
+          (
+            ('assignedOfficer' in resource.data) &&
+            resource.data.assignedOfficer is map &&
+            ('officerId' in resource.data.assignedOfficer) &&
+            resource.data.assignedOfficer.officerId == request.auth.uid
+          )
+        );
+      }
+
+      // Valid staff status progressions
+      function isValidStaffStatusTransition() {
+        return request.resource.data.status in ['confirmed', 'assigned', 'in_progress', 'completed'] &&
+          (
+            request.resource.data.status == resource.data.status ||
+            (resource.data.status == 'confirmed' && request.resource.data.status == 'assigned') ||
+            (resource.data.status == 'assigned' && request.resource.data.status == 'in_progress') ||
+            (resource.data.status == 'in_progress' && request.resource.data.status == 'completed')
+          );
+      }
+
+      // Read: Customer owner, assigned staff/officer, or manager/admin
+      allow read: if isManager() || isAssignedOfficer() || isBookingOwner();
+
+      // Create: Authenticated customer creates booking for self with initial 'confirmed' status.
+      // Manager/Admin can create any booking.
+      allow create: if isValidBooking(request.resource.data) && (
+        (
+          isAuthenticated() &&
+          request.resource.data.userId == request.auth.uid &&
+          request.resource.data.status == 'confirmed'
+        ) ||
+        isManager()
+      );
+
+      // Update:
+      // - Managers: full update capabilities
+      // - Assigned Staff: update milestone statuses and operational progress
+      // - Customers: cancel their own bookings (before completion)
+      allow update: if isValidBooking(request.resource.data) && (
+        // Manager update (cannot alter primary bookingId)
+        (isManager() && request.resource.data.bookingId == resource.data.bookingId) ||
+
+        // Staff milestone progress update
+        (
+          isAssignedOfficer() &&
+          areImmutableFieldsUnchanged(['bookingId', 'userId', 'passenger', 'flight', 'servicePackage', 'addons', 'pricing', 'payment']) &&
+          isValidStaffStatusTransition()
+        ) ||
+
+        // Customer cancellation
+        (
+          isBookingOwner() &&
+          request.resource.data.status == 'cancelled' &&
+          resource.data.status in ['confirmed', 'assigned', 'in_progress'] &&
+          areImmutableFieldsUnchanged(['bookingId', 'userId', 'flight', 'servicePackage', 'pricing', 'payment', 'assignedOfficer']) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'cancellationReason', 'cancelledAt', 'cancelled', 'updatedAt', 'statusHistory'])
+        )
+      );
+
+      // Delete: Admins and managers only
+      allow delete: if isManager();
+    }
+
+    // ---------------------------------------------------------------
+    // 3. airport_services & packages: Public service catalog
+    // ---------------------------------------------------------------
+    match /airport_services/{serviceId} {
+      // Public read for customer booking and arrival/departure flow
+      allow read: if true;
+
+      // Admin-only creation, mutation, and catalog removal
+      allow create, update: if isAdmin() && isValidAirportService(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /packages/{packageId} {
+      // Public read for package selection wizard
+      allow read: if true;
+
+      // Admin-only management
+      allow create, update: if isAdmin() && isValidPackage(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // 4. promo_codes: Promotional coupons & discounts
+    // ---------------------------------------------------------------
+    match /promo_codes/{codeId} {
+      // Public read for coupon code verification during checkout
+      allow read: if true;
+
+      // Admin-only write and campaign configuration
+      allow create, update: if isAdmin() && isValidPromoCode(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // 5. staff_roster: Protocol officers & greeters
+    // ---------------------------------------------------------------
+    match /staff_roster/{staffId} {
+      // Authenticated users can read roster (for officer profiles, badges, assignment)
+      allow read: if isAuthenticated();
+
+      // Admin can create new staff roster entries
+      allow create: if isAdmin() && isValidStaffMember(request.resource.data);
+
+      // Updates:
+      // - Admin can update any staff record
+      // - Staff member can update their own GPS location and heartbeat timestamp
+      allow update: if (isAdmin() && isValidStaffMember(request.resource.data)) ||
+                       isStaffLocationUpdate(staffId);
+
+      // Admin only delete
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // 6. notifications: User inbox & system alerts
+    // ---------------------------------------------------------------
+    match /notifications/{notificationId} {
+      // Target user or manager can read
+      allow read: if isManager() || (isAuthenticated() && resource.data.targetUserId == request.auth.uid);
+
+      // Admin and server functions can create notifications
+      allow create: if isManager() && isValidNotification(request.resource.data);
+
+      // Updates:
+      // - Manager can modify notifications
+      // - Target user can only mark their notification as read
+      allow update: if (isManager() && isValidNotification(request.resource.data)) ||
+        (
+          isAuthenticated() &&
+          resource.data.targetUserId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt', 'updatedAt']) &&
+          request.resource.data.read is bool &&
+          (!('readAt' in request.resource.data) || isValidTimestampOrString(request.resource.data.readAt)) &&
+          (!('updatedAt' in request.resource.data) || isValidTimestampOrString(request.resource.data.updatedAt))
+        );
+
+      // Target user or manager can dismiss/delete notifications
+      allow delete: if isManager() || (isAuthenticated() && resource.data.targetUserId == request.auth.uid);
+    }
+
+    // ---------------------------------------------------------------
+    // 7. managed_airports: Airport operational hubs
+    // ---------------------------------------------------------------
+    match /managed_airports/{airportCode} {
+      allow read: if true;
+      allow write: if isManager();
+    }
+
+    // ---------------------------------------------------------------
+    // 8. admin_users: Secured Administrative Credentials
+    // Zero public read: Direct access strictly denied to unauthenticated clients
+    // ---------------------------------------------------------------
+    match /admin_users/{userId} {
+      allow write: if false;
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.token.email == userId);
+    }
+
+    // ---------------------------------------------------------------
+    // 9. settings: Platform & Gateway settings
+    // ---------------------------------------------------------------
+    match /settings/{settingId} {
+      allow read: if isManager();
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // Default Deny: All other paths are locked by default
+    // ---------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# Secure Payment Directory Rules
+<Files "config.php">
+  Order allow,deny
+  Deny from all
+</Files>
+
+<FilesMatch "\.(log|json)$">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+
+Options -Indexes
+

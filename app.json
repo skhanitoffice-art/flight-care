@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "FlightCare",
+    "slug": "flightcare",
+    "owner": "afmshamsulhaque",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#071A2E"
+    },
+    "ios": {
+      "bundleIdentifier": "com.nevrik.flightcare",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.nevrik.flightcare",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#071A2E"
+      }
+    },
+    "web": {
+      "favicon": "./assets/logo.png",
+      "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0f343ac3-1f8e-44bb-b889-87a9bf9bb452"
+      }
+    }
+  }
+}

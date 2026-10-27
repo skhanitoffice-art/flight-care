@@ -1,0 +1,25 @@
+# Native folders (let Expo EAS build clean native code from app.json)
+android
+ios
+
+# Dependencies and caches
+node_modules
+.expo
+.gradle
+scratch
+web
+
+# Web distribution & large archives
+dist
+build
+*.zip
+*.apk
+*.aab
+*.ipa
+FlightCare.apk
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
