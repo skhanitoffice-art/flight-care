@@ -1935,52 +1935,6 @@ export default function ProfileScreen({
 
         {authView === 'login' && (
           <>
-            {/* Quick 1-Click "Log in with Gmail" Card */}
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={handleOpenGmailModal}
-              style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: 12,
-                paddingVertical: 12,
-                paddingHorizontal: 16,
-                borderWidth: 1.5,
-                borderColor: '#EA4335',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                marginBottom: 14,
-                shadowColor: '#EA4335',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.12,
-                shadowRadius: 4,
-                elevation: 2,
-              }}
-            >
-              <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: '#FEF2F2', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 14 }}>🔴</Text>
-              </View>
-              <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#B91C1C' }}>
-                {lang ? 'Google / Gmail দিয়ে ১-ক্লিকে সাইন ইন' : 'Log in with Gmail (1-Click)'}
-              </Text>
-              <View style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#DC2626' }}>
-                  {lang ? 'সহজ ১-ক্লিক' : '1-Click'}
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-              <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
-              <Text style={{ marginHorizontal: 10, fontSize: 11, fontWeight: '700', color: '#94A3B8' }}>
-                {authMode === 'gmail'
-                  ? (lang ? 'অথবা জিমেইল ও পাসওয়ার্ড দিয়ে' : 'OR WITH GMAIL & PASSWORD')
-                  : (lang ? 'অথবা মোবাইল নম্বর ও পাসওয়ার্ড দিয়ে' : 'OR WITH MOBILE & PASSWORD')}
-              </Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
-            </View>
-
             {authMode === 'gmail'
               ? field('identifier', lang ? 'আপনার জিমেইল ঠিকানা (user@gmail.com)' : 'Your Gmail (user@gmail.com)', { first: false, autoCapitalize: 'none', keyboardType: 'email-address' })
               : field('identifier', lang ? 'আপনার মোবাইল নম্বর (যেমন: 017XXXXXXXX)' : 'Your Mobile Number (e.g. 017XXXXXXXX)', { first: false, keyboardType: 'phone-pad' })
@@ -2059,52 +2013,6 @@ export default function ProfileScreen({
 
         {authView === 'register' && (
           <>
-            {/* Quick 1-Click "Log in with Gmail" Card */}
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={handleOpenGmailModal}
-              style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: 12,
-                paddingVertical: 12,
-                paddingHorizontal: 16,
-                borderWidth: 1.5,
-                borderColor: '#EA4335',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                marginBottom: 14,
-                shadowColor: '#EA4335',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.12,
-                shadowRadius: 4,
-                elevation: 2,
-              }}
-            >
-              <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: '#FEF2F2', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 14 }}>🔴</Text>
-              </View>
-              <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#B91C1C' }}>
-                {lang ? 'Google / Gmail দিয়ে ১-ক্লিকে সাইন আপ' : 'Sign up with Gmail (1-Click)'}
-              </Text>
-              <View style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#DC2626' }}>
-                  {lang ? 'সহজ ১-ক্লিক' : '1-Click'}
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-              <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
-              <Text style={{ marginHorizontal: 10, fontSize: 11, fontWeight: '700', color: '#94A3B8' }}>
-                {authMode === 'gmail'
-                  ? (lang ? 'অথবা জিমেইল দিয়ে অ্যাকাউন্ট খুলুন' : 'OR REGISTER WITH GMAIL')
-                  : (lang ? 'অথবা মোবাইল দিয়ে অ্যাকাউন্ট খুলুন' : 'OR REGISTER WITH MOBILE')}
-              </Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
-            </View>
-
             {field('name', t('name'), { first: false })}
             {authMode === 'gmail' ? (
               <>
