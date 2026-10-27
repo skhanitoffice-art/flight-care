@@ -19,7 +19,56 @@ export const DUAL_VAULT_KEYS = {
   MODE: '@flightcare_dual_vault_mode',
   SHOWCASE_IDS: '@flightcare_showcase_booking_ids',
   PIN_HASH: '@flightcare_master_vault_pin_hash',
+  EXCEL_CONFIG: '@flightcare_dual_vault_excel_config',
 };
+
+// Default Excel 1 (Auditor) stealth configuration
+export const DEFAULT_EXCEL_CONFIG = {
+  omitServiceColumns: true,         // Removes 'Package' and 'Service' columns completely from 1st Excel sheet
+  excludeVipFromExcel1: true,       // Excludes VIP First Class services from 1st Excel sheet
+  excludeBusinessFromExcel1: false, // Excludes Business Protocol from 1st Excel sheet
+  maskServicesInExcel1: false,      // If columns are kept, masks name to 'Airport Concierge'
+};
+
+let _cachedExcelConfig = null;
+
+/**
+ * Get current 1st Excel stealth configuration
+ */
+export async function getAuditorExcelConfig() {
+  if (_cachedExcelConfig !== null) {
+    return _cachedExcelConfig;
+  }
+  try {
+    const raw = await AsyncStorage.getItem(DUAL_VAULT_KEYS.EXCEL_CONFIG);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        _cachedExcelConfig = { ...DEFAULT_EXCEL_CONFIG, ...parsed };
+        return _cachedExcelConfig;
+      }
+    }
+  } catch (e) {
+    console.warn('[DualVault] Error reading excel config:', e);
+  }
+  _cachedExcelConfig = { ...DEFAULT_EXCEL_CONFIG };
+  return _cachedExcelConfig;
+}
+
+/**
+ * Save new 1st Excel stealth configuration
+ */
+export async function setAuditorExcelConfig(updates = {}) {
+  const current = await getAuditorExcelConfig();
+  const nextConfig = { ...current, ...updates };
+  _cachedExcelConfig = nextConfig;
+  try {
+    await AsyncStorage.setItem(DUAL_VAULT_KEYS.EXCEL_CONFIG, JSON.stringify(nextConfig));
+  } catch (e) {
+    console.warn('[DualVault] Error saving excel config:', e);
+  }
+  return nextConfig;
+}
 
 // Default Master Vault PIN: '7860'
 const DEFAULT_PIN_HASH = '2e92b97cf20e7af7247dce07c22579b60892247c33ce3456edc1af19f26954eb';
@@ -178,12 +227,40 @@ function escapeCsv(val) {
 
 /**
  * Export Dual-Vault Bookings to CSV/Excel
- * - mode === 'auditor': Exports ONLY the showcase bookings (clean, non-suspicious filename)
- * - mode === 'master': Exports 100% of all master database bookings
+ * - mode === 'auditor': Exports ONLY the showcase bookings with stealth service stripping if configured
+ * - mode === 'master': Exports 100% of all master database bookings with ALL services and ALL columns intact!
  */
-export function exportDualVaultBookingsCsv(bookings = [], mode = 'auditor') {
+export function exportDualVaultBookingsCsv(bookings = [], mode = 'auditor', customOptions = {}) {
   const isMaster = mode === 'master';
-  const headers = [
+
+  // Master mode NEVER strips or removes anything - keeps 100% of all records and columns
+  const effectiveConfig = isMaster
+    ? { omitServiceColumns: false, excludeVipFromExcel1: false, excludeBusinessFromExcel1: false, maskServicesInExcel1: false }
+    : { ...(_cachedExcelConfig || DEFAULT_EXCEL_CONFIG), ...customOptions };
+
+  // Filter bookings for Auditor Mode if specific services are to be stripped
+  let targetList = [...(bookings || [])];
+  if (!isMaster) {
+    targetList = targetList.filter(b => {
+      // If booking was explicitly marked to be excluded from 1st Excel
+      if (b.excludeFromAuditorExcel === true || b.includeInAuditor === false) {
+        return false;
+      }
+      const pkg = String(b.package || b.pkg?.t || '').toLowerCase();
+      const svc = String(b.service || b.svc?.titleEn || '').toLowerCase();
+
+      if (effectiveConfig.excludeVipFromExcel1 && (pkg.includes('vip') || pkg.includes('first') || svc.includes('vip'))) {
+        return false;
+      }
+      if (effectiveConfig.excludeBusinessFromExcel1 && (pkg.includes('business') || pkg.includes('premium') || svc.includes('business'))) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  // Base headers
+  let headers = [
     'Booking ID',
     'Passenger Name',
     'Phone',
@@ -193,37 +270,59 @@ export function exportDualVaultBookingsCsv(bookings = [], mode = 'auditor') {
     'Flight Number',
     'Flight Date',
     'Flight Time',
-    'Package',
-    'Service',
+  ];
+
+  // In 1st Excel, if omitServiceColumns is active, completely omit 'Package' & 'Service'!
+  const shouldOmitServiceCols = !isMaster && effectiveConfig.omitServiceColumns;
+  if (!shouldOmitServiceCols) {
+    headers.push('Package', 'Service');
+  }
+
+  headers.push(
     'Passengers',
     'Total Amount (BDT)',
     'Payment Status',
     'Payment Method',
     'Status',
     'Assigned Staff',
-    'Remarks',
-  ];
+    'Remarks'
+  );
 
-  const rows = (bookings || []).map(b => [
-    escapeCsv(b.id || b.bookingId),
-    escapeCsv(b.customer || b.passengerName || b.name),
-    escapeCsv(b.phone || b.passengerPhone),
-    escapeCsv(b.email),
-    escapeCsv(b.airport?.code || b.airport),
-    escapeCsv(b.direction || b.dir),
-    escapeCsv(b.fno || b.flight?.number),
-    escapeCsv(b.date || b.flight?.date),
-    escapeCsv(b.time || b.flight?.time),
-    escapeCsv(b.package || b.pkg?.t),
-    escapeCsv(b.service || b.svc?.titleEn),
-    escapeCsv(b.passengers || b.a || 1),
-    escapeCsv(b.amount || 0),
-    escapeCsv(b.paymentStatus || 'paid'),
-    escapeCsv(b.paymentMethod || b.method),
-    escapeCsv(b.status || 'upcoming'),
-    escapeCsv(b.staff || b.leadStaffName || 'Unassigned'),
-    escapeCsv(b.remarks || ''),
-  ]);
+  const rows = targetList.map(b => {
+    const row = [
+      escapeCsv(b.id || b.bookingId),
+      escapeCsv(b.customer || b.passengerName || b.name),
+      escapeCsv(b.phone || b.passengerPhone),
+      escapeCsv(b.email),
+      escapeCsv(b.airport?.code || b.airport),
+      escapeCsv(b.direction || b.dir),
+      escapeCsv(b.fno || b.flight?.number),
+      escapeCsv(b.date || b.flight?.date),
+      escapeCsv(b.time || b.flight?.time),
+    ];
+
+    if (!shouldOmitServiceCols) {
+      let pkgVal = b.package || b.pkg?.t || 'Standard Economy Protocol';
+      let svcVal = b.service || b.svc?.titleEn || 'Airport Meet & Greet';
+      if (!isMaster && effectiveConfig.maskServicesInExcel1) {
+        pkgVal = 'Standard Protocol';
+        svcVal = 'Airport Assistance';
+      }
+      row.push(escapeCsv(pkgVal), escapeCsv(svcVal));
+    }
+
+    row.push(
+      escapeCsv(b.passengers || b.a || 1),
+      escapeCsv(b.amount || 0),
+      escapeCsv(b.paymentStatus || 'paid'),
+      escapeCsv(b.paymentMethod || b.method),
+      escapeCsv(b.status || 'upcoming'),
+      escapeCsv(b.staff || b.leadStaffName || 'Unassigned'),
+      escapeCsv(b.remarks || '')
+    );
+
+    return row;
+  });
 
   const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
   const now = new Date();
@@ -236,8 +335,9 @@ export function exportDualVaultBookingsCsv(bookings = [], mode = 'auditor') {
   return {
     success: true,
     filename,
-    count: bookings.length,
+    count: targetList.length,
     isMaster,
+    servicesOmitted: shouldOmitServiceCols,
   };
 }
 
@@ -302,4 +402,7 @@ export default {
   filterBookingsByVaultMode,
   exportDualVaultBookingsCsv,
   registerVaultTriggerClick,
+  getAuditorExcelConfig,
+  setAuditorExcelConfig,
+  DEFAULT_EXCEL_CONFIG,
 };

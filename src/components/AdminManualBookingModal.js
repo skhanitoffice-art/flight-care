@@ -124,6 +124,7 @@ export default function AdminManualBookingModal({
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [isManualPriceOverride, setIsManualPriceOverride] = useState(false);
   const [overridePriceInput, setOverridePriceInput] = useState('');
+  const [excludeFromFirstExcel, setExcludeFromFirstExcel] = useState(false);
 
   // Staff Assignment
   const effectiveStaffRoster = useMemo(() => {
@@ -429,6 +430,7 @@ export default function AdminManualBookingModal({
       staffNotes: staffInstructions.trim() || '',
       remarks: remarks.trim() || '',
       isOfflineManual: true,
+      excludeFromAuditorExcel: excludeFromFirstExcel,
       source: source,
       sourceLabel: OFFLINE_BOOKING_SOURCES.find(s => s.id === source)?.[isBn ? 'labelBn' : 'labelEn'] || 'Offline Manual',
       enteredBy: {
@@ -1324,6 +1326,54 @@ export default function AdminManualBookingModal({
                       </TouchableOpacity>
                     );
                   })}
+                </View>
+
+                {/* Secret 1st Excel Visibility Toggle */}
+                <View
+                  style={{
+                    backgroundColor: excludeFromFirstExcel ? '#FFF1F2' : '#F0FDF4',
+                    borderRadius: 12,
+                    padding: 12,
+                    borderWidth: 1.5,
+                    borderColor: excludeFromFirstExcel ? '#FECDD3' : '#BBF7D0',
+                    marginTop: 4,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 230 }}>
+                      <Text style={{ fontSize: 16 }}>{excludeFromFirstExcel ? '🙈' : '🛡️'}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 12.5, fontWeight: '800', color: excludeFromFirstExcel ? '#BE123C' : '#15803D' }}>
+                          {isBn ? '১ম এক্সেলশীট হতে এই সার্ভিসটি সরিয়ে রাখবেন?' : 'Remove this service from 1st Excel?'}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: excludeFromFirstExcel ? '#E11D48' : '#166534', marginTop: 1 }}>
+                          {isBn
+                            ? (excludeFromFirstExcel
+                                ? '✓ এই সার্ভিসটি ১ম এক্সেল হতে গোপনে বাদ থাকবে। ২য় এক্সেলে ১০০% অক্ষত থাকবে।'
+                                : 'এই সার্ভিসটি ১ম এক্সেলেও দেখানো হবে।')
+                            : (excludeFromFirstExcel
+                                ? '✓ Hidden from 1st Excel. Preserved 100% in 2nd Master Excel.'
+                                : 'Will appear in 1st Excel.')}
+                        </Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setExcludeFromFirstExcel(!excludeFromFirstExcel)}
+                      activeOpacity={0.8}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 8,
+                        backgroundColor: excludeFromFirstExcel ? '#E11D48' : '#16A34A',
+                      }}
+                    >
+                      <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF' }}>
+                        {excludeFromFirstExcel
+                          ? (isBn ? '🔒 ১ম এক্সেল হতে সরানো' : '🔒 Excluded from Excel 1')
+                          : (isBn ? '✓ ১ম এক্সেলে দৃশ্যমান' : '✓ Visible in Excel 1')}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {/* Add-ons Checklist */}
