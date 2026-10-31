@@ -13,14 +13,14 @@ import {
 export const PLACARD_STORAGE_KEY = 'flightcare_placard_history_v1';
 export const FIRESTORE_COLLECTION_PLACARDS = 'placard_history';
 
-// Sample baseline history for realistic initial showcase
+// Sample baseline history with exact reference structure matching HSIA operational placards
 const INITIAL_SAMPLE_PLACARDS = [
   {
     id: 'PLC-1730370000001',
-    passengerName: 'MR. ANISUR RAHMAN',
-    serviceDate: '31 OCT 2026',
-    rawDate: '2026-10-31',
-    flightNumber: 'BG 084',
+    passengerName: 'MR. ISHAUJHYAODS',
+    serviceDate: '29-10-2026',
+    rawDate: '2026-10-29',
+    flightNumber: 'XY-312',
     createdBy: {
       id: 'mgr_sonia',
       name: 'Sonia Akter',
@@ -28,15 +28,15 @@ const INITIAL_SAMPLE_PLACARDS = [
       role: 'manager',
       roleTitle: 'Operations Manager',
     },
-    createdAt: '2026-10-31T09:15:00.000Z',
-    createdAtFormatted: '31 Oct 2026, 09:15 AM',
+    createdAt: '2026-10-29T10:15:00.000Z',
+    createdAtFormatted: '29 Oct 2026, 10:15 AM',
   },
   {
     id: 'PLC-1730362800002',
     passengerName: 'DR. MD. KAMAL UDDIN',
-    serviceDate: '31 OCT 2026',
+    serviceDate: '31-10-2026',
     rawDate: '2026-10-31',
-    flightNumber: 'EK 582',
+    flightNumber: 'EK-582',
     createdBy: {
       id: 'admin_user',
       name: 'Super Admin',
@@ -49,10 +49,10 @@ const INITIAL_SAMPLE_PLACARDS = [
   },
   {
     id: 'PLC-1730276400003',
-    passengerName: 'BEGUM ROKEYA SULTANA',
-    serviceDate: '30 OCT 2026',
-    rawDate: '2026-10-30',
-    flightNumber: 'QR 638',
+    passengerName: 'MR. ANISUR RAHMAN',
+    serviceDate: '31-10-2026',
+    rawDate: '2026-10-31',
+    flightNumber: 'BG-084',
     createdBy: {
       id: 'mgr_sonia',
       name: 'Sonia Akter',
@@ -60,8 +60,8 @@ const INITIAL_SAMPLE_PLACARDS = [
       role: 'manager',
       roleTitle: 'Operations Manager',
     },
-    createdAt: '2026-10-30T15:40:00.000Z',
-    createdAtFormatted: '30 Oct 2026, 03:40 PM',
+    createdAt: '2026-10-31T09:15:00.000Z',
+    createdAtFormatted: '31 Oct 2026, 09:15 AM',
   },
 ];
 
@@ -88,35 +88,54 @@ export function formatPlacardName(rawName) {
 }
 
 /**
- * Format flight number to clean uppercase
+ * Format flight number to clean uppercase (e.g. XY-312, BG-084)
  */
 export function formatPlacardFlight(rawFlight) {
-  if (!rawFlight || typeof rawFlight !== 'string') return 'VIP ESCORT';
+  if (!rawFlight || typeof rawFlight !== 'string') return 'XY-312';
   const clean = rawFlight.replace(/^FLIGHT[:\s]*/i, '').trim().toUpperCase();
-  return clean || 'VIP ESCORT';
+  return clean || 'XY-312';
 }
 
 /**
- * Format service date to e.g. "31 OCT 2026"
+ * Format service date to exact DD-MM-YYYY (e.g. "29-10-2026") matching official reference
  */
 export function formatPlacardDate(rawDate) {
   if (!rawDate) {
     const today = new Date();
     const day = String(today.getDate()).padStart(2, '0');
-    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    return `${day} ${months[today.getMonth()]} ${today.getFullYear()}`;
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    return `${day}-${mm}-${today.getFullYear()}`;
+  }
+
+  const str = String(rawDate).trim();
+
+  // If already in DD-MM-YYYY format
+  if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
+    return str;
+  }
+
+  // If in YYYY-MM-DD format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const parts = str.split('-');
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+
+  // If in DD/MM/YYYY format
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
+    const parts = str.split('/');
+    return `${parts[0]}-${parts[1]}-${parts[2]}`;
   }
 
   try {
     const d = new Date(rawDate);
     if (!isNaN(d.getTime())) {
       const day = String(d.getDate()).padStart(2, '0');
-      const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-      return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      return `${day}-${mm}-${d.getFullYear()}`;
     }
-    return String(rawDate).toUpperCase();
+    return str;
   } catch {
-    return String(rawDate).toUpperCase();
+    return str;
   }
 }
 
@@ -160,15 +179,13 @@ export async function getPlacardHistory() {
       await AsyncStorage.setItem(PLACARD_STORAGE_KEY, JSON.stringify(list));
     }
 
-    // Attempt background sync from Firestore if connected
+    // Background sync from Firestore if connected
     if (isFirebaseConfigured()) {
       getFirestoreCollection(FIRESTORE_COLLECTION_PLACARDS)
         .then(async remoteItems => {
           if (Array.isArray(remoteItems) && remoteItems.length > 0) {
             const map = new Map();
-            // Local items first
             list.forEach(item => { if (item.id) map.set(item.id, item); });
-            // Merge remote items
             remoteItems.forEach(item => { if (item.id) map.set(item.id, item); });
             const merged = Array.from(map.values()).sort(
               (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
@@ -179,7 +196,6 @@ export async function getPlacardHistory() {
         .catch(() => {});
     }
 
-    // Sort descending by creation date
     return list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   } catch (err) {
     console.warn('[placardService] getPlacardHistory error:', err?.message);
@@ -230,7 +246,6 @@ export async function savePlacardRecord({
 
     await AsyncStorage.setItem(PLACARD_STORAGE_KEY, JSON.stringify(updatedList));
 
-    // Async save to Cloud Firestore
     if (isFirebaseConfigured()) {
       saveFirestoreDoc(FIRESTORE_COLLECTION_PLACARDS, newRecord.id, newRecord).catch(() => {});
     }
@@ -309,7 +324,8 @@ export function exportPlacardHistoryCsv(records = [], lang = 0) {
 }
 
 /**
- * High-Resolution HTML5 Canvas Placard Generator & Image Downloader (1024x724 A4)
+ * Pixel-Perfect High-Resolution HTML5 Canvas Placard Generator & Image Downloader (1024x724 A4)
+ * Matching reference image: MR. ISHAUJHYAODS, FLIGHT: XY-312, DATE: 29-10-2026
  */
 export function downloadPlacardImage({
   passengerName,
@@ -334,67 +350,69 @@ export function downloadPlacardImage({
     img.src = '/placard_template.png';
 
     const renderCanvas = () => {
+      // 1. Draw Template Artwork
       ctx.drawImage(img, 0, 0, 1024, 724);
 
-      // 1. Draw Passenger Name (Auto scaled bold condensed typography)
-      ctx.fillStyle = '#032B14';
-      let canvasNameSize = 138;
+      // 2. Draw Passenger Name (Matching reference exact style: dark forest green #012B14, Impact font)
+      ctx.fillStyle = '#012B14';
+      let canvasNameSize = 128;
       ctx.font = `900 ${canvasNameSize}px 'Impact', 'Montserrat', 'Arial Black', sans-serif`;
       const maxNameWidth = 940;
       const measuredW = ctx.measureText(formattedName).width;
       if (measuredW > maxNameWidth) {
         canvasNameSize = Math.floor(canvasNameSize * (maxNameWidth / measuredW));
       }
-      canvasNameSize = Math.max(50, canvasNameSize);
+      canvasNameSize = Math.max(48, canvasNameSize);
       ctx.font = `900 ${canvasNameSize}px 'Impact', 'Montserrat', 'Arial Black', sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(formattedName, 512, 382);
+      ctx.fillText(formattedName, 512, 380);
 
-      // 2. Center Gold Divider Bar
+      // 3. Center Gold Vertical Divider Bar at x=511, y=460..514
       ctx.fillStyle = '#CAA048';
-      ctx.fillRect(511, 458, 2, 54);
+      ctx.fillRect(511, 460, 2, 54);
 
-      // 3. Airplane Icon + FLIGHT
+      // 4. Airplane Icon + FLIGHT text (Exact positions from reference image)
       const planeImg = new window.Image();
       planeImg.crossOrigin = 'anonymous';
       planeImg.src = '/placard_plane_icon.png';
 
-      // Calendar Icon + DATE
+      // 5. Calendar Icon + DATE text (Exact positions from reference image)
       const calImg = new window.Image();
       calImg.crossOrigin = 'anonymous';
       calImg.src = '/placard_cal_icon.png';
 
       const drawFinal = () => {
-        // Plane & Flight
+        // Airplane icon at x=217, y=467, w=42, h=31
         try {
-          ctx.drawImage(planeImg, 215, 465, 46, 36);
+          ctx.drawImage(planeImg, 217, 467, 42, 31);
         } catch {}
         ctx.textAlign = 'left';
-        ctx.fillStyle = '#052E1B';
-        ctx.font = `800 13px sans-serif`;
-        ctx.fillText('FLIGHT:', 275, 466);
-        ctx.fillStyle = '#032B14';
-        ctx.font = `900 30px 'Impact', 'Arial Black', 'Montserrat', sans-serif`;
-        ctx.fillText(cleanFlight, 275, 502);
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = '#012B14';
+        ctx.font = `800 12px sans-serif`;
+        ctx.fillText('FLIGHT:', 275, 470);
+        ctx.font = `900 30px 'Impact', 'Arial Black', sans-serif`;
+        ctx.fillText(cleanFlight, 275, 508);
 
-        // Calendar & Date
+        // Calendar icon at x=537, y=465, w=30, h=34
         try {
-          ctx.drawImage(calImg, 535, 463, 34, 38);
+          ctx.drawImage(calImg, 537, 465, 30, 34);
         } catch {}
         ctx.textAlign = 'left';
-        ctx.fillStyle = '#052E1B';
-        ctx.font = `800 13px sans-serif`;
-        ctx.fillText('DATE:', 585, 466);
-        ctx.fillStyle = '#032B14';
-        ctx.font = `900 29px 'Impact', 'Arial Black', 'Montserrat', sans-serif`;
-        ctx.fillText(formattedDate, 585, 502);
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = '#012B14';
+        ctx.font = `800 12px sans-serif`;
+        ctx.fillText('DATE:', 586, 470);
+        ctx.font = `900 30px 'Impact', 'Arial Black', sans-serif`;
+        ctx.fillText(formattedDate, 586, 508);
 
-        // Download PNG
+        // Export high-res PNG download
         const dataUrl = canvas.toDataURL('image/png');
         const link = document.createElement('a');
         const safeName = formattedName.replace(/[^a-zA-Z0-9]/g, '_');
-        link.download = `FlightCare_Placard_${cleanFlight}_${safeName}.png`;
+        const safeFlight = cleanFlight.replace(/[^a-zA-Z0-9]/g, '_');
+        link.download = `FlightCare_Placard_${safeFlight}_${safeName}.png`;
         link.href = dataUrl;
         document.body.appendChild(link);
         link.click();
@@ -428,6 +446,7 @@ export function downloadPlacardImage({
 
 /**
  * Direct High-Resolution Print Window with CSS A4 Landscape
+ * Matching exact dimensions and positioning from reference artwork
  */
 export function printPlacardDirect({
   passengerName,
@@ -481,24 +500,24 @@ export function printPlacardDirect({
           }
           .name-overlay {
             position: absolute;
-            top: 52.8%;
-            left: 3%;
-            width: 94%;
+            top: 52.5%;
+            left: 4%;
+            width: 92%;
             text-align: center;
             transform: translateY(-50%);
             font-family: 'Impact', 'Montserrat', 'Arial Black', sans-serif;
-            font-size: ${formattedName.length > 25 ? '78px' : formattedName.length > 20 ? '96px' : formattedName.length > 15 ? '116px' : '138px'};
+            font-size: ${formattedName.length > 25 ? '76px' : formattedName.length > 20 ? '94px' : formattedName.length > 15 ? '112px' : '128px'};
             font-weight: 900;
-            color: #032B14;
-            letter-spacing: 1.5px;
+            color: #012B14;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
             white-space: nowrap;
           }
           .flight-date-overlay {
             position: absolute;
-            top: 67%;
-            left: 6%;
-            width: 88%;
+            top: 67.2%;
+            left: 5%;
+            width: 90%;
             transform: translateY(-50%);
             display: flex;
             align-items: center;
@@ -509,8 +528,14 @@ export function printPlacardDirect({
             align-items: center;
             gap: 12px;
           }
-          .info-icon {
-            height: 38px;
+          .plane-icon {
+            width: 42px;
+            height: 31px;
+            object-fit: contain;
+          }
+          .cal-icon {
+            width: 30px;
+            height: 34px;
             object-fit: contain;
           }
           .info-text {
@@ -520,23 +545,24 @@ export function printPlacardDirect({
           }
           .info-label {
             font-family: sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 800;
-            color: #052E1B;
-            letter-spacing: 0.8px;
+            color: #012B14;
+            line-height: 1.1;
           }
           .info-val {
-            font-family: 'Impact', 'Arial Black', 'Montserrat', sans-serif;
-            font-size: 30px;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            font-size: 29px;
             font-weight: 900;
-            color: #032B14;
+            color: #012B14;
+            line-height: 1.1;
             letter-spacing: 0.5px;
           }
           .gold-divider-bar {
             width: 2px;
-            height: 48px;
+            height: 52px;
             background-color: #CAA048;
-            margin: 0 24px;
+            margin: 0 32px;
           }
         </style>
       </head>
@@ -546,7 +572,7 @@ export function printPlacardDirect({
           <div class="name-overlay">${formattedName}</div>
           <div class="flight-date-overlay">
             <div class="info-group">
-              <img src="/placard_plane_icon.png" class="info-icon" />
+              <img src="/placard_plane_icon.png" class="info-icon plane-icon" />
               <div class="info-text">
                 <span class="info-label">FLIGHT:</span>
                 <span class="info-val">${cleanFlight}</span>
@@ -554,7 +580,7 @@ export function printPlacardDirect({
             </div>
             <div class="gold-divider-bar"></div>
             <div class="info-group">
-              <img src="/placard_cal_icon.png" class="info-icon" />
+              <img src="/placard_cal_icon.png" class="info-icon cal-icon" />
               <div class="info-text">
                 <span class="info-label">DATE:</span>
                 <span class="info-val">${formattedDate}</span>

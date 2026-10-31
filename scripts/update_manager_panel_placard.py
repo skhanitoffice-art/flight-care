@@ -225,3 +225,4 @@ with open('src/screens/ManagerPanel.js', 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("Update completed!")
+

@@ -1,3 +1,4 @@
+import { formatPlacardDate } from '../services/placardService';
 // src/components/VipPlacardModal.js
 // Flight Care Enterprise - VIP Airport Protocol Placard / Greeter Nameboard Modal
 
@@ -53,25 +54,9 @@ export default function VipPlacardModal({
   const rawFlight = booking.flight?.number || booking.flightNumber || booking.fno || 'EK 582';
   const cleanFlight = String(rawFlight).replace(/^FLIGHT[:\s]*/i, '').trim().toUpperCase();
 
-  // 3. Extract and Format Service Date (e.g. 25 OCT 2026)
+  // 3. Extract and Format Service Date (Exact DD-MM-YYYY e.g. 29-10-2026)
   const rawDate = booking.flightDate || booking.serviceDate || booking.date || booking.flight_date || '';
-  let formattedDate = '25 OCT 2026';
-  if (rawDate) {
-    try {
-      const d = new Date(rawDate);
-      if (!isNaN(d.getTime())) {
-        const day = String(d.getDate()).padStart(2, '0');
-        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-        const mon = months[d.getMonth()];
-        const yr = d.getFullYear();
-        formattedDate = `${day} ${mon} ${yr}`;
-      } else {
-        formattedDate = String(rawDate).toUpperCase();
-      }
-    } catch {
-      formattedDate = String(rawDate).toUpperCase();
-    }
-  }
+  const formattedDate = formatPlacardDate(rawDate);
 
   // Responsive Placard Sizing
   const isMobile = windowWidth < 768;
@@ -116,7 +101,7 @@ export default function VipPlacardModal({
           ctx.drawImage(img, 0, 0, 1024, 724);
 
           // 1. Draw Passenger Name - Maximum Large Scale matching reference design
-          ctx.fillStyle = '#032B14';
+          ctx.fillStyle = '#012B14';
           let canvasNameSize = 138;
           ctx.font = `900 ${canvasNameSize}px 'Impact', 'Montserrat', 'Arial Black', sans-serif`;
           const maxNameWidth = 940;
@@ -149,10 +134,10 @@ export default function VipPlacardModal({
               ctx.drawImage(planeImg, 215, 465, 46, 36);
             } catch {}
             ctx.textAlign = 'left';
-            ctx.fillStyle = '#052E1B';
+            ctx.fillStyle = '#012B14';
             ctx.font = `800 13px sans-serif`;
             ctx.fillText('FLIGHT:', 275, 466);
-            ctx.fillStyle = '#032B14';
+            ctx.fillStyle = '#012B14';
             ctx.font = `900 30px 'Impact', 'Arial Black', 'Montserrat', sans-serif`;
             ctx.fillText(cleanFlight, 275, 502);
 
@@ -161,10 +146,10 @@ export default function VipPlacardModal({
               ctx.drawImage(calImg, 535, 463, 34, 38);
             } catch {}
             ctx.textAlign = 'left';
-            ctx.fillStyle = '#052E1B';
+            ctx.fillStyle = '#012B14';
             ctx.font = `800 13px sans-serif`;
             ctx.fillText('DATE:', 585, 466);
-            ctx.fillStyle = '#032B14';
+            ctx.fillStyle = '#012B14';
             ctx.font = `900 29px 'Impact', 'Arial Black', 'Montserrat', sans-serif`;
             ctx.fillText(formattedDate, 585, 502);
 
@@ -257,7 +242,7 @@ export default function VipPlacardModal({
                 font-family: 'Impact', 'Montserrat', 'Arial Black', sans-serif;
                 font-size: ${formattedName.length > 25 ? '78px' : formattedName.length > 20 ? '96px' : formattedName.length > 15 ? '116px' : '138px'};
                 font-weight: 900;
-                color: #032B14;
+                color: #012B14;
                 letter-spacing: 1.5px;
                 text-transform: uppercase;
                 white-space: nowrap;
@@ -290,14 +275,14 @@ export default function VipPlacardModal({
                 font-family: sans-serif;
                 font-size: 13px;
                 font-weight: 800;
-                color: #052E1B;
+                color: #012B14;
                 letter-spacing: 0.8px;
               }
               .info-val {
                 font-family: 'Impact', 'Arial Black', 'Montserrat', sans-serif;
                 font-size: 30px;
                 font-weight: 900;
-                color: #032B14;
+                color: #012B14;
                 letter-spacing: 0.5px;
               }
               .gold-divider-bar {
@@ -456,7 +441,7 @@ export default function VipPlacardModal({
               adjustsFontSizeToFit
               minimumFontScale={0.4}
               style={{
-                color: '#032B14',
+                color: '#012B14',
                 fontSize: nameFontSize,
                 fontWeight: '900',
                 fontFamily: Platform.select({
@@ -498,7 +483,7 @@ export default function VipPlacardModal({
               <View>
                 <Text
                   style={{
-                    color: '#052E1B',
+                    color: '#012B14',
                     fontSize: Math.max(9, Math.round(cardWidth * 0.013)),
                     fontWeight: '800',
                     letterSpacing: 0.8,
@@ -508,7 +493,7 @@ export default function VipPlacardModal({
                 </Text>
                 <Text
                   style={{
-                    color: '#032B14',
+                    color: '#012B14',
                     fontSize: Math.max(13, Math.round(cardWidth * 0.03)),
                     fontWeight: '900',
                     fontFamily: Platform.select({
@@ -546,7 +531,7 @@ export default function VipPlacardModal({
               <View>
                 <Text
                   style={{
-                    color: '#052E1B',
+                    color: '#012B14',
                     fontSize: Math.max(9, Math.round(cardWidth * 0.013)),
                     fontWeight: '800',
                     letterSpacing: 0.8,
@@ -556,7 +541,7 @@ export default function VipPlacardModal({
                 </Text>
                 <Text
                   style={{
-                    color: '#032B14',
+                    color: '#012B14',
                     fontSize: Math.max(13, Math.round(cardWidth * 0.029)),
                     fontWeight: '900',
                     fontFamily: Platform.select({

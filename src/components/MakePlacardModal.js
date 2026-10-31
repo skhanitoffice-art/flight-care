@@ -44,18 +44,18 @@ export default function MakePlacardModal({
   // Tabs: 'create' | 'history'
   const [activeTab, setActiveTab] = useState('create');
 
-  // Input states (Defaulting to today's date)
-  const getTodayIso = () => {
+  // Input states (Defaulting to today's date formatted as DD-MM-YYYY)
+  const getTodayDdmmyyyy = () => {
     const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
   };
 
   const [passengerName, setPassengerName] = useState('');
-  const [serviceDate, setServiceDate] = useState(getTodayIso());
-  const [flightNumber, setFlightNumber] = useState('VIP ESCORT');
+  const [serviceDate, setServiceDate] = useState(getTodayDdmmyyyy());
+  const [flightNumber, setFlightNumber] = useState('XY-312');
 
   // Placard History State
   const [historyList, setHistoryList] = useState([]);
@@ -70,7 +70,7 @@ export default function MakePlacardModal({
   useEffect(() => {
     if (visible) {
       loadHistory();
-      if (!serviceDate) setServiceDate(getTodayIso());
+      if (!serviceDate) setServiceDate(getTodayDdmmyyyy());
     }
   }, [visible]);
 
@@ -88,12 +88,12 @@ export default function MakePlacardModal({
 
   if (!visible) return null;
 
-  // Formatted preview values
+  // Formatted preview values matching exact official artwork
   const formattedName = formatPlacardName(passengerName || (isBn ? 'যাত্রীর নাম লিখুন' : 'ENTER PASSENGER NAME'));
   const cleanFlight = formatPlacardFlight(flightNumber);
   const formattedDate = formatPlacardDate(serviceDate);
 
-  // Responsive Placard Card Preview calculations
+  // Responsive Placard Card Preview calculations (1024 x 724 A4 landscape)
   const previewMaxWidth = isMobile ? Math.min(windowWidth - 40, 480) : 560;
   const previewMaxHeight = isMobile ? 340 : 396;
   let previewWidth = previewMaxWidth;
@@ -103,9 +103,9 @@ export default function MakePlacardModal({
     previewWidth = previewHeight * (1024 / 724);
   }
 
-  // Dynamic Font Sizing for Live Preview
+  // Dynamic Font Sizing for Live Preview (scaled from 128px base on 1024w)
   const scaleRatio = previewWidth / 1024;
-  let baseNameSize = Math.round(138 * scaleRatio);
+  let baseNameSize = Math.round(128 * scaleRatio);
   if (formattedName.length > 25) {
     baseNameSize = Math.round(baseNameSize * 0.58);
   } else if (formattedName.length > 20) {
@@ -114,12 +114,11 @@ export default function MakePlacardModal({
     baseNameSize = Math.round(baseNameSize * 0.84);
   }
   const nameFontSize = Math.max(16, baseNameSize);
-  const flightFontSize = Math.max(10, Math.min(18, Math.round(previewWidth * 0.029)));
+  const flightFontSize = Math.max(11, Math.min(18, Math.round(previewWidth * 0.029)));
 
   // Handle Quick Prefix
   const applyPrefix = (prefix) => {
     const raw = (passengerName || '').trim();
-    // remove existing known prefix
     const cleaned = raw.replace(/^(mr\.|mrs\.|ms\.|dr\.|engr\.|prof\.|begum|barrister)\s+/i, '');
     if (prefix === 'CLEAR') {
       setPassengerName(cleaned);
@@ -128,14 +127,14 @@ export default function MakePlacardModal({
     }
   };
 
-  // Handle Quick Date Chips
+  // Handle Quick Date Chips (DD-MM-YYYY)
   const applyQuickDate = (offsetDays = 0) => {
     const d = new Date();
     d.setDate(d.getDate() + offsetDays);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
-    setServiceDate(`${yyyy}-${mm}-${dd}`);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    setServiceDate(`${dd}-${mm}-${yyyy}`);
   };
 
   // Handle Generate & Save Placard
@@ -169,7 +168,6 @@ export default function MakePlacardModal({
       return;
     }
 
-    // Auto save to history on download
     await handleSaveToHistory();
 
     downloadPlacardImage({
@@ -191,7 +189,6 @@ export default function MakePlacardModal({
       return;
     }
 
-    // Auto save to history on print
     await handleSaveToHistory();
 
     printPlacardDirect({
@@ -208,8 +205,8 @@ export default function MakePlacardModal({
   // Handle Reset Form
   const handleResetForm = () => {
     setPassengerName('');
-    setServiceDate(getTodayIso());
-    setFlightNumber('VIP ESCORT');
+    setServiceDate(getTodayDdmmyyyy());
+    setFlightNumber('XY-312');
     setLastSavedId(null);
     setStatusNotice('');
   };
@@ -252,8 +249,8 @@ export default function MakePlacardModal({
   // Quick Load From History Item into Generator
   const handleLoadFromHistory = (item) => {
     setPassengerName(item.passengerName || '');
-    setFlightNumber(item.flightNumber || 'VIP ESCORT');
-    if (item.rawDate) setServiceDate(item.rawDate);
+    setFlightNumber(item.flightNumber || 'XY-312');
+    if (item.serviceDate) setServiceDate(item.serviceDate);
     setActiveTab('create');
     setStatusNotice(isBn ? `✓ ${item.passengerName} প্লেকার্ড লোড হয়েছে` : `✓ Loaded ${item.passengerName}`);
     setTimeout(() => setStatusNotice(''), 3000);
@@ -552,7 +549,7 @@ export default function MakePlacardModal({
                     <TextInput
                       value={passengerName}
                       onChangeText={setPassengerName}
-                      placeholder={isBn ? 'যেমন: MD. KAMAL HOSSAIN বা DR. RAHMAN' : 'e.g. MD. KAMAL HOSSAIN or DR. RAHMAN'}
+                      placeholder={isBn ? 'যেমন: MR. ISHAUJHYAODS বা DR. RAHMAN' : 'e.g. MR. ISHAUJHYAODS or DR. RAHMAN'}
                       placeholderTextColor="#94A3B8"
                       autoCapitalize="characters"
                       style={{
@@ -572,14 +569,14 @@ export default function MakePlacardModal({
                     </Text>
                   </View>
 
-                  {/* 2. SERVICE DATE (Required) */}
+                  {/* 2. SERVICE DATE (Required, format DD-MM-YYYY) */}
                   <View style={{ marginBottom: 14 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                       <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#1E293B' }}>
-                        📅 {isBn ? 'সার্ভিস তারিখ (Date):' : 'Service Date:'}
+                        📅 {isBn ? 'সার্ভিস তারিখ (DD-MM-YYYY):' : 'Service Date (DD-MM-YYYY):'}
                         <Text style={{ color: '#EF4444' }}> *</Text>
                       </Text>
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#0284C7' }}>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: '#012B14' }}>
                         {formattedDate}
                       </Text>
                     </View>
@@ -636,7 +633,7 @@ export default function MakePlacardModal({
                     <TextInput
                       value={serviceDate}
                       onChangeText={setServiceDate}
-                      placeholder="YYYY-MM-DD"
+                      placeholder="DD-MM-YYYY (e.g. 29-10-2026)"
                       placeholderTextColor="#94A3B8"
                       style={{
                         backgroundColor: '#FFFFFF',
@@ -659,13 +656,13 @@ export default function MakePlacardModal({
                         ✈️ {isBn ? 'ফ্লাইট নম্বর (ঐচ্ছিক):' : 'Flight Number (Optional):'}
                       </Text>
                       <Text style={{ fontSize: 11, color: '#64748B' }}>
-                        {isBn ? 'ডিফল্ট: VIP ESCORT' : 'Default: VIP ESCORT'}
+                        {isBn ? 'যেমন: XY-312, BG-084' : 'e.g. XY-312, BG-084'}
                       </Text>
                     </View>
 
                     {/* Quick Flight Chips */}
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
-                      {['BG 084', 'EK 582', 'QR 638', 'SV 804', 'VIP ESCORT'].map(f => (
+                      {['XY-312', 'BG-084', 'EK-582', 'QR-638', 'SV-804', 'VIP ESCORT'].map(f => (
                         <TouchableOpacity
                           key={f}
                           onPress={() => setFlightNumber(f)}
@@ -694,7 +691,7 @@ export default function MakePlacardModal({
                     <TextInput
                       value={flightNumber}
                       onChangeText={setFlightNumber}
-                      placeholder="e.g. BG 084 or VIP ESCORT"
+                      placeholder="e.g. XY-312 or BG-084"
                       placeholderTextColor="#94A3B8"
                       autoCapitalize="characters"
                       style={{
@@ -785,7 +782,7 @@ export default function MakePlacardModal({
                     </Text>
                   </View>
 
-                  {/* The Live Placard Card */}
+                  {/* The Live Placard Card Container */}
                   <View
                     style={{
                       width: previewWidth,
@@ -813,14 +810,14 @@ export default function MakePlacardModal({
                       resizeMode="contain"
                     />
 
-                    {/* Passenger Name Overlay */}
+                    {/* Passenger Name Overlay (Bold condensed dark green #012B14) */}
                     <View
                       style={{
                         position: 'absolute',
-                        top: '52.8%',
-                        left: '3%',
-                        right: '3%',
-                        transform: [{ translateY: -nameFontSize * 0.52 }],
+                        top: '52.5%',
+                        left: '4%',
+                        right: '4%',
+                        transform: [{ translateY: -nameFontSize * 0.5 }],
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
@@ -830,7 +827,7 @@ export default function MakePlacardModal({
                         style={{
                           fontSize: nameFontSize,
                           fontWeight: '900',
-                          color: '#032B14',
+                          color: '#012B14',
                           textAlign: 'center',
                           letterSpacing: 0.5,
                           fontFamily: Platform.OS === 'web' ? "'Impact', 'Montserrat', 'Arial Black', sans-serif" : undefined,
@@ -840,16 +837,16 @@ export default function MakePlacardModal({
                       </Text>
                     </View>
 
-                    {/* Center Gold Line */}
+                    {/* Center Gold Line at x=511, y=460..514 */}
                     <View
                       style={{
                         position: 'absolute',
-                        top: '67%',
+                        top: '67.2%',
                         left: '50%',
                         width: 2,
-                        height: Math.max(16, previewHeight * 0.08),
+                        height: Math.max(16, previewHeight * 0.075),
                         backgroundColor: '#CAA048',
-                        transform: [{ translateX: -1 }, { translateY: -Math.max(8, previewHeight * 0.04) }],
+                        transform: [{ translateX: -1 }, { translateY: -Math.max(8, previewHeight * 0.037) }],
                       }}
                     />
 
@@ -857,34 +854,34 @@ export default function MakePlacardModal({
                     <View
                       style={{
                         position: 'absolute',
-                        top: '67%',
-                        left: '6%',
-                        right: '6%',
-                        transform: [{ translateY: -flightFontSize * 0.9 }],
+                        top: '67.2%',
+                        left: '5%',
+                        right: '5%',
+                        transform: [{ translateY: -flightFontSize * 0.85 }],
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
                     >
                       {/* Left: Plane Icon + FLIGHT */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginRight: 16 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginRight: 24 }}>
                         <Image
                           source={PLACARD_PLANE_ICON}
                           style={{
-                            width: Math.max(16, previewWidth * 0.044),
-                            height: Math.max(14, previewHeight * 0.048),
+                            width: Math.max(16, previewWidth * 0.041),
+                            height: Math.max(12, previewHeight * 0.043),
                           }}
                           resizeMode="contain"
                         />
                         <View>
-                          <Text style={{ fontSize: Math.max(7, previewWidth * 0.013), fontWeight: '800', color: '#052E1B' }}>
+                          <Text style={{ fontSize: Math.max(7, previewWidth * 0.012), fontWeight: '800', color: '#012B14' }}>
                             FLIGHT:
                           </Text>
                           <Text
                             style={{
                               fontSize: flightFontSize,
                               fontWeight: '900',
-                              color: '#032B14',
+                              color: '#012B14',
                               letterSpacing: 0.3,
                               fontFamily: Platform.OS === 'web' ? "'Impact', 'Arial Black', sans-serif" : undefined,
                             }}
@@ -895,24 +892,24 @@ export default function MakePlacardModal({
                       </View>
 
                       {/* Right: Calendar Icon + DATE */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 16 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 24 }}>
                         <Image
                           source={PLACARD_CAL_ICON}
                           style={{
-                            width: Math.max(14, previewWidth * 0.034),
-                            height: Math.max(16, previewHeight * 0.052),
+                            width: Math.max(12, previewWidth * 0.029),
+                            height: Math.max(14, previewHeight * 0.047),
                           }}
                           resizeMode="contain"
                         />
                         <View>
-                          <Text style={{ fontSize: Math.max(7, previewWidth * 0.013), fontWeight: '800', color: '#052E1B' }}>
+                          <Text style={{ fontSize: Math.max(7, previewWidth * 0.012), fontWeight: '800', color: '#012B14' }}>
                             DATE:
                           </Text>
                           <Text
                             style={{
-                              fontSize: Math.max(10, Math.round(flightFontSize * 0.96)),
+                              fontSize: flightFontSize,
                               fontWeight: '900',
-                              color: '#032B14',
+                              color: '#012B14',
                               letterSpacing: 0.3,
                               fontFamily: Platform.OS === 'web' ? "'Impact', 'Arial Black', sans-serif" : undefined,
                             }}
