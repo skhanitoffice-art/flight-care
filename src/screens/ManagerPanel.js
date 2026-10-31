@@ -1421,6 +1421,7 @@ export default function ManagerPanel({
 
   // Make Placard & Super Admin Audit History Modal State
   const [showMakePlacardModal, setShowMakePlacardModal] = useState(false);
+  const [selectedPlacardBooking, setSelectedPlacardBooking] = useState(null);
   const [placardHistoryList, setPlacardHistoryList] = useState([]);
 
   useEffect(() => {
