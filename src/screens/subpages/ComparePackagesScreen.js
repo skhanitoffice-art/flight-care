@@ -32,72 +32,72 @@ export default function ComparePackagesScreen({
   const packageComparisonFeatures = [
     {
       icon: '👤',
-      name: 'Meet & Greet at Gate / Terminal (গেট স্বাগত ও গ্রহণ)',
-      nameBn: 'Meet & Greet at Gate / Terminal (গেট স্বাগত ও গ্রহণ)',
+      name: 'Meet & Greet at Gate / Terminal',
+      nameBn: 'গেট বা টার্মিনালে স্বাগত ও গ্রহণ (Meet & Greet)',
       standard: true,
       premium: true,
       vip: true,
     },
     {
       icon: '🧳',
-      name: 'Baggage Assistance & Handling (ব্যাগেজ সহায়তা)',
-      nameBn: 'Baggage Assistance & Handling (ব্যাগেজ সহায়তা)',
+      name: 'Baggage Assistance & Handling',
+      nameBn: 'ব্যাগেজ ট্রলি ও মালামাল পরিবহন সহায়তা',
       standard: true,
       premium: true,
       vip: true,
     },
     {
       icon: '👮',
-      name: 'Immigration & Customs Guidance (ইমিগ্রেশন ও কাস্টমস নির্দেশনা)',
-      nameBn: 'Immigration & Customs Guidance (ইমিগ্রেশন ও কাস্টমস নির্দেশনা)',
+      name: 'Immigration & Customs Guidance',
+      nameBn: 'ইমিগ্রেশন ও কাস্টমস দিকনির্দেশনা ও সহায়তা',
       standard: false,
       premium: true,
       vip: true,
     },
     {
       icon: '📋',
-      name: 'Check-in & Boarding Pass Assistance (চেক-ইন ও বোর্ডিং পাস সহায়তা)',
-      nameBn: 'Check-in & Boarding Pass Assistance (চেক-ইন ও বোর্ডিং পাস সহায়তা)',
+      name: 'Check-in & Boarding Pass Assistance',
+      nameBn: 'এয়ারলাইন চেক-ইন ও বোর্ডিং পাস সহায়তা',
       standard: true,
       premium: true,
       vip: true,
     },
     {
       icon: '⏩',
-      name: 'Fast-track Priority Clearance (ফাস্ট-ট্র্যাক প্রায়োরিটি ক্লিয়ারেন্স)',
-      nameBn: 'Fast-track Priority Clearance (ফাস্ট-ট্র্যাক প্রায়োরিটি ক্লিয়ারেন্স)',
+      name: 'Fast-track Priority Clearance',
+      nameBn: 'ফাস্ট-ট্র্যাক অগ্রাধিকার ক্লিয়ারেন্স',
       standard: false,
       premium: true,
       vip: true,
     },
     {
       icon: '👮',
-      name: 'Dedicated 1-on-1 Protocol Officer (নির্ধারিত ১-জন প্রোটোকল অফিসার)',
-      nameBn: 'Dedicated 1-on-1 Protocol Officer (নির্ধারিত ১-জন প্রোটোকল অফিসার)',
+      name: 'Dedicated 1-on-1 Protocol Officer',
+      nameBn: 'নির্ধারিত ১-জন ডেডিকেটেড প্রোটোকল অফিসার',
       standard: false,
       premium: true,
       vip: true,
     },
     {
       icon: '✈️',
-      name: 'VIP Protocol Assistance up to Boarding Bridge / Aerobridge (বোর্ডিং ব্রিজ / এরোব্রিজ পর্যন্ত প্রোটোকল সহায়তা)',
-      nameBn: 'VIP Protocol Assistance up to Boarding Bridge / Aerobridge (বোর্ডিং ব্রিজ / এরোব্রিজ পর্যন্ত প্রোটোকল সহায়তা)',
+      name: 'VIP Protocol up to Boarding Bridge / Aerobridge',
+      nameBn: 'বোর্ডিং ব্রিজ / এরোব্রিজ পর্যন্ত ভিআইপি প্রোটোকল সহায়তা',
       standard: false,
       premium: false,
       vip: true,
     },
     {
       icon: '📍',
-      name: 'Live Real-time GPS Radar Tracking (রিয়েল-টাইম জিপিএস ট্র্যাকিং)',
-      nameBn: 'Live Real-time GPS Radar Tracking (রিয়েল-টাইম জিপিএস ট্র্যাকিং)',
+      name: 'Live Real-time GPS Radar Tracking',
+      nameBn: 'লাইভ রিয়েল-টাইম জিপিএস ও রাডার ট্র্যাকিং',
       standard: true,
       premium: true,
       vip: true,
     },
     {
       icon: '🎖️',
-      name: 'Highest VIP Protocol Priority (সর্বোচ্চ ভিআইপি প্রোটোকল প্রায়োরিটি)',
-      nameBn: 'Highest VIP Protocol Priority (সর্বোচ্চ ভিআইপি প্রোটোকল প্রায়োরিটি)',
+      name: 'Highest VIP Protocol Priority',
+      nameBn: 'সর্বোচ্চ ভিআইপি প্রোটোকল অগ্রাধিকার',
       standard: false,
       premium: false,
       vip: true,
@@ -143,10 +143,10 @@ export default function ComparePackagesScreen({
 
             const scopeText =
               pkg.id === 'economy'
-                ? '(Boarding Pass পর্যন্ত)'
+                ? (isBn ? '(বোর্ডিং পাস পর্যন্ত)' : '(Up to Boarding Pass)')
                 : pkg.id === 'business'
-                ? '(Immigration পর্যন্ত)'
-                : '(Boarding Bridge / Aerobridge পর্যন্ত)';
+                ? (isBn ? '(ইমিগ্রেশন পর্যন্ত)' : '(Up to Immigration)')
+                : (isBn ? '(বোর্ডিং ব্রিজ / এরোব্রিজ পর্যন্ত)' : '(Up to Boarding Bridge / Aerobridge)');
 
             return (
               <View
@@ -351,17 +351,17 @@ export default function ComparePackagesScreen({
                           letterSpacing: -0.2,
                         }}
                       >
-                        Package Feature Breakdown
+                        {isBn ? 'প্যাকেজ অনুযায়ী সেবা বিবরণ' : 'Package Feature Breakdown'}
                       </Text>
                       <Text
                         style={{
                           fontSize: 12.5,
                           fontWeight: '700',
-                          color: '#0F172A',
+                          color: '#64748B',
                           marginTop: 2,
                         }}
                       >
-                        প্যাকেজ অনুযায়ী সেবা বিবরণ
+                        {isBn ? 'সব সুবিধা ও প্যাকেজের তুলনা' : 'Compare all benefits and features'}
                       </Text>
                     </View>
                   </View>
@@ -383,10 +383,10 @@ export default function ComparePackagesScreen({
                 >
                   <StandardPkgIcon size={24} color="#FFFFFF" />
                   <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900', textAlign: 'center', marginTop: 4 }}>
-                    Standard
+                    {isBn ? 'স্ট্যান্ডার্ড' : 'Standard'}
                   </Text>
                   <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: 11.5, fontWeight: '600', marginTop: 2, textAlign: 'center' }}>
-                    (Boarding Pass পর্যন্ত)
+                    {isBn ? '(বোর্ডিং পাস পর্যন্ত)' : '(Up to Boarding Pass)'}
                   </Text>
                 </View>
 
@@ -406,10 +406,10 @@ export default function ComparePackagesScreen({
                 >
                   <PremiumPkgIcon size={24} color="#FFFFFF" />
                   <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900', textAlign: 'center', marginTop: 4 }}>
-                    Premium
+                    {isBn ? 'প্রিমিয়াম' : 'Premium'}
                   </Text>
                   <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: 11.5, fontWeight: '600', marginTop: 2, textAlign: 'center' }}>
-                    (Immigration পর্যন্ত)
+                    {isBn ? '(ইমিগ্রেশন পর্যন্ত)' : '(Up to Immigration)'}
                   </Text>
                 </View>
 
@@ -429,10 +429,10 @@ export default function ComparePackagesScreen({
                 >
                   <VipPkgIcon size={24} color="#FFFFFF" />
                   <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900', textAlign: 'center', marginTop: 4 }}>
-                    VIP
+                    {isBn ? 'ভিআইপি' : 'VIP'}
                   </Text>
                   <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: 11.5, fontWeight: '600', marginTop: 2, textAlign: 'center' }}>
-                    (Boarding Bridge / Aerobridge পর্যন্ত)
+                    {isBn ? '(বোর্ডিং ব্রিজ / এরোব্রিজ পর্যন্ত)' : '(Up to Boarding Bridge / Aerobridge)'}
                   </Text>
                 </View>
               </View>
@@ -456,7 +456,7 @@ export default function ComparePackagesScreen({
                   }}
                 >
                   <Text style={{ fontSize: 12.5, fontWeight: '700', color: '#64748B' }}>
-                    Feature / Service (সেবা / সুবিধা)
+                    {isBn ? 'সেবা / সুবিধা' : 'Feature / Service'}
                   </Text>
                 </View>
 
