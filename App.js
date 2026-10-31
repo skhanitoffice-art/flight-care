@@ -122,6 +122,7 @@ import { s } from './src/styles/styles';
 import MobileTabs from './src/components/MobileTabs';
 import DesktopHeader from './src/components/DesktopHeader';
 import DesktopFooter from './src/components/DesktopFooter';
+import FlightIntroSplash from './src/components/FlightIntroSplash';
 
 import HomeScreen from './src/screens/HomeScreen';
 import DetailScreen from './src/screens/DetailScreen';
@@ -314,6 +315,16 @@ export default function App() {
   const [subPage, setSubPage] = useState(() => initialWebRoute.subPage || null); // 'additional_services' | 'compare_packages' | 'protocol_ranks' | 'officer_profile'
   const [subPageParams, setSubPageParams] = useState({});
   const [navHistory, setNavHistory] = useState([]);
+  const [showIntroSplash, setShowIntroSplash] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const p = (window.location.pathname || '') + (window.location.hash || '');
+      const clean = p.replace(/^#?\/?/, '').replace(/\/+$/, '').toLowerCase();
+      if (clean.includes('manager') || clean.includes('admin') || clean.includes('staff')) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   const navigateToSubPage = (pageName, params = {}) => {
     setNavHistory(curr => [...curr, { tab, subPage, subPageParams }]);
@@ -5573,6 +5584,14 @@ export default function App() {
         onReviewSubmitted={handleReviewSubmitted}
         lang={lang}
       />
+
+      {/* 3D Airplane Flight Takeoff & Sky Cloud Intro Splash Animation */}
+      {showIntroSplash && (
+        <FlightIntroSplash
+          onFinish={() => setShowIntroSplash(false)}
+          lang={lang}
+        />
+      )}
     </SafeAreaView>
   );
 }
