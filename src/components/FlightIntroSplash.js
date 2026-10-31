@@ -36,18 +36,22 @@ export default function FlightIntroSplash({
   const cloudOffset3 = useRef(new Animated.Value(0)).current;
   const contrailOpacity = useRef(new Animated.Value(0)).current;
 
-  // Primary Departure Plane Trajectory (Bottom-Left to Top-Right)
-  const startX = -260;
-  const startY = winHeight + 120;
-  const endX = winWidth + 240;
-  const endY = -220;
+  // Primary Departure Plane Trajectory:
+  // Starts off bottom-left, flies straight through the exact center directly over the Flight Care logo, and exits top-right.
+  const distanceX = Math.max(winWidth * 0.75, 480);
+  const distanceY = Math.max(winHeight * 0.70, 420);
+
+  const startX = -distanceX;
+  const startY = distanceY;
+  const endX = distanceX;
+  const endY = -distanceY;
 
   // Path angle
-  const deltaX = endX - startX;
-  const deltaY = startY - endY;
+  const deltaX = 2 * distanceX;
+  const deltaY = 2 * distanceY;
   const flightPathAngleDeg = (Math.atan2(deltaY, deltaX) * 180) / Math.PI;
-  // Natural plane orientation in plane_takeoff.png is ~17.2 degrees
-  const takeoffRotationDeg = -(flightPathAngleDeg - 17.2);
+  // Natural plane orientation in plane_takeoff.png is ~22 degrees
+  const takeoffRotationDeg = -(flightPathAngleDeg - 22);
 
   // Secondary Arrival Plane Trajectory (Distant Top-Right to Mid-Left)
   const cruiseStartX = winWidth + 180;
@@ -94,7 +98,7 @@ export default function FlightIntroSplash({
 
     // 3. Central Brand Logo (Appears, holds, then gently fades)
     Animated.sequence([
-      Animated.delay(350),
+      Animated.delay(150),
       Animated.parallel([
         Animated.timing(logoOpacity, {
           toValue: 1,
@@ -109,7 +113,7 @@ export default function FlightIntroSplash({
           useNativeDriver: true,
         }),
       ]),
-      Animated.delay(1800),
+      Animated.delay(2000),
       Animated.timing(logoOpacity, {
         toValue: 0,
         duration: 500,
@@ -118,18 +122,18 @@ export default function FlightIntroSplash({
       }),
     ]).start();
 
-    // 4. Hero Takeoff Airliner Flight ("বিমানগুলো উড়বে")
+    // 4. Hero Departure 3D Airliner Flight (Flies directly through center over logo)
     Animated.sequence([
-      Animated.delay(200),
+      Animated.delay(250),
       Animated.parallel([
         Animated.timing(takeoffProgress, {
           toValue: 1,
-          duration: 3300,
+          duration: 3200,
           easing: Easing.bezier(0.25, 0.1, 0.25, 1),
           useNativeDriver: true,
         }),
         Animated.sequence([
-          Animated.delay(250),
+          Animated.delay(200),
           Animated.timing(contrailOpacity, {
             toValue: 1,
             duration: 550,
@@ -164,25 +168,25 @@ export default function FlightIntroSplash({
 
   if (!visible) return null;
 
-  // Hero Takeoff Plane Interpolations
+  // Hero Takeoff Plane Interpolations (Passes directly through screen center (0, 0) over logo)
   const takeoffX = takeoffProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [startX, endX],
+    inputRange: [0, 0.5, 1],
+    outputRange: [startX, 0, endX],
   });
 
   const takeoffY = takeoffProgress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [startY, endY],
+    inputRange: [0, 0.5, 1],
+    outputRange: [startY, 0, endY],
   });
 
   const takeoffScale = takeoffProgress.interpolate({
-    inputRange: [0, 0.35, 0.75, 1],
-    outputRange: [0.65, 1.25, 1.05, 0.85],
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [0.65, 0.95, 1.45, 1.15, 0.85],
   });
 
   const takeoffRoll = takeoffProgress.interpolate({
-    inputRange: [0, 0.25, 0.65, 1],
-    outputRange: ['-4deg', '3deg', '-1deg', '2deg'],
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: ['-6deg', '-2deg', '0deg', '4deg', '0deg'],
   });
 
   // Distant Cruising Plane Interpolations
@@ -621,24 +625,28 @@ const styles = StyleSheet.create({
   },
   heroPlaneWrapper: {
     position: 'absolute',
-    width: 320,
-    height: 320,
+    top: '50%',
+    left: '50%',
+    width: 360,
+    height: 360,
+    marginTop: -180,
+    marginLeft: -180,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 25,
+    zIndex: 35, // High z-index ensures the 3D airplane flies directly OVER the brand logo
   },
   heroPlaneBody: {
-    width: 320,
-    height: 320,
+    width: 360,
+    height: 360,
     alignItems: 'center',
     justifyContent: 'center',
   },
   heroPlaneImage: {
-    width: 320,
-    height: 320,
+    width: 360,
+    height: 360,
     ...(Platform.OS === 'web'
       ? {
-          filter: 'drop-shadow(0px 28px 32px rgba(15, 23, 42, 0.45)) drop-shadow(0px 6px 14px rgba(2, 132, 199, 0.35))',
+          filter: 'drop-shadow(0px 32px 38px rgba(15, 23, 42, 0.50)) drop-shadow(0px 8px 18px rgba(2, 132, 199, 0.40))',
         }
       : {}),
   },
