@@ -7327,7 +7327,8 @@ export default function ManagerPanel({
                           onPress={() => {
                             const target = selectedBooking;
                             setShowBookingDetailsModal(false);
-                            setPlacardModalBooking(target);
+                            setSelectedPlacardBooking(target);
+                            setShowMakePlacardModal(true);
                           }}
                           style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: '#064E3B', borderWidth: 1, borderColor: '#F59E0B', flexDirection: 'row', alignItems: 'center', gap: 4 }}
                         >
@@ -13334,11 +13335,14 @@ export default function ManagerPanel({
         visible={showMakePlacardModal}
         onClose={() => {
           setShowMakePlacardModal(false);
+          setSelectedPlacardBooking(null);
           getPlacardHistory().then(list => setPlacardHistoryList(list || [])).catch(() => {});
         }}
         managerSession={managerSession}
         isAdmin={isAdmin}
         lang={lang}
+        bookings={allPlatformBookings}
+        initialBooking={selectedPlacardBooking}
       />
 
       <DualVaultPinModal

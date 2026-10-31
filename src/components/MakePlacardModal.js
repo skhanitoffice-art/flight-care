@@ -25,6 +25,7 @@ import {
   downloadPlacardImage,
   printPlacardDirect,
 } from '../services/placardService';
+import DatePickerModal from './DatePickerModal';
 
 const PLACARD_TEMPLATE_IMAGE = require('../../assets/placard_template.png');
 const PLACARD_PLANE_ICON = require('../../assets/placard_plane_icon.png');
@@ -36,6 +37,8 @@ export default function MakePlacardModal({
   managerSession,
   isAdmin = false,
   lang = 0,
+  bookings = [],
+  initialBooking = null,
 }) {
   const isBn = Boolean(lang);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -56,6 +59,21 @@ export default function MakePlacardModal({
   const [passengerName, setPassengerName] = useState('');
   const [serviceDate, setServiceDate] = useState(getTodayDdmmyyyy());
   const [flightNumber, setFlightNumber] = useState('XY-312');
+
+  // Dynamic DatePicker Modal state (Like Home & Booking Wizard in Photo 2 & 3)
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Sync initialBooking if provided
+  useEffect(() => {
+    if (visible && initialBooking) {
+      const bName = initialBooking.passenger_information?.name || initialBooking.passengerName || initialBooking.name || initialBooking.customer || '';
+      const bFlight = initialBooking.flight?.number || initialBooking.fno || initialBooking.flightNumber || 'XY-312';
+      const bDate = initialBooking.flight?.date || initialBooking.date || initialBooking.serviceDate || '';
+      if (bName) setPassengerName(bName);
+      if (bFlight) setFlightNumber(bFlight);
+      if (bDate) setServiceDate(formatPlacardDate(bDate));
+    }
+  }, [visible, initialBooking]);
 
   // Placard History State
   const [historyList, setHistoryList] = useState([]);
@@ -522,10 +540,81 @@ export default function MakePlacardModal({
                     </Text>
                     <Text style={{ fontSize: 11.5, color: '#64748B' }}>
                       {isBn
-                        ? 'শুধুমাত্র নাম ও তারিখ লিখে সরাসরি প্লেকার্ড আউটপুট তৈরি করুন'
-                        : 'Input passenger name & date to generate instant placard'}
+                        ? 'সরাসরি টাইপ করুন অথবা বুকিং ও ক্যালেন্ডার থেকে ডাইনামিকভাবে পূরণ করুন'
+                        : 'Input directly or autofill dynamically from bookings and calendar'}
                     </Text>
                   </View>
+
+                  {/* Dynamic Autofill from Active Bookings */}
+                  {Array.isArray(bookings) && bookings.length > 0 && (
+                    <View
+                      style={{
+                        marginBottom: 14,
+                        backgroundColor: '#EFF6FF',
+                        borderRadius: 12,
+                        padding: 10,
+                        borderWidth: 1,
+                        borderColor: '#BFDBFE',
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <Text style={{ fontSize: 12, fontWeight: '800', color: '#1E40AF' }}>
+                          ⚡ {isBn ? 'বুকিং তালিকা থেকে সরাসরি প্লেকার্ড পূরণ:' : 'Autofill from Live Bookings:'}
+                        </Text>
+                        <Text style={{ fontSize: 10.5, color: '#3B82F6', fontWeight: '700' }}>
+                          {bookings.length} {isBn ? 'টি বুকিং' : 'Bookings'}
+                        </Text>
+                      </View>
+
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ gap: 6, paddingVertical: 2 }}
+                      >
+                        {bookings.slice(0, 15).map((b, bIdx) => {
+                          const bName = b.passenger_information?.name || b.passengerName || b.name || b.customer || 'Passenger';
+                          const bFlight = b.flight?.number || b.fno || b.flightNumber || 'XY-312';
+                          const bDate = b.flight?.date || b.date || b.serviceDate || '';
+                          return (
+                            <TouchableOpacity
+                              key={b.id || bIdx}
+                              activeOpacity={0.75}
+                              onPress={() => {
+                                setPassengerName(bName);
+                                setFlightNumber(bFlight);
+                                if (bDate) setServiceDate(formatPlacardDate(bDate));
+                                setStatusNotice(isBn ? `✓ ${bName} (${bFlight}) প্লেকার্ডে যুক্ত হয়েছে` : `✓ Loaded ${bName}`);
+                                setTimeout(() => setStatusNotice(''), 3000);
+                              }}
+                              style={{
+                                backgroundColor: '#FFFFFF',
+                                paddingHorizontal: 10,
+                                paddingVertical: 6,
+                                borderRadius: 8,
+                                borderWidth: 1,
+                                borderColor: '#93C5FD',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                              }}
+                            >
+                              <Text style={{ fontSize: 11, fontWeight: '800', color: '#1E40AF' }}>
+                                ✈️ {bFlight}
+                              </Text>
+                              <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#0F172A' }} numberOfLines={1}>
+                                {bName}
+                              </Text>
+                              {bDate ? (
+                                <Text style={{ fontSize: 10, color: '#64748B' }}>
+                                  ({formatPlacardDate(bDate)})
+                                </Text>
+                              ) : null}
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+                  )}
 
                   {/* 1. PASSENGER NAME (Required) */}
                   <View style={{ marginBottom: 14 }}>
@@ -603,13 +692,13 @@ export default function MakePlacardModal({
                       </Text>
                     </View>
 
-                    {/* Quick Date Shortcuts */}
-                    <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                    {/* Quick Date Shortcuts (Today / Tomorrow / +2 Days like 2nd & 3rd photos) */}
+                    <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8, alignItems: 'center' }}>
                       <TouchableOpacity
                         onPress={() => applyQuickDate(0)}
                         style={{
                           paddingHorizontal: 10,
-                          paddingVertical: 4,
+                          paddingVertical: 4.5,
                           borderRadius: 6,
                           backgroundColor: '#E0F2FE',
                           borderWidth: 1,
@@ -617,16 +706,16 @@ export default function MakePlacardModal({
                         }}
                       >
                         <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>
-                          📅 {isBn ? 'আজ (Today)' : 'Today'}
+                          📅 {isBn ? 'আজ' : 'Today'}
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() => applyQuickDate(1)}
                         style={{
                           paddingHorizontal: 10,
-                          paddingVertical: 4,
+                          paddingVertical: 4.5,
                           borderRadius: 6,
-                          backgroundColor: '#FFFFFF',
+                          backgroundColor: '#F1F5F9',
                           borderWidth: 1,
                           borderColor: '#CBD5E1',
                         }}
@@ -639,9 +728,9 @@ export default function MakePlacardModal({
                         onPress={() => applyQuickDate(2)}
                         style={{
                           paddingHorizontal: 10,
-                          paddingVertical: 4,
+                          paddingVertical: 4.5,
                           borderRadius: 6,
-                          backgroundColor: '#FFFFFF',
+                          backgroundColor: '#F1F5F9',
                           borderWidth: 1,
                           borderColor: '#CBD5E1',
                         }}
@@ -652,23 +741,53 @@ export default function MakePlacardModal({
                       </TouchableOpacity>
                     </View>
 
-                    <TextInput
-                      value={serviceDate}
-                      onChangeText={setServiceDate}
-                      placeholder="DD-MM-YYYY (e.g. 29-10-2026)"
-                      placeholderTextColor="#94A3B8"
+                    {/* Dynamic Calendar Picker Field (Matches Photos 2 & 3: Opens Calendar Modal) */}
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => setShowDatePicker(true)}
                       style={{
                         backgroundColor: '#FFFFFF',
                         borderWidth: 1.5,
-                        borderColor: '#CBD5E1',
+                        borderColor: '#0284C7',
                         borderRadius: 10,
                         paddingHorizontal: 12,
                         paddingVertical: 9,
-                        fontSize: 13.5,
-                        fontWeight: '700',
-                        color: '#0F172A',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        shadowColor: '#0284C7',
+                        shadowOffset: { width: 0, height: 1 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 3,
+                        elevation: 1,
                       }}
-                    />
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={{ fontSize: 16 }}>🗓️</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '800', color: '#0F172A' }}>
+                          {serviceDate || (isBn ? 'ক্যালেন্ডার হতে তারিখ নির্বাচন করুন' : 'Select Service Date')}
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          backgroundColor: '#0284C7',
+                          paddingHorizontal: 10,
+                          paddingVertical: 4,
+                          borderRadius: 6,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 11.5 }}>
+                          {isBn ? 'ক্যালেন্ডার খুলুন ▾' : 'Pick Date ▾'}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    <Text style={{ fontSize: 10.5, color: '#64748B', marginTop: 4 }}>
+                      💡 {isBn ? 'ক্লিক করে ২য় ও ৩য় ছবির মতো ক্যালেন্ডার থেকে ডাইনামিকভাবে তারিখ নির্বাচন করুন' : 'Click above to pick date dynamically from the calendar modal'}
+                    </Text>
                   </View>
 
                   {/* 3. FLIGHT NUMBER (Optional) */}
@@ -1315,6 +1434,18 @@ export default function MakePlacardModal({
           </ScrollView>
         </View>
       </View>
+
+      {/* Dynamic Date Picker Calendar Modal (Exact 2nd & 3rd Photo Modal) */}
+      <DatePickerModal
+        visible={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        selectedDate={serviceDate}
+        onSelectDate={(formatted) => {
+          setServiceDate(formatted);
+          setShowDatePicker(false);
+        }}
+        lang={lang}
+      />
     </Modal>
   );
 }
