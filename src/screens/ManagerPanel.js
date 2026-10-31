@@ -72,6 +72,8 @@ import LiveTrackingModal from '../components/LiveTrackingModal';
 import AdminManualBookingModal from '../components/AdminManualBookingModal';
 import BookingInvoiceModal from '../components/BookingInvoiceModal';
 import VipPlacardModal from '../components/VipPlacardModal';
+import MakePlacardModal from '../components/MakePlacardModal';
+import { getPlacardHistory } from '../services/placardService';
 import {
   getAllActiveTrackingSessions,
   AIRPORT_CHECKPOINTS,
@@ -1416,6 +1418,20 @@ export default function ManagerPanel({
   const [showManualBookingModal, setShowManualBookingModal] = useState(false);
   const [invoiceModalBooking, setInvoiceModalBooking] = useState(null);
   const [placardModalBooking, setPlacardModalBooking] = useState(null);
+
+  // Make Placard & Super Admin Audit History Modal State
+  const [showMakePlacardModal, setShowMakePlacardModal] = useState(false);
+  const [placardHistoryList, setPlacardHistoryList] = useState([]);
+
+  useEffect(() => {
+    getPlacardHistory().then(list => setPlacardHistoryList(list || [])).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (managerSection === 'placards') {
+      setShowMakePlacardModal(true);
+    }
+  }, [managerSection]);
 
   // Additional Booking administration filter & modal states
   const [bookingAirportFilter, setBookingAirportFilter] = useState('all');
@@ -3211,6 +3227,7 @@ export default function ManagerPanel({
     { key: 'tracking', label: lang ? 'লাইভ ট্র্যাকিং ও রাডার' : 'Live Radar & Tracking', icon: '📍' },
     { key: 'incidents', label: lang ? 'ইনসিডেন্ট ও হারানো লাগেজ' : 'Incidents & Baggage', icon: '🚨' },
     { key: 'bookings', label: lang ? 'বুকিং তালিকা' : 'Bookings', icon: '🎫' },
+    { key: 'placards', label: lang ? 'প্লেকার্ড তৈরি ও হিস্টোরি' : 'VIP Placard Maker', icon: '🏷️' },
     { key: 'payments', label: lang ? 'পেমেন্ট ও রিফান্ড' : 'Payments & Refunds', icon: '💳' },
     { key: 'allocation', label: lang ? 'স্টাফ বরাদ্দ' : 'Staff Allocation', icon: '⚙️', adminOnly: true },
     { key: 'customers', label: lang ? 'গ্রাহক' : 'Customers', icon: '👥', adminOnly: true },
@@ -5713,6 +5730,33 @@ export default function ManagerPanel({
               </Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              {/* Make Placard Button in Bookings Management */}
+              <TouchableOpacity
+                onPress={() => setShowMakePlacardModal(true)}
+                activeOpacity={0.8}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 6,
+                  borderRadius: 20,
+                  backgroundColor: '#0E2A47',
+                  borderWidth: 1.5,
+                  borderColor: '#D97706',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  shadowColor: '#0E2A47',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+              >
+                <Text style={{ fontSize: 13, color: '#FBBF24' }}>🏷️</Text>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#FFFFFF' }}>
+                  {lang ? 'প্লেকার্ড তৈরি' : 'Make Placard'}
+                </Text>
+              </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={() => setShowManualBookingModal(true)}
                 style={{
@@ -11668,6 +11712,47 @@ export default function ManagerPanel({
       case 'pricing':
         if (!isAdmin) return renderRestrictedAccess(lang ? 'মূল্য নির্ধারণ' : 'Pricing & Rates');
         return renderPricingManagement();
+      case 'placards':
+        return (
+          <View style={{ width: '100%', padding: 20 }}>
+            <View style={{ backgroundColor: '#F8FAFC', borderRadius: 16, padding: 28, borderWidth: 1, borderColor: '#CBD5E1', alignItems: 'center' }}>
+              <Text style={{ fontSize: 44, marginBottom: 12 }}>🏷️</Text>
+              <Text style={{ fontSize: 20, fontWeight: '800', color: '#0F172A', marginBottom: 6 }}>
+                {lang ? 'ভিআইপি এয়ারপোর্ট প্লেকার্ড ও নেমবোর্ড মেকার' : 'VIP Airport Placard & Nameboard Portal'}
+              </Text>
+              <Text style={{ fontSize: 13.5, color: '#64748B', textAlign: 'center', maxWidth: 620, marginBottom: 20 }}>
+                {lang
+                  ? 'যাত্রীর নাম ও তারিখ ইনপুট দিয়ে মুহূর্তেই ভিআইপি নেমবোর্ড প্লেকার্ড তৈরি, এইচডি ডাউনলোড ও সরাসরি প্রিন্ট করুন। সুপার এডমিন সকল তৈরির হিস্টোরি পর্যবেক্ষণ করতে পারবেন।'
+                  : 'Input passenger name and date to generate, download HD image and direct print. Super Admin can inspect complete audit history.'}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowMakePlacardModal(true)}
+                activeOpacity={0.8}
+                style={{
+                  backgroundColor: '#0E2A47',
+                  borderWidth: 1.5,
+                  borderColor: '#D97706',
+                  paddingHorizontal: 22,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                  shadowColor: '#0E2A47',
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 5,
+                  elevation: 3,
+                }}
+              >
+                <Text style={{ fontSize: 18 }}>🏷️</Text>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>
+                  {lang ? 'প্লেকার্ড তৈরি করুন ও হিস্টোরি দেখুন' : 'Make Placard & View History'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        );
       case 'bookings':
         return renderBookingsManagement();
       case 'payments':
@@ -11879,6 +11964,33 @@ export default function ManagerPanel({
                 </Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', alignSelf: responsive.isPhone ? 'stretch' : 'auto' }}>
+                {/* 🏷️ Make Placard Button (User requested position next to Offline Booking) */}
+                <TouchableOpacity
+                  onPress={() => setShowMakePlacardModal(true)}
+                  activeOpacity={0.8}
+                  style={{
+                    backgroundColor: '#0E2A47',
+                    borderWidth: 1.5,
+                    borderColor: '#D97706',
+                    paddingHorizontal: 14,
+                    paddingVertical: 7,
+                    borderRadius: 10,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    shadowColor: '#0E2A47',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 5,
+                    elevation: 3,
+                  }}
+                >
+                  <Text style={{ fontSize: 13, color: '#FBBF24' }}>🏷️</Text>
+                  <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#FFFFFF' }}>
+                    {lang ? 'প্লেকার্ড তৈরি করুন' : 'Make Placard'}
+                  </Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity
                   onPress={() => setShowManualBookingModal(true)}
                   style={{
@@ -13217,6 +13329,18 @@ export default function ManagerPanel({
       />
     
       {/* Dual Vault PIN Controller Modal */}
+      {/* Make Placard & Super Admin History Modal */}
+      <MakePlacardModal
+        visible={showMakePlacardModal}
+        onClose={() => {
+          setShowMakePlacardModal(false);
+          getPlacardHistory().then(list => setPlacardHistoryList(list || [])).catch(() => {});
+        }}
+        managerSession={managerSession}
+        isAdmin={isAdmin}
+        lang={lang}
+      />
+
       <DualVaultPinModal
         visible={showDualVaultModal}
         onClose={() => setShowDualVaultModal(false)}
