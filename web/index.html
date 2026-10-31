@@ -224,6 +224,28 @@
         }
       }
     </style>
+    <!-- Animated Service Cards Hover & Icon Wiggle Keyframes -->
+    <style id="flightcare-animated-service-card-styles">
+      @keyframes fcIconWiggle {
+        0% { transform: scale(1) rotate(0deg); }
+        20% { transform: scale(1.22) rotate(-12deg); }
+        40% { transform: scale(1.25) rotate(10deg); }
+        60% { transform: scale(1.2) rotate(-8deg); }
+        80% { transform: scale(1.18) rotate(4deg); }
+        100% { transform: scale(1.18) rotate(0deg); }
+      }
+      .fc-service-card {
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease !important;
+      }
+      .fc-service-card:hover {
+        transform: translateY(-6px) scale(1.03) !important;
+        box-shadow: 0 20px 25px -5px rgba(2, 132, 199, 0.22), 0 8px 10px -6px rgba(2, 132, 199, 0.12) !important;
+        border-color: #0284C7 !important;
+      }
+      .fc-service-card:hover .fc-service-icon {
+        animation: fcIconWiggle 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
+      }
+    </style>
   </head>
 
   <body>

@@ -30,6 +30,7 @@ import {
 import { SERVICES, getAddonAsset } from '../constants/data';
 import DatePickerModal from './DatePickerModal';
 import AdditionalServicesModal from './AdditionalServicesModal';
+import AnimatedServiceCard from './AnimatedServiceCard';
 import { isValidFlightNumber, isValidFlightDate, createAddonDetails } from '../utils/helpers';
 import {
   searchFlightSuggestions,
@@ -38,6 +39,193 @@ import {
   searchLiveFlightsFromAviationStack,
 } from '../services/flightService';
 import CustomerRewardsCard from './CustomerRewardsCard';
+
+const getFeaturedAirportServices = (lang = 0) => [
+  {
+    id: 'bb2car',
+    cat: 'arr',
+    badge: lang ? '★ সর্বাধিক জনপ্রিয়' : '★ Most Popular',
+    category: lang ? 'ভিআইপি অ্যারাইভাল' : 'VIP Arrival',
+    image: require('../../assets/arrival_icon.png'),
+    n: ['Boarding Bridge to Car', 'বোর্ডিং ব্রিজ থেকে গাড়ি পর্যন্ত'],
+    d: [
+      'Meet at the boarding bridge, assist through immigration and baggage collection, guide through customs, and escort to your vehicle.',
+      'বোর্ডিং ব্রিজ গেটে প্রটোকল অফিসারের অভ্যর্থনা, দ্রুত ইমিগ্রেশন ও লাগেজ সংগ্রহ এবং গাড়ি পর্যন্ত সরাসরি পৌঁছে দেওয়া।'
+    ],
+    p: 1500,
+    priceUnit: 'package',
+    features: lang ? [
+      'বোর্ডিং ব্রিজে ব্যক্তিগত অফিসারের অভ্যর্থনা',
+      'ইমিগ্রেশন ও কাস্টমস ডেস্কে অগ্রাধিকার গাইডেন্স',
+      'লাগেজ কালেকশন ও গাড়িতে নিরাপদে পৌঁছে দেওয়া',
+    ] : [
+      'Dedicated Protocol Officer at Boarding Bridge',
+      'Priority Guidance at Immigration & Customs',
+      'Baggage Carousel Porter & Escort to Vehicle',
+    ]
+  },
+  {
+    id: 'gate2bb',
+    cat: 'dep',
+    badge: lang ? 'ডিপার্চার স্পেশাল' : 'Departure Special',
+    category: lang ? 'ভিআইপি ডিপার্চার' : 'VIP Departure',
+    image: require('../../assets/departure_icon.png'),
+    n: ['Entry Gate to Boarding Bridge', 'মেইন গেট থেকে বোর্ডিং ব্রিজ'],
+    d: [
+      'Meet at entry gate, baggage drop & check-in assistance, fast-track immigration escort up to the boarding bridge.',
+      'বিমানবন্দর মেইন গেটে অভ্যর্থনা, লাগেজ ড্রপ ও বোর্ডিং পাস সহায়তা এবং ইমিগ্রেশন পার হয়ে ব্রিজ পর্যন্ত পৌঁছে দেওয়া।'
+    ],
+    p: 1500,
+    priceUnit: 'package',
+    features: lang ? [
+      'বিমানবন্দর ১ নম্বর এন্ট্রি গেটে অফিসার অভ্যর্থনা',
+      'এয়ারলাইন চেক-ইন ও বোর্ডিং পাস দ্রুত সংগ্রহ',
+      'নিরাপত্তা ক্লিয়ারেন্স ও বোর্ডিং ব্রিজ পর্যন্ত এসকর্ট',
+    ] : [
+      'Terminal Entry Gate Protocol Reception',
+      'Check-in & Priority Boarding Pass Assistance',
+      'Security Check & Aerobridge Escort',
+    ]
+  },
+  {
+    id: 'wheel',
+    cat: 'arr',
+    badge: lang ? 'বিশেষ যত্ন' : 'Special Care',
+    category: lang ? 'কেয়ার প্রটোকল' : 'Care Protocol',
+    image: require('../../assets/wheelchair.webp'),
+    n: ['Wheelchair Assistance', 'হুইলচেয়ার ও বয়োজ্যেষ্ঠ সহায়তা'],
+    d: [
+      'Mobility assistance with a dedicated wheelchair and trained helper throughout the airport.',
+      'বিমানবন্দরে চলাচল সুবিধার জন্য প্রস্তুত হুইলচেয়ার এবং সার্বক্ষণিক ট্রেইন্ড হেল্পার দ্বারা বিশেষ যত্ন।'
+    ],
+    p: 300,
+    priceUnit: 'person',
+    features: lang ? [
+      'গেটে প্রস্তুত আরামদায়ক হুইলচেয়ার ও হেল্পার',
+      'ইমিগ্রেশন ও টার্মিনালে সার্বক্ষণিক চলাচল সহায়তা',
+      'বয়োজ্যেষ্ঠ ও অসুস্থ যাত্রীদের বিশেষ কমফোর্ট',
+    ] : [
+      'Ready-to-use Wheelchair & Dedicated Helper',
+      'Full Transit Assistance through Terminal',
+      'Priority Comfort for Elderly & Patients',
+    ]
+  },
+  {
+    id: 'visa',
+    cat: 'arr',
+    badge: lang ? 'ডকুমেন্ট সাপোর্ট' : 'Document Support',
+    category: lang ? 'অন-অ্যারাইভাল ভিসা' : 'Visa Assistance',
+    image: require('../../assets/visa_immigration.webp'),
+    n: ['Visa On Arrival Support', 'অন-অ্যারাইভাল ভিসা প্রটোকল'],
+    d: [
+      'Document pre-verification & visa on arrival support by experienced airport protocol officers.',
+      'প্রয়োজনীয় কাগজপত্র প্রি-ভেরিফিকেশন, ইমিগ্রেশন ডেস্ক সহায়তা ও দ্রুত ভিসা ছাড়পত্রে অফিসার সাপোর্ট।'
+    ],
+    p: 1500,
+    priceUnit: 'person',
+    features: lang ? [
+      'আগমনের পূর্বেই ট্রাভেল ডকুমেন্ট যাচাইকরণ',
+      'অন-অ্যারাইভাল ভিসা ডেস্কে অফিসার গাইডেন্স',
+      'ঝামেলাহীন ও দ্রুত সরকারি কাউন্টার ক্লিয়ারেন্স',
+    ] : [
+      'Pre-Arrival Document Verification Protocol',
+      'Direct Visa Counter Officer Escort',
+      'Fast Government Clearance without Delays',
+    ]
+  },
+  {
+    id: 'wrap',
+    cat: 'dep',
+    badge: lang ? 'নিরাপত্তা শিল্ড' : 'Luggage Shield',
+    category: lang ? 'লাগেজ সুরক্ষা' : 'Luggage Wrap',
+    image: require('../../assets/luggage_wrapping.webp'),
+    n: ['Luggage Wrapping', 'লাগেজ সুরক্ষা ও র‍্যাপিং'],
+    d: [
+      'Secure multi-layer protective wrapping charged by the number of bags to prevent damage or theft.',
+      'আন্তর্জাতিক মানের প্রিমিয়াম প্রটেকটিভ ফিল্ম র‍্যাপিং, লাগেজ চুরি ও ক্ষতি রোধ এবং ট্যাগিং সহায়তা।'
+    ],
+    p: 400,
+    priceUnit: 'bag',
+    features: lang ? [
+      'প্রিমিয়াম কোয়ালিটি ডাবল ফিল্ম প্রটেকটিভ র‍্যাপ',
+      'চুরি ও অনাকাঙ্ক্ষিত খোলা থেকে শতভাগ সুরক্ষা',
+      'সহজ শনাক্তকরণ ও এয়ারপোর্ট ট্যাগিং সহায়তা',
+    ] : [
+      'High-Grade Double Protective Film Wrap',
+      '100% Tamper, Scratch & Theft Protection',
+      'Fast Bag Tagging & Identification Help',
+    ]
+  },
+  {
+    id: 'transfer',
+    cat: 'arr',
+    badge: lang ? '২৪/৭ অন-কল' : '24/7 Available',
+    category: lang ? 'এয়ারপোর্ট গাড়ি' : 'Airport Car',
+    image: require('../../assets/rent_car.webp'),
+    n: ['Rent a Car / Airport Transfer', 'প্রাইভেট এয়ারপোর্ট গাড়ি ভাড়া'],
+    d: [
+      'Choose airport pickup, drop-off, and a private AC vehicle (Sedan, Noah, HiAce) with vetted driver.',
+      'আধুনিক এসি সেডান কার, নোয়া ও হাইয়েস মাইক্রোবাস, বিশ্বস্ত ড্রাইভার এবং সারাদেশে ড্রপ-অফ।'
+    ],
+    p: null,
+    priceUnit: 'quote',
+    features: lang ? [
+      'প্রিমিয়াম এসি সেডান, নোয়া ও হাইয়েস মাইক্রোবাস',
+      'প্রশিক্ষিত ও পেশাদার এয়ারপোর্ট ড্রাইভার',
+      'ঢাকা শহরসহ সারাদেশে অন-টাইম ড্রপ-অফ',
+    ] : [
+      'Executive Sedan, Noah & HiAce AC Fleet',
+      'Vetted Professional Airport Chauffeurs',
+      'On-Time Drop-off in Dhaka & Nationwide',
+    ]
+  },
+  {
+    id: 'print',
+    cat: 'dep',
+    badge: lang ? 'ইনস্ট্যান্ট প্রিন্ট' : 'Instant Print',
+    category: lang ? 'জরুরি প্রিন্ট' : 'Document Print',
+    image: require('../../assets/printer.webp'),
+    n: ['Document Print & Photocopy', 'জরুরি প্রিন্ট ও ফটোকপি'],
+    d: [
+      'Printing & photocopying boarding passes, visas, tickets, and essential travel documents.',
+      'বোর্ডিং পাস, ই-ভিসা, টিকিট ও ট্রাভেল ডকুমেন্টস বিমানবন্দরে তাৎক্ষণিক প্রিন্ট এবং ফটোকপি সুবিধা।'
+    ],
+    p: 100,
+    priceUnit: 'request',
+    features: lang ? [
+      'বোর্ডিং পাস ও ই-ভিসা তাৎক্ষণিক কালার প্রিন্ট',
+      'পাসপোর্ট ও জরুরি ডকুমেন্টস ফটোকপি সুবিধা',
+      'ফ্লাইটের আগে কাউন্টারেই ডকুমেন্ট হ্যান্ডওভার',
+    ] : [
+      'Instant Color Print for Boarding Pass & Visa',
+      'Quick Passport & Travel Document Photocopy',
+      'Immediate Counter Delivery Before Flight',
+    ]
+  },
+  {
+    id: 'security',
+    cat: 'dep',
+    badge: lang ? 'ভিআইপি প্রটোকল' : 'VIP Protocol',
+    category: lang ? 'কাস্টমস প্রটোকল' : 'Fast-Track',
+    image: require('../../assets/security_protocol.webp'),
+    n: ['Fast-Track Security Protocol', 'ফাস্ট-ট্র্যাক সিকিউরিটি ও কাস্টমস'],
+    d: [
+      'Request airport security protocol assistance and expedited clearance through customs channels.',
+      'বিমানবন্দরে বিশেষ প্রটোকল ক্লিয়ারেন্স, কাস্টমস চ্যানেল দিয়ে দ্রুত প্রস্থান এবং অফিসিয়াল সঙ্গী।'
+    ],
+    p: null,
+    priceUnit: 'quote',
+    features: lang ? [
+      'গ্রিন চ্যানেল কাস্টমস ক্লিয়ারেন্স সহায়তা',
+      'স্পেশাল সিকিউরিটি প্রটোকল অফিসার এসকর্ট',
+      'লম্বা লাইনের ঝামেলা ছাড়াই নিরবচ্ছিন্ন ছাড়পত্র',
+    ] : [
+      'Green Channel Fast-Track Clearance Support',
+      'Dedicated Airport Protocol Officer Escort',
+      'Zero Queue Hassle-Free Terminal Transition',
+    ]
+  },
+];
 
 export default function DesktopHomeScreen({
   lang = 0,
@@ -68,6 +256,8 @@ export default function DesktopHomeScreen({
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
   const [showServicesModal, setShowServicesModal] = useState(false);
+  const [hoveredPackage, setHoveredPackage] = useState(null);
+  const [hoveredAddonCard, setHoveredAddonCard] = useState(false);
   const [flightSuggestions, setFlightSuggestions] = useState([]);
   const [showFlightSuggestions, setShowFlightSuggestions] = useState(false);
   const [selectedFlightData, setSelectedFlightData] = useState(null);
@@ -916,15 +1106,26 @@ export default function DesktopHomeScreen({
                 <TouchableOpacity
                   activeOpacity={0.85}
                   onPress={() => setSelectedPackage('economy')}
+                  // @ts-ignore
+                  onMouseEnter={() => setHoveredPackage('economy')}
+                  onMouseLeave={() => setHoveredPackage(null)}
                   style={{
                     flex: 1,
                     backgroundColor: selectedPackage === 'economy' ? '#F0F9FF' : '#FFFFFF',
                     borderWidth: 1.8,
-                    borderColor: selectedPackage === 'economy' ? '#0284C7' : '#E2E8F0',
+                    borderColor: selectedPackage === 'economy' ? '#0284C7' : (hoveredPackage === 'economy' ? '#0284C7' : '#E2E8F0'),
                     borderRadius: 14,
                     padding: 10,
                     alignItems: 'center',
                     position: 'relative',
+                    ...(Platform.OS === 'web'
+                      ? {
+                          cursor: 'pointer',
+                          transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                          transform: hoveredPackage === 'economy' ? 'translateY(-4px) scale(1.04)' : 'translateY(0) scale(1)',
+                          boxShadow: hoveredPackage === 'economy' ? '0 12px 20px -3px rgba(2, 132, 199, 0.2)' : 'none',
+                        }
+                      : {}),
                   }}
                 >
                   <View style={{ position: 'absolute', top: 7, right: 7 }}>
@@ -946,7 +1147,15 @@ export default function DesktopHomeScreen({
                     </View>
                   </View>
 
-                  <StandardPkgIcon size={30} color="#0284C7" />
+                  <View
+                    style={
+                      Platform.OS === 'web' && hoveredPackage === 'economy'
+                        ? { transform: 'scale(1.18) rotate(-7deg)', transition: 'transform 0.25s ease' }
+                        : { transition: 'transform 0.25s ease' }
+                    }
+                  >
+                    <StandardPkgIcon size={30} color="#0284C7" />
+                  </View>
                   <Text style={{ fontSize: 13, fontWeight: '800', color: '#0F172A', marginTop: 4 }}>
                     {lang ? 'স্ট্যান্ডার্ড' : 'Standard'}
                   </Text>
@@ -976,15 +1185,26 @@ export default function DesktopHomeScreen({
                 <TouchableOpacity
                   activeOpacity={0.85}
                   onPress={() => setSelectedPackage('business')}
+                  // @ts-ignore
+                  onMouseEnter={() => setHoveredPackage('business')}
+                  onMouseLeave={() => setHoveredPackage(null)}
                   style={{
                     flex: 1,
                     backgroundColor: selectedPackage === 'business' ? '#F0F9FF' : '#FFFFFF',
                     borderWidth: 1.8,
-                    borderColor: selectedPackage === 'business' ? '#0284C7' : '#E2E8F0',
+                    borderColor: selectedPackage === 'business' ? '#0284C7' : (hoveredPackage === 'business' ? '#0284C7' : '#E2E8F0'),
                     borderRadius: 14,
                     padding: 10,
                     alignItems: 'center',
                     position: 'relative',
+                    ...(Platform.OS === 'web'
+                      ? {
+                          cursor: 'pointer',
+                          transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                          transform: hoveredPackage === 'business' ? 'translateY(-4px) scale(1.04)' : 'translateY(0) scale(1)',
+                          boxShadow: hoveredPackage === 'business' ? '0 12px 20px -3px rgba(37, 99, 235, 0.2)' : 'none',
+                        }
+                      : {}),
                   }}
                 >
                   <View style={{ position: 'absolute', top: 7, right: 7 }}>
@@ -1006,7 +1226,15 @@ export default function DesktopHomeScreen({
                     </View>
                   </View>
 
-                  <PremiumPkgIcon size={30} color="#2563EB" />
+                  <View
+                    style={
+                      Platform.OS === 'web' && hoveredPackage === 'business'
+                        ? { transform: 'scale(1.18) rotate(-7deg)', transition: 'transform 0.25s ease' }
+                        : { transition: 'transform 0.25s ease' }
+                    }
+                  >
+                    <PremiumPkgIcon size={30} color="#2563EB" />
+                  </View>
                   <Text style={{ fontSize: 13, fontWeight: '800', color: '#0F172A', marginTop: 4 }}>
                     {lang ? 'প্রিমিয়াম' : 'Premium'}
                   </Text>
@@ -1036,15 +1264,26 @@ export default function DesktopHomeScreen({
                 <TouchableOpacity
                   activeOpacity={0.85}
                   onPress={() => setSelectedPackage('first')}
+                  // @ts-ignore
+                  onMouseEnter={() => setHoveredPackage('first')}
+                  onMouseLeave={() => setHoveredPackage(null)}
                   style={{
                     flex: 1,
                     backgroundColor: selectedPackage === 'first' ? '#FFFBEB' : '#FFFFFF',
                     borderWidth: 1.8,
-                    borderColor: selectedPackage === 'first' ? '#D97706' : '#E2E8F0',
+                    borderColor: selectedPackage === 'first' ? '#D97706' : (hoveredPackage === 'first' ? '#D97706' : '#E2E8F0'),
                     borderRadius: 14,
                     padding: 10,
                     alignItems: 'center',
                     position: 'relative',
+                    ...(Platform.OS === 'web'
+                      ? {
+                          cursor: 'pointer',
+                          transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                          transform: hoveredPackage === 'first' ? 'translateY(-4px) scale(1.04)' : 'translateY(0) scale(1)',
+                          boxShadow: hoveredPackage === 'first' ? '0 12px 20px -3px rgba(217, 119, 6, 0.25)' : 'none',
+                        }
+                      : {}),
                   }}
                 >
                   <View style={{ position: 'absolute', top: 7, right: 7 }}>
@@ -1066,7 +1305,15 @@ export default function DesktopHomeScreen({
                     </View>
                   </View>
 
-                  <VipPkgIcon size={30} color="#D97706" />
+                  <View
+                    style={
+                      Platform.OS === 'web' && hoveredPackage === 'first'
+                        ? { transform: 'scale(1.18) rotate(-7deg)', transition: 'transform 0.25s ease' }
+                        : { transition: 'transform 0.25s ease' }
+                    }
+                  >
+                    <VipPkgIcon size={30} color="#D97706" />
+                  </View>
                   <Text style={{ fontSize: 13, fontWeight: '800', color: '#0F172A', marginTop: 4 }}>
                     {lang ? 'ভিআইপি' : 'VIP'}
                   </Text>
@@ -1141,15 +1388,26 @@ export default function DesktopHomeScreen({
                     setShowServicesModal(true);
                   }
                 }}
+                // @ts-ignore
+                onMouseEnter={() => setHoveredAddonCard(true)}
+                onMouseLeave={() => setHoveredAddonCard(false)}
                 style={{
-                  backgroundColor: selectedAddons.length > 0 ? '#F0F9FF' : '#F8FAFC',
+                  backgroundColor: selectedAddons.length > 0 ? '#F0F9FF' : (hoveredAddonCard ? '#F0F9FF' : '#F8FAFC'),
                   borderRadius: 12,
                   borderWidth: 1.5,
-                  borderColor: selectedAddons.length > 0 ? '#0284C7' : '#BAE6FD',
+                  borderColor: selectedAddons.length > 0 ? '#0284C7' : (hoveredAddonCard ? '#0284C7' : '#BAE6FD'),
                   padding: 11,
                   flexDirection: 'row',
                   alignItems: 'center',
                   marginBottom: 12,
+                  ...(Platform.OS === 'web'
+                    ? {
+                        cursor: 'pointer',
+                        transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        transform: hoveredAddonCard ? 'translateY(-3px) scale(1.025)' : 'translateY(0) scale(1)',
+                        boxShadow: hoveredAddonCard ? '0 10px 18px -3px rgba(2, 132, 199, 0.18)' : 'none',
+                      }
+                    : {}),
                 }}
               >
                 <View
@@ -1157,10 +1415,16 @@ export default function DesktopHomeScreen({
                     width: 38,
                     height: 38,
                     borderRadius: 10,
-                    backgroundColor: selectedAddons.length > 0 ? '#BAE6FD' : '#E0F2FE',
+                    backgroundColor: selectedAddons.length > 0 ? '#BAE6FD' : (hoveredAddonCard ? '#BAE6FD' : '#E0F2FE'),
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginRight: 10,
+                    ...(Platform.OS === 'web'
+                      ? {
+                          transition: 'transform 0.25s ease',
+                          transform: hoveredAddonCard ? 'scale(1.18) rotate(8deg)' : 'scale(1) rotate(0deg)',
+                        }
+                      : {}),
                   }}
                 >
                   <Image
@@ -1395,6 +1659,149 @@ export default function DesktopHomeScreen({
                 </Text>
               </View>
             </View>
+          </View>
+        </View>
+
+        {/* ========================================================= */}
+        {/* 3.1. FEATURED AIRPORT SERVICES GRID (Animated Service Cards) */}
+        {/* ========================================================= */}
+        <View
+          style={{
+            maxWidth: 1200,
+            width: '100%',
+            marginHorizontal: 'auto',
+            paddingHorizontal: 24,
+            marginTop: 48,
+            marginBottom: 20,
+          }}
+        >
+          {/* Section Header */}
+          <View style={{ alignItems: 'center', marginBottom: 28 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                backgroundColor: '#F0F9FF',
+                paddingHorizontal: 12,
+                paddingVertical: 5,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: '#BAE6FD',
+                marginBottom: 10,
+              }}
+            >
+              <Text style={{ fontSize: 13 }}>✨</Text>
+              <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#0284C7', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {lang ? 'সম্পূর্ণ এয়ারপোর্ট প্রটোকল সমাধান · ১০০% HSIA ভেরিফাইড' : 'Airport Protocol Solutions · 100% HSIA Verified'}
+              </Text>
+            </View>
+
+            <Text
+              style={{
+                fontSize: 26,
+                fontWeight: '900',
+                color: '#0F172A',
+                letterSpacing: -0.3,
+                marginBottom: 8,
+                textAlign: 'center',
+              }}
+            >
+              {lang ? 'আমাদের বিশেষ এয়ারপোর্ট সেবাসমূহ' : 'Our Specialized Airport Services'}
+            </Text>
+
+            <Text
+              style={{
+                fontSize: 14,
+                color: '#64748B',
+                maxWidth: 620,
+                lineHeight: 20,
+                textAlign: 'center',
+              }}
+            >
+              {lang
+                ? 'যেকোনো সার্ভিসের ওপর মাউস নিয়ে বিস্তারিত দেখুন, সুবিধা জানুন এবং সরাসরি বুকিং সম্পন্ন করুন'
+                : 'Hover over any service card to view inclusions, live perks and book with 1-click'}
+            </Text>
+          </View>
+
+          {/* Responsive Grid of Animated Service Cards */}
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              marginHorizontal: -8,
+              rowGap: 18,
+            }}
+          >
+            {getFeaturedAirportServices(lang).map(srv => {
+              const isSelected = selectedAddons.includes(srv.id) || (
+                (srv.id === 'bb2car' && direction === 'arr' && selectedPackage === 'first') ||
+                (srv.id === 'gate2bb' && direction === 'dep' && selectedPackage === 'first')
+              );
+
+              return (
+                <View
+                  key={srv.id}
+                  style={{
+                    width: '25%',
+                    paddingHorizontal: 8,
+                    minWidth: 260,
+                  }}
+                >
+                  <AnimatedServiceCard
+                    service={srv}
+                    isSelected={isSelected}
+                    lang={lang}
+                    variant="grid"
+                    onPress={() => {
+                      if (srv.id === 'bb2car') {
+                        setDirection('arr');
+                        setSelectedPackage('first');
+                        if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } else if (srv.id === 'gate2bb') {
+                        setDirection('dep');
+                        setSelectedPackage('first');
+                        if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } else {
+                        setSelectedAddons(prev => {
+                          const exists = prev.includes(srv.id);
+                          return exists ? prev.filter(x => x !== srv.id) : [...prev, srv.id];
+                        });
+                      }
+                    }}
+                    onBookNow={() => {
+                      if (srv.id === 'bb2car') {
+                        setDirection('arr');
+                        setSelectedPackage('first');
+                        if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } else if (srv.id === 'gate2bb') {
+                        setDirection('dep');
+                        setSelectedPackage('first');
+                        if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } else {
+                        if (!selectedAddons.includes(srv.id)) {
+                          setSelectedAddons(prev => [...prev, srv.id]);
+                        }
+                        if (navigateToSubPage) {
+                          navigateToSubPage('additional_services', {
+                            selectedAddons: [...new Set([...selectedAddons, srv.id])],
+                            setSelectedAddons,
+                            addonDetails,
+                            setAddonDetails,
+                            onProceedBooking: handleProceedBookingFromModal,
+                            flightNumber,
+                            serviceDate,
+                          });
+                        } else {
+                          setShowServicesModal(true);
+                        }
+                      }
+                    }}
+                  />
+                </View>
+              );
+            })}
           </View>
         </View>
 

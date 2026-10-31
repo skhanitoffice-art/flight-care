@@ -35,6 +35,7 @@ export default function AdditionalServicesModal({
   // Local draft state so user can select/tweak before applying
   const [localSelected, setLocalSelected] = useState(selectedAddons || []);
   const [localDetails, setLocalDetails] = useState(addonDetails || {});
+  const [hoveredCardId, setHoveredCardId] = useState(null);
 
   useEffect(() => {
     if (visible) {
@@ -233,14 +234,23 @@ export default function AdditionalServicesModal({
           >
             {ADDONS.map(addon => {
               const isSelected = localSelected.includes(addon.id);
+              const isHovered = hoveredCardId === addon.id;
               const assetImage = addon.image || getAddonAsset(addon.id);
 
               return (
                 <View
                   key={addon.id}
+                  // @ts-ignore
+                  onMouseEnter={() => setHoveredCardId(addon.id)}
+                  onMouseLeave={() => setHoveredCardId(null)}
                   style={[
                     styles.serviceCard,
                     isSelected && styles.serviceCardActive,
+                    Platform.OS === 'web' && isHovered && {
+                      borderColor: '#0284C7',
+                      transform: 'translateY(-3px) scale(1.02)',
+                      boxShadow: '0 12px 20px -3px rgba(2, 132, 199, 0.18)',
+                    },
                   ]}
                 >
                   <TouchableOpacity
@@ -253,6 +263,11 @@ export default function AdditionalServicesModal({
                       style={[
                         styles.iconContainer,
                         isSelected && styles.iconContainerActive,
+                        Platform.OS === 'web' && isHovered && {
+                          backgroundColor: '#BAE6FD',
+                          borderColor: '#0284C7',
+                          transform: 'scale(1.18) rotate(-7deg)',
+                        },
                       ]}
                     >
                       {assetImage ? (
@@ -268,14 +283,17 @@ export default function AdditionalServicesModal({
 
                     {/* Service Name & Description */}
                     <View style={{ flex: 1, paddingRight: 8 }}>
-                      <Text style={[styles.serviceName, isSelected && styles.serviceNameActive]}>
+                      <Text style={[styles.serviceName, (isSelected || isHovered) && styles.serviceNameActive]}>
                         {addon.n[lang] || addon.n[0]}
                       </Text>
-                      <Text style={styles.serviceDesc} numberOfLines={2}>
+                      <Text
+                        style={[styles.serviceDesc, isHovered && { color: '#334155' }]}
+                        numberOfLines={isHovered ? undefined : 2}
+                      >
                         {addon.d[lang] || addon.d[0]}
                       </Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                        <Text style={[styles.priceTag, isSelected && styles.priceTagActive]}>
+                        <Text style={[styles.priceTag, (isSelected || isHovered) && styles.priceTagActive]}>
                           {addon.p != null
                             ? `${addon.p} ${isBn ? 'টাকা' : 'Tk'}${addon.priceUnit === 'bag' ? ` / ${isBn ? 'ব্যাগ' : 'bag'}` : addon.priceUnit === 'person' ? ` / ${isBn ? 'জন' : 'person'}` : ''}`
                             : isBn
@@ -634,6 +652,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    transition: 'all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
   },
   iconContainerActive: {
     backgroundColor: '#E0F2FE',

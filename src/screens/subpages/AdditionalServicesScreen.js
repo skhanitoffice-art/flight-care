@@ -35,6 +35,7 @@ export default function AdditionalServicesScreen({
 
   const [localSelected, setLocalSelected] = useState(selectedAddons || []);
   const [localDetails, setLocalDetails] = useState(addonDetails || {});
+  const [hoveredCardId, setHoveredCardId] = useState(null);
 
   const toggleService = id => {
     setLocalSelected(prev => {
@@ -246,47 +247,67 @@ export default function AdditionalServicesScreen({
         <View style={{ gap: 12 }}>
           {ADDONS.map(addon => {
             const isSelected = localSelected.includes(addon.id);
+            const isHovered = hoveredCardId === addon.id;
             const assetSource = getAddonAsset(addon.id);
 
             return (
               <TouchableOpacity
                 key={addon.id}
-                activeOpacity={0.85}
+                activeOpacity={0.88}
                 onPress={() => toggleService(addon.id)}
+                // @ts-ignore
+                onMouseEnter={() => setHoveredCardId(addon.id)}
+                onMouseLeave={() => setHoveredCardId(null)}
                 style={{
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: isSelected ? '#F0F9FF' : '#FFFFFF',
                   borderRadius: 16,
                   borderWidth: 2,
-                  borderColor: isSelected ? '#0284C7' : '#E2E8F0',
+                  borderColor: isSelected ? '#0284C7' : (isHovered ? '#0284C7' : '#E2E8F0'),
                   padding: 14,
                   shadowColor: isSelected ? '#0284C7' : '#0F172A',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: isSelected ? 0.08 : 0.04,
-                  shadowRadius: 6,
-                  elevation: 2,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: isSelected ? 0.12 : (isHovered ? 0.15 : 0.04),
+                  shadowRadius: isHovered ? 12 : 6,
+                  elevation: isHovered ? 4 : 2,
+                  ...(Platform.OS === 'web'
+                    ? {
+                        cursor: 'pointer',
+                        transition: 'all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        transform: isHovered ? 'translateY(-4px) scale(1.02)' : 'translateY(0) scale(1)',
+                        boxShadow: isHovered
+                          ? '0 16px 24px -4px rgba(2, 132, 199, 0.2), 0 6px 10px -4px rgba(2, 132, 199, 0.1)'
+                          : 'none',
+                      }
+                    : {}),
                 }}
               >
                 {/* Header Row: Icon, Title, Checkbox, Price */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <View
                     style={{
-                      width: 52,
-                      height: 52,
-                      borderRadius: 12,
-                      backgroundColor: isSelected ? '#E0F2FE' : '#F1F5F9',
+                      width: 54,
+                      height: 54,
+                      borderRadius: 14,
+                      backgroundColor: isHovered ? '#BAE6FD' : (isSelected ? '#E0F2FE' : '#F1F5F9'),
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderWidth: 1,
-                      borderColor: isSelected ? '#BAE6FD' : '#E2E8F0',
+                      borderWidth: 1.5,
+                      borderColor: isHovered ? '#0284C7' : (isSelected ? '#BAE6FD' : '#E2E8F0'),
+                      ...(Platform.OS === 'web'
+                        ? {
+                            transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                            transform: isHovered ? 'scale(1.18) rotate(-7deg)' : 'scale(1) rotate(0deg)',
+                          }
+                        : {}),
                     }}
                   >
                     {assetSource ? (
                       <Image
                         source={assetSource}
-                        style={{ width: 38, height: 38, resizeMode: 'contain' }}
+                        style={{ width: 40, height: 40, resizeMode: 'contain' }}
                       />
                     ) : (
-                      <Text style={{ fontSize: 26 }}>{addon.icon || '✨'}</Text>
+                      <Text style={{ fontSize: 28 }}>{addon.icon || '✨'}</Text>
                     )}
                   </View>
 
@@ -294,9 +315,9 @@ export default function AdditionalServicesScreen({
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Text
                         style={{
-                          fontSize: 15,
+                          fontSize: 15.5,
                           fontWeight: '800',
-                          color: isSelected ? '#0284C7' : '#0F172A',
+                          color: (isSelected || isHovered) ? '#0284C7' : '#0F172A',
                         }}
                       >
                         {isBn ? addon.n[1] : addon.n[0]}
@@ -304,12 +325,12 @@ export default function AdditionalServicesScreen({
                     </View>
                     <Text
                       style={{
-                        fontSize: 12,
-                        color: '#64748B',
+                        fontSize: 12.5,
+                        color: isHovered ? '#334155' : '#64748B',
                         marginTop: 2,
-                        lineHeight: 16,
+                        lineHeight: 18,
                       }}
-                      numberOfLines={2}
+                      numberOfLines={isHovered ? undefined : 2}
                     >
                       {isBn ? addon.d[1] : addon.d[0]}
                     </Text>
