@@ -160,43 +160,65 @@ export default function MakePlacardModal({
     return null;
   };
 
-  // Handle Download HD Placard
-  const handleDownload = async () => {
+  // Handle Download HD Placard (Synchronous trigger to prevent browser blockers)
+  const handleDownload = () => {
+    const effectiveName = (passengerName && passengerName.trim()) ? passengerName.trim() : 'MR. ISHAUJHYAODS';
     if (!passengerName || !passengerName.trim()) {
-      setStatusNotice(isBn ? '⚠️ অনুগ্রহ করে যাত্রীর নাম ইনপুট দিন' : '⚠️ Please enter passenger name');
-      setTimeout(() => setStatusNotice(''), 3000);
-      return;
+      setPassengerName('MR. ISHAUJHYAODS');
     }
 
-    await handleSaveToHistory();
+    // Save to history asynchronously in background
+    savePlacardRecord({
+      passengerName: effectiveName,
+      serviceDate,
+      flightNumber,
+      managerSession,
+    }).then(saved => {
+      if (saved) {
+        setLastSavedId(saved.id);
+        loadHistory();
+      }
+    }).catch(() => {});
 
+    // Instant HD Download
     downloadPlacardImage({
-      passengerName,
+      passengerName: effectiveName,
       flightNumber,
       serviceDate,
       onSuccess: () => {
-        setStatusNotice(isBn ? '✓ এইচডি প্লেকার্ড সফলভাবে ডাউনলোড হয়েছে!' : '✓ HD Placard downloaded successfully!');
+        setStatusNotice(isBn ? '✓ এইচডি প্লেকার্ড ডাউনলোড হয়েছে!' : '✓ HD Placard downloaded successfully!');
         setTimeout(() => setStatusNotice(''), 4000);
       },
     });
   };
 
-  // Handle Direct Print A4 Placard
-  const handlePrint = async () => {
+  // Handle Direct Print A4 Placard (Synchronous trigger with iframe print)
+  const handlePrint = () => {
+    const effectiveName = (passengerName && passengerName.trim()) ? passengerName.trim() : 'MR. ISHAUJHYAODS';
     if (!passengerName || !passengerName.trim()) {
-      setStatusNotice(isBn ? '⚠️ অনুগ্রহ করে যাত্রীর নাম ইনপুট দিন' : '⚠️ Please enter passenger name');
-      setTimeout(() => setStatusNotice(''), 3000);
-      return;
+      setPassengerName('MR. ISHAUJHYAODS');
     }
 
-    await handleSaveToHistory();
+    // Save to history asynchronously in background
+    savePlacardRecord({
+      passengerName: effectiveName,
+      serviceDate,
+      flightNumber,
+      managerSession,
+    }).then(saved => {
+      if (saved) {
+        setLastSavedId(saved.id);
+        loadHistory();
+      }
+    }).catch(() => {});
 
+    // Instant Direct Print
     printPlacardDirect({
-      passengerName,
+      passengerName: effectiveName,
       flightNumber,
       serviceDate,
       onSuccess: () => {
-        setStatusNotice(isBn ? '✓ প্রিন্ট উইন্ডো প্রস্তুত করা হয়েছে' : '✓ Print window opened');
+        setStatusNotice(isBn ? '✓ প্রিন্ট প্রস্তুত করা হয়েছে' : '✓ Print dialog ready');
         setTimeout(() => setStatusNotice(''), 4000);
       },
     });

@@ -1,4 +1,4 @@
-import { formatPlacardDate } from '../services/placardService';
+import { formatPlacardDate, downloadPlacardImage, printPlacardDirect } from '../services/placardService';
 // src/components/VipPlacardModal.js
 // Flight Care Enterprise - VIP Airport Protocol Placard / Greeter Nameboard Modal
 
@@ -84,245 +84,26 @@ export default function VipPlacardModal({
   const nameFontSize = Math.max(22, baseNameSize);
   const flightFontSize = Math.max(12, Math.min(26, Math.round(cardWidth * 0.029)));
 
-  // Generate High-Res Canvas Image for Download
+  // Generate High-Res Canvas Image for Download (Instant Base64 Renderer)
   const handleDownloadPlacard = () => {
-    if (Platform.OS === 'web' && typeof document !== 'undefined') {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1024;
-        canvas.height = 724;
-        const ctx = canvas.getContext('2d');
-
-        const img = new window.Image();
-        img.crossOrigin = 'anonymous';
-        img.src = '/placard_template.png';
-
-        const renderCanvas = () => {
-          ctx.drawImage(img, 0, 0, 1024, 724);
-
-          // 1. Draw Passenger Name - Maximum Large Scale matching reference design
-          ctx.fillStyle = '#012B14';
-          let canvasNameSize = 138;
-          ctx.font = `900 ${canvasNameSize}px 'Impact', 'Montserrat', 'Arial Black', sans-serif`;
-          const maxNameWidth = 940;
-          const measuredW = ctx.measureText(formattedName).width;
-          if (measuredW > maxNameWidth) {
-            canvasNameSize = Math.floor(canvasNameSize * (maxNameWidth / measuredW));
-          }
-          canvasNameSize = Math.max(50, canvasNameSize);
-          ctx.font = `900 ${canvasNameSize}px 'Impact', 'Montserrat', 'Arial Black', sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(formattedName, 512, 382);
-
-          // 2. Draw Center Gold Divider Line at x=512
-          ctx.fillStyle = '#CAA048';
-          ctx.fillRect(511, 458, 2, 54);
-
-          // 3. Draw Flight & Date Info with Icons
-          const planeImg = new window.Image();
-          planeImg.crossOrigin = 'anonymous';
-          planeImg.src = '/placard_plane_icon.png';
-
-          const calImg = new window.Image();
-          calImg.crossOrigin = 'anonymous';
-          calImg.src = '/placard_cal_icon.png';
-
-          const drawFinal = () => {
-            // Left: Plane Icon + FLIGHT: + flight number
-            try {
-              ctx.drawImage(planeImg, 215, 465, 46, 36);
-            } catch {}
-            ctx.textAlign = 'left';
-            ctx.fillStyle = '#012B14';
-            ctx.font = `800 13px sans-serif`;
-            ctx.fillText('FLIGHT:', 275, 466);
-            ctx.fillStyle = '#012B14';
-            ctx.font = `900 30px 'Impact', 'Arial Black', 'Montserrat', sans-serif`;
-            ctx.fillText(cleanFlight, 275, 502);
-
-            // Right: Calendar Icon + DATE: + date text
-            try {
-              ctx.drawImage(calImg, 535, 463, 34, 38);
-            } catch {}
-            ctx.textAlign = 'left';
-            ctx.fillStyle = '#012B14';
-            ctx.font = `800 13px sans-serif`;
-            ctx.fillText('DATE:', 585, 466);
-            ctx.fillStyle = '#012B14';
-            ctx.font = `900 29px 'Impact', 'Arial Black', 'Montserrat', sans-serif`;
-            ctx.fillText(formattedDate, 585, 502);
-
-            // 4. Trigger Instant Download
-            const dataUrl = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            const safeName = formattedName.replace(/[^a-zA-Z0-9]/g, '_');
-            link.download = `FlightCare_Placard_${cleanFlight}_${safeName}.png`;
-            link.href = dataUrl;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            setDownloadSuccess(true);
-            setTimeout(() => setDownloadSuccess(false), 3000);
-          };
-
-          let loadedCount = 0;
-          const markLoaded = () => {
-            loadedCount += 1;
-            if (loadedCount >= 2) drawFinal();
-          };
-          planeImg.onload = markLoaded;
-          calImg.onload = markLoaded;
-          planeImg.onerror = markLoaded;
-          calImg.onerror = markLoaded;
-          setTimeout(() => {
-            if (loadedCount < 2) drawFinal();
-          }, 350);
-        };
-
-        img.onload = renderCanvas;
-        img.onerror = () => {
-          img.src = './placard_template.png';
-        };
-      } catch (err) {
-        console.warn('Placard download notice:', err);
-      }
-    }
+    downloadPlacardImage({
+      passengerName: formattedName,
+      flightNumber: cleanFlight,
+      serviceDate: formattedDate,
+      onSuccess: () => {
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 3000);
+      },
+    });
   };
 
-  // High-Resolution Print Window with CSS A4 Landscape
+  // Direct Print Placard (Unblockable Iframe Printer)
   const handlePrintPlacard = () => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      try {
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) return;
-
-        printWindow.document.write(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Flight Care VIP Placard - ${formattedName} (${cleanFlight})</title>
-            <style>
-              @page {
-                size: A4 landscape;
-                margin: 0;
-              }
-              body {
-                margin: 0;
-                padding: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-height: 100vh;
-                background-color: #FFFFFF;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-              .placard-container {
-                position: relative;
-                width: 1024px;
-                height: 724px;
-                max-width: 100vw;
-                max-height: 100vh;
-              }
-              .bg-image {
-                width: 100%;
-                height: 100%;
-                display: block;
-              }
-              .name-overlay {
-                position: absolute;
-                top: 52.8%;
-                left: 3%;
-                width: 94%;
-                text-align: center;
-                transform: translateY(-50%);
-                font-family: 'Impact', 'Montserrat', 'Arial Black', sans-serif;
-                font-size: ${formattedName.length > 25 ? '78px' : formattedName.length > 20 ? '96px' : formattedName.length > 15 ? '116px' : '138px'};
-                font-weight: 900;
-                color: #012B14;
-                letter-spacing: 1.5px;
-                text-transform: uppercase;
-                white-space: nowrap;
-              }
-              .flight-date-overlay {
-                position: absolute;
-                top: 67%;
-                left: 6%;
-                width: 88%;
-                transform: translateY(-50%);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              }
-              .info-group {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-              }
-              .info-icon {
-                height: 38px;
-                object-fit: contain;
-              }
-              .info-text {
-                display: flex;
-                flex-direction: column;
-                text-align: left;
-              }
-              .info-label {
-                font-family: sans-serif;
-                font-size: 13px;
-                font-weight: 800;
-                color: #012B14;
-                letter-spacing: 0.8px;
-              }
-              .info-val {
-                font-family: 'Impact', 'Arial Black', 'Montserrat', sans-serif;
-                font-size: 30px;
-                font-weight: 900;
-                color: #012B14;
-                letter-spacing: 0.5px;
-              }
-              .gold-divider-bar {
-                width: 2px;
-                height: 48px;
-                background-color: #CAA048;
-                margin: 0 24px;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="placard-container">
-              <img src="/placard_template.png" class="bg-image" onload="window.print(); setTimeout(() => window.close(), 1000);" />
-              <div class="name-overlay">${formattedName}</div>
-              <div class="flight-date-overlay">
-                <div class="info-group">
-                  <img src="/placard_plane_icon.png" class="info-icon" />
-                  <div class="info-text">
-                    <span class="info-label">FLIGHT:</span>
-                    <span class="info-val">${cleanFlight}</span>
-                  </div>
-                </div>
-                <div class="gold-divider-bar"></div>
-                <div class="info-group">
-                  <img src="/placard_cal_icon.png" class="info-icon" />
-                  <div class="info-text">
-                    <span class="info-label">DATE:</span>
-                    <span class="info-val">${formattedDate}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </body>
-          </html>
-        `);
-        printWindow.document.close();
-      } catch (err) {
-        console.warn('Print error:', err);
-      }
-    }
+    printPlacardDirect({
+      passengerName: formattedName,
+      flightNumber: cleanFlight,
+      serviceDate: formattedDate,
+    });
   };
 
   return (
