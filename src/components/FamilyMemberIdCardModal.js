@@ -121,6 +121,50 @@ export default function FamilyMemberIdCardModal({
   }, [member]);
 
   const isOwner = member ? Number(member.serial) === 1 : false;
+
+  const isManagement = useMemo(() => {
+    if (!member) return false;
+    if (Number(member.serial) === 1) return true;
+    const rLower = (member.rank || member.role || '').toLowerCase();
+    const dLower = (member.department || '').toLowerCase();
+    const cLower = (member.departmentCategory || '').toLowerCase();
+    const bUpper = (member.badgeNo || member.id || '').toUpperCase();
+    return (
+      cLower === 'management' ||
+      dLower.includes('top management') ||
+      dLower.includes('human resource') ||
+      rLower.includes('chairman') ||
+      rLower.includes('ceo') ||
+      rLower.includes('hr') ||
+      rLower.includes('agm') ||
+      rLower.includes('coordinator') ||
+      rLower.includes('it head') ||
+      rLower.includes('director') ||
+      rLower.includes('managing') ||
+      bUpper.startsWith('FC-CHM') ||
+      bUpper.startsWith('FC-CEO') ||
+      bUpper.startsWith('FC-HR') ||
+      bUpper.startsWith('FC-AGM') ||
+      bUpper.startsWith('FC-CTC') ||
+      bUpper.startsWith('FC-IT')
+    );
+  }, [member]);
+
+  const isFrontDesk = useMemo(() => {
+    if (!member) return false;
+    const rLower = (member.rank || member.role || '').toLowerCase();
+    const dLower = (member.department || '').toLowerCase();
+    const cLower = (member.departmentCategory || '').toLowerCase();
+    const bUpper = (member.badgeNo || member.id || '').toUpperCase();
+    return (
+      cLower === 'front_desk' ||
+      rLower.includes('front desk') ||
+      dLower.includes('front desk') ||
+      rLower.includes('fdo') ||
+      bUpper.startsWith('FC-FDO')
+    );
+  }, [member]);
+
   const qrData = useMemo(() => {
     if (!member) return { verificationUrl: '', qrImageUrl: '', vcardText: '', vcardQrImageUrl: '', securitySeal: '' };
     return generateFamilyMemberQrData(member);
@@ -137,32 +181,310 @@ export default function FamilyMemberIdCardModal({
   // Core specializations list (Run unconditionally to adhere to React Rules of Hooks)
   const specialties = useMemo(() => {
     if (!member) return [];
-    if (isOwner) {
-      return isBn
-        ? ['কোম্পানি মালিকানা ও শীর্ষ পরিচালনা কমান্ড', 'সিভিল এভিয়েশন অথরিটি (CAAB) লিয়াজোঁ', 'ভিভিআইপি ও রাষ্ট্রীয় অতিথি প্রোটোকল', 'কর্পোরেট স্ট্র্যাটেজি ও জরুরি রেসপন্স']
-        : ['Company Ownership & Operational Command', 'Civil Aviation Authority (CAAB) Liaison', 'VVIP & State Guest Protocol', 'Corporate Strategy & Crisis Response'];
-    }
-    const rLower = (member.rank || '').toLowerCase();
+    const rLower = (member.rank || member.role || '').toLowerCase();
     const dLower = (member.department || '').toLowerCase();
-    if (rLower.includes('manager') || rLower.includes('agm') || rLower.includes('ceo')) {
+    const bUpper = (member.badgeNo || member.id || '').toUpperCase();
+
+    // 1. Chairman / Founder
+    if (isOwner || rLower.includes('chairman') || bUpper.startsWith('FC-CHM')) {
       return isBn
-        ? ['এয়ারপোর্ট গ্রাউন্ড অপারেশনস কমান্ড', 'টার্মিনাল ও ফ্লোর সুপারভিশন', 'জরুরি ফ্লাইট বিলম্ব সমাধান', 'ভিআইপি প্যাসেঞ্জার এসকেলেশন']
-        : ['Airport Ground Operations Command', 'Terminal & Floor Supervision', 'Flight Delay Crisis Response', 'VIP Passenger Escalation'];
+        ? [
+            'কোম্পানি মালিকানা ও শীর্ষ পরিচালনা কমান্ড',
+            'সিভিল এভিয়েশন অথরিটি (CAAB) লিয়াজোঁ',
+            'ভিভিআইপি ও রাষ্ট্রীয় অতিথি প্রোটোকল',
+            'কর্পোরেট পলিসি ও কৌশলগত সিদ্ধান্ত',
+          ]
+        : [
+            'Company Ownership & Operational Command',
+            'Civil Aviation Authority (CAAB) Liaison',
+            'VVIP & State Guest Protocol Governance',
+            'Corporate Policy & Strategic Leadership',
+          ];
     }
-    if (rLower.includes('front desk') || dLower.includes('front desk') || rLower.includes('fdo')) {
+
+    // 2. CEO
+    if (rLower.includes('ceo') || bUpper.startsWith('FC-CEO')) {
       return isBn
-        ? ['বিমানবন্দর ক্যানোপি অভ্যর্থনা ও প্যাসেঞ্জার রেজিস্ট্রেশন', 'ফ্লাইট স্ট্যাটাস ও টার্মিনাল ডিরেকশন সহায়তা', 'ইনস্ট্যান্ট প্রোটোকল অফিসার হ্যান্ডওভার', 'প্যাসেঞ্জার ব্যাগেজ ট্যাগিং ও কাস্টমার সার্ভিস']
-        : ['Airport Canopy Reception & Passenger Registration', 'Flight Status & Terminal Navigation Guidance', 'Instant Protocol Officer Handover', 'Passenger Baggage Tagging & Customer Service'];
+        ? [
+            'প্রধান নির্বাহী কমান্ড ও কৌশলগত পরিচালনা',
+            'এয়ারপোর্ট সার্বিক প্রোটোকল অপারেশনস তদারকি',
+            'এয়ারলাইন্স অথরিটি ও হাই-লেভেল লিয়াজোঁ',
+            'ভিআইপি সার্ভিস মান নিয়ন্ত্রণ ও এসকেলেশন',
+          ]
+        : [
+            'Chief Executive Command & Strategic Direction',
+            'Airport Ground Operations Overall Supervision',
+            'Airline Authority & Executive Liaison',
+            'VIP Service Quality Control & Escalation',
+          ];
     }
+
+    // 3. HR Head / Human Resources
+    if (rLower.includes('hr') || dLower.includes('human resource') || bUpper.startsWith('FC-HR')) {
+      return isBn
+        ? [
+            'মানবসম্পদ ব্যবস্থাপনা ও নিয়োগ প্রক্রিয়া',
+            'এয়ারপোর্ট সিকিউরিটি ক্লিয়ারেন্স ও ব্যাকগ্রাউন্ড যাচাই',
+            'প্রোটোকল অফিসার ট্রেনিং ও প্রফেশনাল গ্রুমিং',
+            'স্টাফ কল্যাণ ও সিএএবি পাস সমন্বয়',
+          ]
+        : [
+            'Human Resources Management & Recruitment',
+            'Airport Security Clearance & Background Verification',
+            'Protocol Officer Training & Professional Grooming',
+            'Staff Welfare & CAAB Pass Facilitation',
+          ];
+    }
+
+    // 4. AGM
+    if (rLower.includes('agm') || bUpper.startsWith('FC-AGM')) {
+      return isBn
+        ? [
+            'অপারেশনাল লজিস্টিকস ও টার্মিনাল সমন্বয়',
+            'শিফট রস্টার ও গ্রাউন্ড স্টাফ মোবিলাইজেশন',
+            'ফ্লাইট বিলম্ব ও প্যাসেঞ্জার ক্রাইসিস রেসপন্স',
+            'সিভিল এভিয়েশন প্রশাসনিক সমন্বয়',
+          ]
+        : [
+            'Operations Logistics & Terminal Coordination',
+            'Shift Roster & Ground Staff Mobilization',
+            'Flight Delay & Passenger Crisis Response',
+            'Civil Aviation Administrative Liaison',
+          ];
+    }
+
+    // 5. Coordinator to Chairman
+    if (rLower.includes('coordinator') || bUpper.startsWith('FC-CTC') || bUpper.startsWith('FC-COORD')) {
+      return isBn
+        ? [
+            'চেয়ারম্যান সচিবালয় প্রশাসনিক সমন্বয়',
+            'এক্সিকিউটিভ ভিভিআইপি প্রোটোকল তদারকি',
+            'সিভিল এভিয়েশন ও এয়ারলাইন্স সমন্বয়',
+            'কর্পোরেট অপারেশনস মনিটরিং ও রিপোর্টিং',
+          ]
+        : [
+            'Chairman Secretariat Administrative Coordination',
+            'Executive VVIP Protocol Oversight',
+            'Civil Aviation & Airline Authority Liaison',
+            'Corporate Operations Monitoring & Reporting',
+          ];
+    }
+
+    // 6. IT Head
+    if (rLower.includes('it') || rLower.includes('tech') || dLower.includes('it') || bUpper.startsWith('FC-IT')) {
+      return isBn
+        ? [
+            'ফ্লাইট কেয়ার ডিজিটাল সিস্টেমস আর্কিটেকচার',
+            'লাইভ ফ্লাইট ট্র্যাকিং ও রাডার ইন্টিগ্রেশন',
+            'ডিজিটাল আইডি ভেরিফিকেশন ও কিউআর ইনফ্রাস্ট্রাকচার',
+            'সাইবার সিকিউরিটি ও ক্লাউড ডাটাবেজ সুরক্ষা',
+          ]
+        : [
+            'Flight Care Digital Systems Architecture',
+            'Live Flight Tracking & Radar Integration',
+            'Digital ID Verification & QR Infrastructure',
+            'Cyber Security & Cloud Database Protection',
+          ];
+    }
+
+    // 7. Other Management / Executive
+    if (rLower.includes('manager')) {
+      return isBn
+        ? [
+            'এয়ারপোর্ট গ্রাউন্ড অপারেশনস কমান্ড',
+            'টার্মিনাল ও ফ্লোর সুপারভিশন',
+            'জরুরি ফ্লাইট বিলম্ব সমাধান',
+            'ভিআইপি প্যাসেঞ্জার এসকেলেশন',
+          ]
+        : [
+            'Airport Ground Operations Command',
+            'Terminal & Floor Supervision',
+            'Flight Delay Crisis Response',
+            'VIP Passenger Escalation',
+          ];
+    }
+
+    // 8. Front Desk Officers
+    if (rLower.includes('front desk') || dLower.includes('front desk') || rLower.includes('fdo') || bUpper.startsWith('FC-FDO')) {
+      return isBn
+        ? [
+            'বিমানবন্দর ক্যানোপি অভ্যর্থনা ও প্যাসেঞ্জার রেজিস্ট্রেশন',
+            'ফ্লাইট স্ট্যাটাস ও টার্মিনাল ডিরেকশন সহায়তা',
+            'ইনস্ট্যান্ট প্রোটোকল অফিসার হ্যান্ডওভার',
+            'প্যাসেঞ্জার ব্যাগেজ ট্যাগিং ও কাস্টমার সার্ভিস',
+          ]
+        : [
+            'Airport Canopy Reception & Passenger Registration',
+            'Flight Status & Terminal Navigation Guidance',
+            'Instant Protocol Officer Handover',
+            'Passenger Baggage Tagging & Customer Service',
+          ];
+    }
+
+    // 9. Shift In-Charges
     if (rLower.includes('shift') || dLower.includes('shift')) {
       return isBn
-        ? ['শিফট ডিউটি ও টার্মিনাল মুভমেন্ট সমন্বয়', 'এয়ারলাইন্স চেক-ইন কাউন্টার সমন্বয়', 'জরুরি অ্যারাইভাল ও ডিপার্চার ফ্লো হ্যান্ডলিং', 'অফিসার ডিউটি রস্টার ও গ্রাউন্ড মনিটরিং']
-        : ['Shift Duty & Terminal Movement Coordination', 'Airlines Check-in Counter Coordination', 'Urgent Arrival & Departure Flow Handling', 'Officer Duty Roster & Ground Monitoring'];
+        ? [
+            'শিফট ডিউটি ও টার্মিনাল মুভমেন্ট সমন্বয়',
+            'এয়ারলাইন্স চেক-ইন কাউন্টার সমন্বয়',
+            'জরুরি অ্যারাইভাল ও ডিপার্চার ফ্লো হ্যান্ডলিং',
+            'অফিসার ডিউটি রস্টার ও গ্রাউন্ড মনিটরিং',
+          ]
+        : [
+            'Shift Duty & Terminal Movement Coordination',
+            'Airlines Check-in Counter Coordination',
+            'Urgent Arrival & Departure Flow Handling',
+            'Officer Duty Roster & Ground Monitoring',
+          ];
     }
+
+    // 10. Operational Field Protocol Officers (Escorts / Greeters)
     return isBn
-      ? ['ভিআইপি বোর্ডিং ব্রিজ অভ্যর্থনা ও নামপ্লেট এসকর্ট', 'ফাস্ট-ট্র্যাক ইমিগ্রেশন ও কাস্টমস সহায়তা', 'লাগেজ বেল্ট অগ্রাধিকার খালাস ও তদারকি', 'সিআইপি লাউঞ্জ এসকর্ট ও বোর্ডিং গ্রিটিং']
-      : ['VIP Boarding Bridge Greeting & Placard Escort', 'Fast-Track Immigration & Customs Clearance', 'Priority Baggage Handling & Belt Supervision', 'CIP Lounge Escort & Boarding Assistance'];
-  }, [isOwner, member?.rank, member?.department, isBn]);
+      ? [
+          'ভিআইপি বোর্ডিং ব্রিজ অভ্যর্থনা ও নামপ্লেট এসকর্ট',
+          'ফাস্ট-ট্র্যাক ইমিগ্রেশন ও কাস্টমস সহায়তা',
+          'লাগেজ বেল্ট অগ্রাধিকার খালাস ও তদারকি',
+          'সিআইপি লাউঞ্জ এসকর্ট ও বোর্ডিং গ্রিটিং',
+        ]
+      : [
+          'VIP Boarding Bridge Greeting & Placard Escort',
+          'Fast-Track Immigration & Customs Clearance',
+          'Priority Baggage Handling & Belt Supervision',
+          'CIP Lounge Escort & Boarding Assistance',
+        ];
+  }, [isOwner, member?.rank, member?.role, member?.department, member?.badgeNo, member?.id, isBn]);
+
+  // 4 Performance & Safety / Executive Metrics Grid
+  const kpiMetrics = useMemo(() => {
+    if (!member) return [];
+    const rLower = (member.rank || member.role || '').toLowerCase();
+    const bUpper = (member.badgeNo || member.id || '').toUpperCase();
+
+    // 1. Management Members (Chairman, CEO, HR Head, Coordinator, AGM, IT Head, etc.)
+    // ZERO unwarranted "180+ Services" or rating scores!
+    if (isManagement) {
+      let roleVal = isBn ? '🏢 শীর্ষ ব্যবস্থাপনা' : '🏢 Top Management';
+      let scopeVal = isBn ? '🛡️ কর্পোরেট কমান্ড' : '🛡️ Corporate Command';
+
+      if (isOwner || rLower.includes('chairman') || bUpper.startsWith('FC-CHM')) {
+        roleVal = isBn ? '👑 চেয়ারম্যান ও প্রতিষ্ঠাতা' : '👑 Founder & Chairman';
+        scopeVal = isBn ? '🏛️ কর্পোরেট পরিচালনা' : '🏛️ Corporate Governance';
+      } else if (rLower.includes('ceo') || bUpper.startsWith('FC-CEO')) {
+        roleVal = isBn ? '💼 প্রধান নির্বাহী (CEO)' : '💼 Chief Executive (CEO)';
+        scopeVal = isBn ? '🚀 ওভারঅল অপারেশন্স' : '🚀 Operations Command';
+      } else if (rLower.includes('hr') || bUpper.startsWith('FC-HR')) {
+        roleVal = isBn ? '🤝 হেড অব এইচআর' : '🤝 Head of HR & Admin';
+        scopeVal = isBn ? '👥 মানবসম্পদ ও কল্যাণ' : '👥 People & Culture';
+      } else if (rLower.includes('agm') || bUpper.startsWith('FC-AGM')) {
+        roleVal = isBn ? '👔 সহকারী মহাব্যবস্থাপক' : '👔 Assistant General Manager';
+        scopeVal = isBn ? '📋 অপারেশনাল লজিস্টিকস' : '📋 Operational Logistics';
+      } else if (rLower.includes('coordinator') || bUpper.startsWith('FC-CTC')) {
+        roleVal = isBn ? '🎖️ চেয়ারম্যানের সমন্বয়কারী' : '🎖️ Chairman Secretariat';
+        scopeVal = isBn ? '📑 কৌশলগত সমন্বয়' : '📑 Strategic Coordination';
+      } else if (rLower.includes('it') || bUpper.startsWith('FC-IT')) {
+        roleVal = isBn ? '💻 আইটি হেড ও সিস্টেমস' : '💻 Head of IT & Systems';
+        scopeVal = isBn ? '🌐 সিস্টেম হাব ও ডাটা' : '🌐 Digital Infrastructure';
+      }
+
+      return [
+        {
+          label: isBn ? 'পদমর্যাদা ও ভূমিকা' : 'Executive Designation',
+          val: roleVal,
+          bg: '#FEF3C7',
+          border: '#FDE68A',
+          text: '#B45309',
+        },
+        {
+          label: isBn ? 'দায়িত্ব ও কমান্ড' : 'Governance & Scope',
+          val: scopeVal,
+          bg: '#EFF6FF',
+          border: '#DBEAFE',
+          text: '#1D4ED8',
+        },
+        {
+          label: isBn ? 'কার্যকাল / যোগদান' : 'Service Tenure',
+          val: `🗓️ ${member.joinedDate || (isBn ? '২০২৩ সাল হতে' : 'Since 2023')}`,
+          bg: '#ECFDF5',
+          border: '#A7F3D0',
+          text: '#047857',
+        },
+        {
+          label: isBn ? 'রক্তের গ্রুপ' : 'Blood Group',
+          val: `🩸 ${member.bloodGroup || 'A+'}`,
+          bg: '#FEE2E2',
+          border: '#FECACA',
+          text: '#B91C1C',
+        },
+      ];
+    }
+
+    // 2. Front Desk Officers (Canopy registration & counter guidance)
+    if (isFrontDesk) {
+      return [
+        {
+          label: isBn ? 'সার্ভিস ডেস্ক' : 'Service Counter',
+          val: `🏢 ${isBn ? 'ক্যানোপি ও ফ্রন্ট ডেস্ক' : 'Canopy & Front Desk'}`,
+          bg: '#FEF3C7',
+          border: '#FDE68A',
+          text: '#B45309',
+        },
+        {
+          label: isBn ? 'প্যাসেঞ্জার সহায়তা' : 'Passenger Support',
+          val: `👥 ${isBn ? '১০০% সার্বক্ষণিক সহায়তা' : '100% Dedicated Support'}`,
+          bg: '#EFF6FF',
+          border: '#DBEAFE',
+          text: '#1D4ED8',
+        },
+        {
+          label: isBn ? 'কার্যকাল / যোগদান' : 'Service Tenure',
+          val: `🗓️ ${member.joinedDate || (isBn ? '২০২৪ সাল হতে' : 'Since 2024')}`,
+          bg: '#ECFDF5',
+          border: '#A7F3D0',
+          text: '#047857',
+        },
+        {
+          label: isBn ? 'রক্তের গ্রুপ' : 'Blood Group',
+          val: `🩸 ${member.bloodGroup || 'O+'}`,
+          bg: '#FEE2E2',
+          border: '#FECACA',
+          text: '#B91C1C',
+        },
+      ];
+    }
+
+    // 3. Operational Field Protocol Officers (Escorts / Greeters on Flight Duties)
+    const completedCount = member.completedServices || member.totalServices || '120+';
+    return [
+      {
+        label: isBn ? 'কাস্টমার রেটিং' : 'Rating Score',
+        val: '⭐ 5.0 / 5.0',
+        bg: '#FEF3C7',
+        border: '#FDE68A',
+        text: '#B45309',
+      },
+      {
+        label: isBn ? 'সম্পন্ন প্রোটোকল' : 'Protocols Handled',
+        val: `✈️ ${completedCount} ${isBn ? 'সার্ভিসেস' : 'Services'}`,
+        bg: '#EFF6FF',
+        border: '#DBEAFE',
+        text: '#1D4ED8',
+      },
+      {
+        label: isBn ? 'অন-টাইম উপস্থিতি' : 'Punctuality',
+        val: '⏱️ 99.8% On-Time',
+        bg: '#ECFDF5',
+        border: '#A7F3D0',
+        text: '#047857',
+      },
+      {
+        label: isBn ? 'রক্তের গ্রুপ' : 'Blood Group',
+        val: `🩸 ${member.bloodGroup || 'O+'}`,
+        bg: '#FEE2E2',
+        border: '#FECACA',
+        text: '#B91C1C',
+      },
+    ];
+  }, [member, isManagement, isFrontDesk, isOwner, isBn]);
 
   const handleCopyLink = () => {
     if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -557,12 +879,7 @@ export default function FamilyMemberIdCardModal({
 
               {/* 4 Performance & Safety Metrics Grid */}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                {[
-                  { label: isBn ? 'কাস্টমার রেটিং' : 'Rating Score', val: '⭐ 5.0 / 5.0', bg: '#FEF3C7', border: '#FDE68A', text: '#B45309' },
-                  { label: isBn ? 'সম্পন্ন প্রোটোকল' : 'Protocols Handled', val: '✈️ 180+ Services', bg: '#EFF6FF', border: '#DBEAFE', text: '#1D4ED8' },
-                  { label: isBn ? 'অন-টাইম উপস্থিতি' : 'Punctuality', val: '⏱️ 99.8% On-Time', bg: '#ECFDF5', border: '#A7F3D0', text: '#047857' },
-                  { label: isBn ? 'রক্তের গ্রুপ' : 'Blood Group', val: `🩸 ${member.bloodGroup || 'O+'}`, bg: '#FEE2E2', border: '#FECACA', text: '#B91C1C' },
-                ].map((item, idx) => (
+                {kpiMetrics.map((item, idx) => (
                   <View
                     key={idx}
                     style={{
@@ -654,7 +971,7 @@ export default function FamilyMemberIdCardModal({
                 }}
               >
                 <Text style={{ fontSize: 13, fontWeight: '900', color: '#0F172A' }}>
-                  🎖️ {isBn ? 'বিশেষ প্রোটোকল দক্ষতা ও কর্মপরিধি:' : 'Core Protocol Specializations:'}
+                  🎖️ {isManagement ? (isBn ? 'কর্পোরেট কর্মপরিধি ও বিশেষ দক্ষতা:' : 'Executive Competencies & Scope:') : (isBn ? 'বিশেষ প্রোটোকল দক্ষতা ও কর্মপরিধি:' : 'Core Protocol Specializations:')}
                 </Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                   {specialties.map((spec, idx) => (
@@ -701,7 +1018,7 @@ export default function FamilyMemberIdCardModal({
                   }}
                 >
                   <Text style={{ fontSize: 11, fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>
-                    {isBn ? 'অফিসিয়াল দায়িত্ব ও প্রোটোকল নোট' : 'Official Protocol Summary'}
+                    {isManagement ? (isBn ? 'অফিসিয়াল ভূমিকা ও এক্সিকিউটিভ নোট' : 'Official Executive Role & Governance') : (isBn ? 'অফিসিয়াল দায়িত্ব ও প্রোটোকল নোট' : 'Official Protocol Summary')}
                   </Text>
                   <Text style={{ fontSize: 12, color: '#334155', marginTop: 4, lineHeight: 18 }}>
                     {member.rmk}
@@ -721,7 +1038,7 @@ export default function FamilyMemberIdCardModal({
                 }}
               >
                 <Text style={{ fontSize: 13, fontWeight: '900', color: '#0F172A' }}>
-                  ⚡ {isBn ? 'তাত্ক্ষণিক যোগাযোগ ও বুকিং:' : 'Direct Contact & Booking:'}
+                  ⚡ {isManagement ? (isBn ? 'অফিসিয়াল কর্পোরেট যোগাযোগ:' : 'Official Corporate Contact:') : (isBn ? 'তাত্ক্ষণিক যোগাযোগ ও বুকিং:' : 'Direct Contact & Booking:')}
                 </Text>
 
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -744,7 +1061,7 @@ export default function FamilyMemberIdCardModal({
                     >
                       <Text style={{ fontSize: 14 }}>📞</Text>
                       <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12.5 }}>
-                        {isBn ? 'সরাসরি কল' : 'Call Officer'}
+                        {isManagement ? (isBn ? 'অফিসিয়াল কল' : 'Official Call') : (isBn ? 'সরাসরি কল' : 'Call Officer')}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -754,11 +1071,14 @@ export default function FamilyMemberIdCardModal({
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={() => {
-                        const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
-                          isBn
-                            ? `হ্যালো ${member.name}, আমি ফ্লাইট কেয়ার প্রোটোকল সার্ভিস সংক্রান্ত বিষয়ে জানতে চাচ্ছি।`
-                            : `Hello ${member.name}, I would like to inquire about Flight Care protocol service.`
-                        )}`;
+                        const waMsg = isManagement
+                          ? (isBn
+                              ? `হ্যালো ${member.name}, আমি ফ্লাইট কেয়ার সংক্রান্ত অফিসিয়াল বিষয়ে কথা বলতে চাচ্ছি।`
+                              : `Hello ${member.name}, I would like to inquire regarding Flight Care official matters.`)
+                          : (isBn
+                              ? `হ্যালো ${member.name}, আমি ফ্লাইট কেয়ার প্রোটোকল সার্ভিস সংক্রান্ত বিষয়ে জানতে চাচ্ছি।`
+                              : `Hello ${member.name}, I would like to inquire about Flight Care protocol service.`);
+                        const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMsg)}`;
                         Linking.openURL(waUrl);
                       }}
                       style={{
@@ -780,8 +1100,8 @@ export default function FamilyMemberIdCardModal({
                     </TouchableOpacity>
                   )}
 
-                  {/* Direct Booking Button */}
-                  {typeof onBookOfficer === 'function' && (
+                  {/* Direct Booking Button (Only for Operational Field Protocol Officers) */}
+                  {!isManagement && typeof onBookOfficer === 'function' && (
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={() => {
@@ -815,118 +1135,160 @@ export default function FamilyMemberIdCardModal({
                 </View>
               </View>
 
-              {/* Verified Passenger Reviews Section */}
-              <View
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: 16,
-                  padding: 14,
-                  borderWidth: 1,
-                  borderColor: '#E2E8F0',
-                  gap: 10,
-                }}
-              >
+              {/* Executive Governance & Compliance Badge (For Management) OR Passenger Reviews (For Field Protocol Officers) */}
+              {isManagement ? (
                 <View
                   style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+                    backgroundColor: '#F8FAFC',
+                    borderRadius: 16,
+                    padding: 14,
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                    gap: 10,
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ fontSize: 14 }}>⭐</Text>
-                    <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#0F172A' }}>
-                      {isBn ? 'যাত্রীদের ভেরিফাইড রিভিউ' : 'Verified Passenger Reviews'} ({reviews.length})
-                    </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ fontSize: 18 }}>🏛️</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#0F172A' }}>
+                        {isBn ? 'কর্পোরেট পরিচালনা ও সিভিল এভিয়েশন প্রশাসনিক স্বীকৃতি' : 'Corporate Governance & CAAB Executive Clearance'}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>
+                        {isBn ? 'ফ্লাইট কেয়ার বাংলাদেশ — শীর্ষ নীতি নির্ধারণ ও অপারেশনস কমান্ড' : 'Flight Care Bangladesh — Executive Command & Policy Governance'}
+                      </Text>
+                    </View>
                   </View>
 
                   <View
                     style={{
-                      backgroundColor: '#ECFDF5',
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 6,
+                      backgroundColor: '#EFF6FF',
+                      borderRadius: 10,
+                      padding: 10,
                       borderWidth: 1,
-                      borderColor: '#A7F3D0',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
+                      borderColor: '#DBEAFE',
                     }}
                   >
-                    <Text style={{ fontSize: 11, color: '#059669', fontWeight: '800' }}>
-                      ✓ {isBn ? 'ভেরিফাইড প্যাসেঞ্জার' : 'Verified Only'}
+                    <Text style={{ fontSize: 11.5, color: '#1E40AF', lineHeight: 18, fontWeight: '600' }}>
+                      {isBn
+                        ? '✓ এই প্রোফাইলটি ফ্লাইট কেয়ারের কর্পোরেট শীর্ষ নেতৃত্বের অন্তর্ভুক্ত। ভিআইপি প্রোটোকল সার্ভিস সংক্রান্ত সার্বিক নীতি নির্ধারণ, প্রশাসনিক সিদ্ধান্ত, নিরাপত্তা ছাড়পত্র ও স্টাফ সুপারভিশন এই কমান্ডের আওতাভুক্ত।'
+                        : '✓ This official profile belongs to Flight Care executive management, overseeing corporate strategy, aviation clearances, quality standards and protocol operations.'}
                     </Text>
                   </View>
                 </View>
-
-                {/* Verified Passengers Policy Notice */}
+              ) : (
+                /* Verified Passenger Reviews Section for Field Officers */
                 <View
                   style={{
-                    backgroundColor: '#F8FAFC',
-                    borderRadius: 10,
-                    padding: 10,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 16,
+                    padding: 14,
                     borderWidth: 1,
                     borderColor: '#E2E8F0',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
+                    gap: 10,
                   }}
                 >
-                  <Text style={{ fontSize: 16 }}>🛡️</Text>
-                  <Text style={{ fontSize: 11.5, color: '#64748B', flex: 1, lineHeight: 17 }}>
-                    {isBn
-                      ? 'সিভিল এভিয়েশন সিকিউরিটি মানদণ্ড অনুযায়ী শুধুমাত্র সার্ভিস গ্রহণকারী ভেরিফাইড যাত্রীরা সার্ভিস সমাপ্তির পর অফিসিয়াল রিভিউ প্রদান করতে পারেন।'
-                      : 'Per airport security standards, only verified passengers who completed a protocol service can submit officer reviews.'}
-                  </Text>
-                </View>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontSize: 14 }}>⭐</Text>
+                      <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#0F172A' }}>
+                        {isBn ? 'যাত্রীদের ভেরিফাইড রিভিউ' : 'Verified Passenger Reviews'} ({reviews.length})
+                      </Text>
+                    </View>
 
-                {/* Reviews List */}
-                {loadingReviews ? (
-                  <ActivityIndicator size="small" color="#0284C7" />
-                ) : (
-                  <View style={{ gap: 8 }}>
-                    {reviews.map((rev) => (
-                      <View
-                        key={rev.id}
-                        style={{
-                          backgroundColor: '#F8FAFC',
-                          borderRadius: 10,
-                          padding: 10,
-                          borderWidth: 1,
-                          borderColor: '#E2E8F0',
-                          gap: 4,
-                        }}
-                      >
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F172A' }}>
-                              {rev.reviewerName}
+                    <View
+                      style={{
+                        backgroundColor: '#ECFDF5',
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 6,
+                        borderWidth: 1,
+                        borderColor: '#A7F3D0',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <Text style={{ fontSize: 11, color: '#059669', fontWeight: '800' }}>
+                        ✓ {isBn ? 'ভেরিফাইড প্যাসেঞ্জার' : 'Verified Only'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Verified Passengers Policy Notice */}
+                  <View
+                    style={{
+                      backgroundColor: '#F8FAFC',
+                      borderRadius: 10,
+                      padding: 10,
+                      borderWidth: 1,
+                      borderColor: '#E2E8F0',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <Text style={{ fontSize: 16 }}>🛡️</Text>
+                    <Text style={{ fontSize: 11.5, color: '#64748B', flex: 1, lineHeight: 17 }}>
+                      {isBn
+                        ? 'সিভিল এভিয়েশন সিকিউরিটি মানদণ্ড অনুযায়ী শুধুমাত্র সার্ভিস গ্রহণকারী ভেরিফাইড যাত্রীরা সার্ভিস সমাপ্তির পর অফিসিয়াল রিভিউ প্রদান করতে পারেন।'
+                        : 'Per airport security standards, only verified passengers who completed a protocol service can submit officer reviews.'}
+                    </Text>
+                  </View>
+
+                  {/* Reviews List */}
+                  {loadingReviews ? (
+                    <ActivityIndicator size="small" color="#0284C7" />
+                  ) : (
+                    <View style={{ gap: 8 }}>
+                      {reviews.map((rev) => (
+                        <View
+                          key={rev.id}
+                          style={{
+                            backgroundColor: '#F8FAFC',
+                            borderRadius: 10,
+                            padding: 10,
+                            borderWidth: 1,
+                            borderColor: '#E2E8F0',
+                            gap: 4,
+                          }}
+                        >
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F172A' }}>
+                                {rev.reviewerName}
+                              </Text>
+                              {rev.verifiedPassenger && (
+                                <View style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
+                                  <Text style={{ fontSize: 9.5, color: '#166534', fontWeight: '700' }}>
+                                    ✓ {isBn ? 'ভেরিফাইড' : 'Verified'}
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+                            <Text style={{ fontSize: 11, color: '#EAB308', fontWeight: '900' }}>
+                              {'⭐'.repeat(Math.min(5, Math.floor(rev.rating || 5)))}
                             </Text>
-                            {rev.verifiedPassenger && (
-                              <View style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
-                                <Text style={{ fontSize: 9.5, color: '#166534', fontWeight: '700' }}>
-                                  ✓ {isBn ? 'ভেরিফাইড' : 'Verified'}
-                                </Text>
-                              </View>
-                            )}
                           </View>
-                          <Text style={{ fontSize: 11, color: '#EAB308', fontWeight: '900' }}>
-                            {'⭐'.repeat(Math.min(5, Math.floor(rev.rating || 5)))}
+
+                          <Text style={{ fontSize: 11, color: '#64748B' }}>
+                            {rev.flight || 'Flight Service'} · {rev.date || 'Recent'}
+                          </Text>
+
+                          <Text style={{ fontSize: 12, color: '#334155', marginTop: 2, lineHeight: 17 }}>
+                            "{isBn ? rev.commentBn || rev.comment || rev.commentEn : rev.commentEn || rev.comment || rev.commentBn}"
                           </Text>
                         </View>
-
-                        <Text style={{ fontSize: 11, color: '#64748B' }}>
-                          {rev.flight || 'Flight Service'} · {rev.date || 'Recent'}
-                        </Text>
-
-                        <Text style={{ fontSize: 12, color: '#334155', marginTop: 2, lineHeight: 17 }}>
-                          "{isBn ? rev.commentBn || rev.comment || rev.commentEn : rev.commentEn || rev.comment || rev.commentBn}"
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
             </ScrollView>
           )}
 

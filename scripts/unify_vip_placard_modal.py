@@ -52,3 +52,4 @@ with open('src/components/VipPlacardModal.js', 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("Updated VipPlacardModal.js done!")
+

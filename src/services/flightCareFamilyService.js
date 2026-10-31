@@ -266,7 +266,7 @@ export const DEFAULT_FLIGHT_CARE_FAMILY = [
     shift: '09:00 AM - 06:00 PM',
     status: 'active',
     avatar: '🤝',
-    bloodGroup: 'A+',
+    bloodGroup: 'B-',
     joinedDate: '15 Jan 2023',
     rmk: 'Head of Human Resources responsible for protocol recruitment, background checks, airport pass clearance & welfare.',
     aliases: ['FC-HR-001', 'hr', 'shadhin', 'shadin'],

@@ -21,3 +21,4 @@ with open('src/assets/placardAssetsBase64.js', 'w', encoding='utf-8') as f:
     f.write(f'export const PLACARD_CAL_ICON_B64 = "data:image/png;base64,{b64_cal}";\n')
 
 print("Created src/assets/placardAssetsBase64.js successfully!")
+

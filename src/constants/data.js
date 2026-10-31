@@ -760,7 +760,7 @@ export const DEFAULT_STAFF_ROSTER = [
     totalPoints: 0,
     joinedDate: '15 Jan 2023',
     pinHash: '75ed0fd41e13b35bebfea3eefff534fbb34ebf0d8ca7a88532ca196bd3ef3978',
-    bloodGroup: 'A+',
+    bloodGroup: 'B-',
     badgeNo: 'FC-HR-001',
     licenseNo: 'CAAB-ADMIN-DAC-003',
     notes: 'Head of Human Resources responsible for protocol recruitment, background checks, airport pass clearance & welfare.',
