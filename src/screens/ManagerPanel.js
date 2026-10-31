@@ -114,7 +114,11 @@ import {
 import { compressImage } from '../utils/imageCompressor';
 import DualVaultPinModal from '../components/DualVaultPinModal';
 import {
+  VAULT_ROLES,
+  getActiveVaultRole,
   isMasterVaultUnlocked,
+  isManagerVaultUnlocked,
+  isVaultUnlocked,
   getShowcaseBookingIds,
   setShowcaseBookingIds,
   toggleBookingShowcaseStatus,
@@ -122,6 +126,7 @@ import {
   exportDualVaultBookingsCsv,
   lockMasterVault,
   registerVaultTriggerClick,
+  setVaultRoleDirectly,
 } from '../services/dualVaultService';
 
 
@@ -1301,15 +1306,18 @@ export default function ManagerPanel({
   const [bookingCurrentPage, setBookingCurrentPage] = useState(1);
   const [bookingPageSize, setBookingPageSize] = useState(10); // 10 or 20 records per page
 
-  // Dual-Vault Database State (Database 1: Auditor / Showcase vs Database 2: Master Secret Vault)
-  const [isMasterVaultActive, setIsMasterVaultActive] = useState(isMasterVaultUnlocked());
+  // Dual-Vault Database State (Manager Vault: 2 Days vs Super Admin Vault: 100% Lifetime vs Auditor Mode)
+  const [activeVaultRole, setActiveVaultRole] = useState(getActiveVaultRole()); // 'auditor' | 'manager' | 'admin'
+  const isMasterVaultActive = activeVaultRole === VAULT_ROLES.ADMIN;
+  const isManagerVaultActive = activeVaultRole === VAULT_ROLES.MANAGER;
+  const isVaultActive = activeVaultRole !== VAULT_ROLES.AUDITOR;
   const [showcaseBookingIds, setShowcaseBookingIds] = useState([]);
   const [showDualVaultModal, setShowDualVaultModal] = useState(false);
 
-  // 10-Click Steganographic Trigger for Database 2 (Master Vault)
+  // 10-Click Steganographic Trigger for Dual Vault Controller
   const handleVaultAccessClick = () => {
     registerVaultTriggerClick({
-      isUnlocked: isMasterVaultActive,
+      isUnlocked: isVaultActive,
       onTrigger: () => setShowDualVaultModal(true),
       onNotice: (msg) => {
         setAdminNotice(msg);
@@ -1323,7 +1331,7 @@ export default function ManagerPanel({
     getShowcaseBookingIds().then(ids => {
       setShowcaseBookingIds(ids || []);
     });
-    setIsMasterVaultActive(isMasterVaultUnlocked());
+    setActiveVaultRole(getActiveVaultRole());
   }, []);
 
   useEffect(() => {
@@ -2807,8 +2815,15 @@ export default function ManagerPanel({
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   };
 
+  // Filter bookings according to active vault role (Manager: 2 days vs Super Admin: all-time vs Auditor: showcase)
+  const vaultPlatformBookings = filterBookingsByVaultMode(
+    allPlatformBookings,
+    activeVaultRole,
+    showcaseBookingIds
+  );
+
   // Filter bookings according to selected timeframe (all, today, week, month)
-  const timeframeBookings = allPlatformBookings.filter(b => {
+  const timeframeBookings = vaultPlatformBookings.filter(b => {
     if (dashboardTimeframe === 'today') return isTodayBookingDate(b.date);
     if (dashboardTimeframe === 'week') return isThisWeekBooking(b.date);
     if (dashboardTimeframe === 'month') return isThisMonthBooking(b.date);
@@ -2817,12 +2832,12 @@ export default function ManagerPanel({
 
   // Reconciled live calculations for all 9 dashboard metrics
   const totalBookingsCount = timeframeBookings.length;
-  const todayBookingsCount = allPlatformBookings.filter(b => isTodayBookingDate(b.date)).length;
+  const todayBookingsCount = vaultPlatformBookings.filter(b => isTodayBookingDate(b.date)).length;
   const upcomingBookingsCount = timeframeBookings.filter(b => b.status === 'upcoming' || b.status === 'confirmed').length;
   const completedBookingsCount = timeframeBookings.filter(b => b.status === 'completed').length;
   const cancelledBookingsCount = timeframeBookings.filter(b => b.status === 'cancelled').length;
-  const pendingEarlierServicesCount = allPlatformBookings.filter(b => b.status !== 'completed' && b.status !== 'cancelled' && !isTodayBookingDate(b.date)).length;
-  const activeUnfulfilledServicesCount = allPlatformBookings.filter(b => b.status !== 'completed' && b.status !== 'cancelled').length;
+  const pendingEarlierServicesCount = vaultPlatformBookings.filter(b => b.status !== 'completed' && b.status !== 'cancelled' && !isTodayBookingDate(b.date)).length;
+  const activeUnfulfilledServicesCount = vaultPlatformBookings.filter(b => b.status !== 'completed' && b.status !== 'cancelled').length;
 
   const totalRevenueNumber = timeframeBookings
     .filter(b => b.paymentStatus === 'paid')
@@ -2838,8 +2853,8 @@ export default function ManagerPanel({
   const onDutyCount = activeFamilyStaff.filter(s => s.status === 'on_duty' || s.status === 'busy' || s.status === 'active' || s.status !== 'off_duty').length;
   const totalStaffCount = activeFamilyStaff.length;
 
-  const processedRefundsCount = allPlatformBookings.filter(b => b.paymentStatus === 'refunded' || (b.cancellation && b.cancellation.refundAmount > 0)).length;
-  const processedRefundsAmount = allPlatformBookings
+  const processedRefundsCount = vaultPlatformBookings.filter(b => b.paymentStatus === 'refunded' || (b.cancellation && b.cancellation.refundAmount > 0)).length;
+  const processedRefundsAmount = vaultPlatformBookings
     .filter(b => b.paymentStatus === 'refunded' || (b.cancellation && b.cancellation.refundAmount > 0))
     .reduce((sum, b) => sum + (Number(b.cancellation?.refundAmount || b.amount) || 0), 0);
   const processedRefundsFormatted = `৳ ${processedRefundsAmount.toLocaleString('en-IN')}`;
@@ -5525,10 +5540,13 @@ export default function ManagerPanel({
   };
 
   const renderBookingsManagement = () => {
-    // Dual-Vault Filtering: In Auditor Mode (locked), only show curated showcase bookings!
+    // Dual-Vault Filtering:
+    // - Super Admin: 100% all-time platform bookings
+    // - Manager: All bookings of the last 2 days
+    // - Auditor: Curated showcase bookings only
     const effectiveAllPlatformBookings = filterBookingsByVaultMode(
       allPlatformBookings,
-      isMasterVaultActive,
+      activeVaultRole,
       showcaseBookingIds
     );
 
@@ -5725,7 +5743,7 @@ export default function ManagerPanel({
                 <>
                   <TouchableOpacity
                     onPress={() => {
-                      const list = filterBookingsByVaultMode(allPlatformBookings, false, showcaseBookingIds);
+                      const list = filterBookingsByVaultMode(allPlatformBookings, VAULT_ROLES.AUDITOR, showcaseBookingIds);
                       exportDualVaultBookingsCsv(list, 'auditor');
                       setAdminNotice(lang ? `পরিদর্শক এক্সেল (DB-1) ডাউনলোড হয়েছে (${list.length} বুকিং)` : `Exported ${list.length} bookings (Auditor DB-1)`);
                       setTimeout(() => setAdminNotice(''), 3500);
@@ -5747,8 +5765,30 @@ export default function ManagerPanel({
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => {
+                      const mgrList = filterBookingsByVaultMode(allPlatformBookings, VAULT_ROLES.MANAGER);
+                      exportDualVaultBookingsCsv(mgrList, 'manager');
+                      setAdminNotice(lang ? `ম্যানেজার এক্সেল ডাউনলোড হয়েছে (${mgrList.length} বুকিং)` : `Exported ${mgrList.length} manager bookings (2-day)`);
+                      setTimeout(() => setAdminNotice(''), 3500);
+                    }}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      borderRadius: 20,
+                      backgroundColor: '#0369A1',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: '#FFFFFF' }}>💼</Text>
+                    <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#FFFFFF' }}>
+                      {lang ? '২. ম্যানেজার এক্সেল (২ দিন)' : '2. Manager CSV (2D)'}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
                       exportDualVaultBookingsCsv(allPlatformBookings, 'master');
-                      setAdminNotice(lang ? `মাস্টার এক্সেল (DB-2) ডাউনলোড হয়েছে (${allPlatformBookings.length} আসল বুকিং)` : `Exported ${allPlatformBookings.length} master bookings`);
+                      setAdminNotice(lang ? `সুপার এডমিন মাস্টার এক্সেল ডাউনলোড হয়েছে (${allPlatformBookings.length} আসল বুকিং)` : `Exported ${allPlatformBookings.length} master bookings`);
                       setTimeout(() => setAdminNotice(''), 3500);
                     }}
                     style={{
@@ -5761,9 +5801,55 @@ export default function ManagerPanel({
                       gap: 4,
                     }}
                   >
-                    <Text style={{ fontSize: 12, color: '#FFFFFF' }}>🔐</Text>
+                    <Text style={{ fontSize: 12, color: '#FFFFFF' }}>👑</Text>
                     <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#FFFFFF' }}>
-                      {lang ? '২. মাস্টার এক্সেল' : '2. Master CSV'}
+                      {lang ? '৩. মাস্টার এক্সেল' : '3. Master CSV'}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : isManagerVaultActive ? (
+                <>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const list = filterBookingsByVaultMode(allPlatformBookings, VAULT_ROLES.AUDITOR, showcaseBookingIds);
+                      exportDualVaultBookingsCsv(list, 'auditor');
+                      setAdminNotice(lang ? `পরিদর্শক এক্সেল (DB-1) ডাউনলোড হয়েছে (${list.length} বুকিং)` : `Exported ${list.length} bookings (Auditor DB-1)`);
+                      setTimeout(() => setAdminNotice(''), 3500);
+                    }}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      borderRadius: 20,
+                      backgroundColor: '#0284C7',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: '#FFFFFF' }}>👁️</Text>
+                    <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#FFFFFF' }}>
+                      {lang ? '১. দর্শক এক্সেল' : '1. Auditor CSV'}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      exportDualVaultBookingsCsv(effectiveAllPlatformBookings, 'manager');
+                      setAdminNotice(lang ? `ম্যানেজার ভল্ট এক্সেল (বিগত ২ দিন) ডাউনলোড হয়েছে (${effectiveAllPlatformBookings.length} বুকিং)` : `Exported ${effectiveAllPlatformBookings.length} manager bookings (2-day)`);
+                      setTimeout(() => setAdminNotice(''), 3500);
+                    }}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      borderRadius: 20,
+                      backgroundColor: '#0369A1',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: '#FFFFFF' }}>💼</Text>
+                    <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#FFFFFF' }}>
+                      {lang ? '২. ম্যানেজার এক্সেল (২ দিন)' : '2. Manager CSV (2D)'}
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -5883,7 +5969,7 @@ export default function ManagerPanel({
           ))}
         </View>
 
-        {/* Dual-Vault Controller Bar (Master Vault Banner vs Auditor Status) */}
+        {/* Dual-Vault Controller Bar (Super Admin Vault vs Manager Vault) */}
         {isMasterVaultActive ? (
           <View
             style={{
@@ -5901,35 +5987,101 @@ export default function ManagerPanel({
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 240 }}>
-              <Text style={{ fontSize: 20 }}>🔐</Text>
+              <Text style={{ fontSize: 20 }}>👑</Text>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 13, fontWeight: '800', color: '#9F1239' }}>
-                  {lang ? 'মাস্টার ভল্ট আনলকড (ডাটাবেজ ২: ১০০% আসল ডাটা)' : 'MASTER VAULT ACTIVE (Database 2: 100% Real Records)'}
+                  {lang ? 'সুপার এডমিন মাস্টার ভল্ট সক্রিয় (সর্বকালের ১০০% আজীবন ডাটা)' : 'SUPER ADMIN MASTER VAULT ACTIVE (100% All-Time Records)'}
                 </Text>
                 <Text style={{ fontSize: 11, color: '#BE123C', marginTop: 1 }}>
                   {lang
-                    ? `মোট ${allPlatformBookings.length} টি আসল বুকিং দেখা যাচ্ছে। কার্ডের সবুজ 'DB-1: দৃশ্যমান' চিহ্নিত বুকিংগুলোই দর্শক ডাটাবেজে যাবে।`
-                    : `Showing all ${allPlatformBookings.length} real bookings. Green 'DB-1: Visible' badges appear in Auditor DB-1.`}
+                    ? `মোট ${allPlatformBookings.length} টি আসল প্ল্যাটফর্ম বুকিং দেখা যাচ্ছে। সর্বকালের সকল রেকর্ড অক্ষত ও সংরক্ষিত।`
+                    : `Showing all ${allPlatformBookings.length} lifetime bookings. 100% of platform records preserved.`}
+                </Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setVaultRoleDirectly(VAULT_ROLES.MANAGER);
+                  setActiveVaultRole(VAULT_ROLES.MANAGER);
+                  setAdminNotice(lang ? '💼 ম্যানেজার ভল্ট মোডে (বিগত ২ দিনের ডাটা) পরিবর্তন করা হয়েছে।' : '💼 Switched to Manager Vault (Last 2 Days).');
+                  setTimeout(() => setAdminNotice(''), 3500);
+                }}
+                style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE' }}
+              >
+                <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#0284C7' }}>
+                  {lang ? '💼 ম্যানেজার ভল্ট (২ দিন)' : '💼 Manager (2D)'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowDualVaultModal(true)}
+                style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#FDA4AF' }}
+              >
+                <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#BE123C' }}>
+                  {lang ? '⚙️ ভল্ট সেটিংস' : '⚙️ Vault Settings'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  lockMasterVault();
+                  setActiveVaultRole(VAULT_ROLES.AUDITOR);
+                  setAdminNotice(lang ? '🔒 সাধারণ দর্শক মোডে (DB-1) লক করা হয়েছে।' : '🔒 Locked to Auditor Mode (DB-1).');
+                  setTimeout(() => setAdminNotice(''), 3500);
+                }}
+                style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, backgroundColor: '#E11D48' }}
+              >
+                <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF' }}>
+                  {lang ? '🔒 নিরাপদ লক করুন' : '🔒 Lock Vault'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : isManagerVaultActive ? (
+          <View
+            style={{
+              backgroundColor: '#F0F9FF',
+              borderColor: '#BAE6FD',
+              borderWidth: 1.5,
+              borderRadius: 12,
+              padding: 12,
+              marginBottom: 14,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 8,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 240 }}>
+              <Text style={{ fontSize: 20 }}>💼</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#0369A1' }}>
+                  {lang ? 'ম্যানেজার ভল্ট সক্রিয় (বিগত ২ দিনের সকল রেকর্ড)' : 'MANAGER VAULT ACTIVE (Last 2 Days Records)'}
+                </Text>
+                <Text style={{ fontSize: 11, color: '#0284C7', marginTop: 1 }}>
+                  {lang
+                    ? `বিগত ২ দিনের মোট ${effectiveAllPlatformBookings.length} টি বুকিং দেখা যাচ্ছে। (সুপার এডমিনের ভল্টে সর্বকালের সকল রেকর্ড সংরক্ষিত)।`
+                    : `Showing ${effectiveAllPlatformBookings.length} bookings from the last 2 days. (Super Admin retains 100% all-time data).`}
                 </Text>
               </View>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <TouchableOpacity
                 onPress={() => setShowDualVaultModal(true)}
-                style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#FDA4AF' }}
+                style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#BAE6FD' }}
               >
-                <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#BE123C' }}>
-                  {lang ? '⚙️ পিন সেটিংস' : '⚙️ Vault Settings'}
+                <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#0284C7' }}>
+                  {lang ? '⚙️ ভল্ট সেটিংস' : '⚙️ Vault Settings'}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
                   lockMasterVault();
-                  setIsMasterVaultActive(false);
+                  setActiveVaultRole(VAULT_ROLES.AUDITOR);
                   setAdminNotice(lang ? '🔒 সাধারণ দর্শক মোডে (DB-1) লক করা হয়েছে।' : '🔒 Locked to Auditor Mode (DB-1).');
                   setTimeout(() => setAdminNotice(''), 3500);
                 }}
-                style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, backgroundColor: '#E11D48' }}
+                style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, backgroundColor: '#0284C7' }}
               >
                 <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF' }}>
                   {lang ? '🔒 নিরাপদ লক করুন' : '🔒 Lock Vault'}
@@ -12705,9 +12857,30 @@ export default function ManagerPanel({
                     borderColor: '#FECDD3',
                   }}
                 >
-                  <Text style={{ fontSize: 12 }}>🔐</Text>
+                  <Text style={{ fontSize: 12 }}>👑</Text>
                   <Text style={{ fontSize: 11, fontWeight: '800', color: '#BE123C' }}>
-                    DB-2
+                    ADMIN DB
+                  </Text>
+                </TouchableOpacity>
+              ) : isManagerVaultActive ? (
+                <TouchableOpacity
+                  onPress={handleVaultAccessClick}
+                  activeOpacity={0.75}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    paddingHorizontal: 8,
+                    paddingVertical: 5,
+                    borderRadius: 8,
+                    backgroundColor: '#F0F9FF',
+                    borderWidth: 1.5,
+                    borderColor: '#BAE6FD',
+                  }}
+                >
+                  <Text style={{ fontSize: 12 }}>💼</Text>
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: '#0284C7' }}>
+                    MGR (2D)
                   </Text>
                 </TouchableOpacity>
               ) : (
@@ -12896,13 +13069,13 @@ export default function ManagerPanel({
             </View>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            {/* Dual-Vault Quick Access (Stealth faint text: 10-clicks to trigger Database 2) */}
+            {/* Dual-Vault Quick Access */}
             {isMasterVaultActive ? (
               <TouchableOpacity
                 onPress={handleVaultAccessClick}
                 activeOpacity={0.75}
                 accessibilityRole="button"
-                accessibilityLabel={lang ? 'ডাটাবেজ ভল্ট মোড' : 'Database Vault'}
+                accessibilityLabel={lang ? 'সুপার এডমিন ভল্ট' : 'Super Admin Vault'}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -12915,7 +13088,7 @@ export default function ManagerPanel({
                   borderColor: '#FECDD3',
                 }}
               >
-                <Text style={{ fontSize: 13 }}>🔐</Text>
+                <Text style={{ fontSize: 13 }}>👑</Text>
                 <Text
                   style={{
                     fontSize: 12,
@@ -12923,7 +13096,36 @@ export default function ManagerPanel({
                     color: '#BE123C',
                   }}
                 >
-                  {lang ? 'মাস্টার ভল্ট (DB-2)' : 'Master Vault (DB-2)'}
+                  {lang ? 'সুপার এডমিন ভল্ট (সর্বকাল)' : 'Super Admin Vault (All-Time)'}
+                </Text>
+              </TouchableOpacity>
+            ) : isManagerVaultActive ? (
+              <TouchableOpacity
+                onPress={handleVaultAccessClick}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel={lang ? 'ম্যানেজার ভল্ট' : 'Manager Vault'}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 8,
+                  backgroundColor: '#F0F9FF',
+                  borderWidth: 1.5,
+                  borderColor: '#BAE6FD',
+                }}
+              >
+                <Text style={{ fontSize: 13 }}>💼</Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '800',
+                    color: '#0284C7',
+                  }}
+                >
+                  {lang ? 'ম্যানেজার ভল্ট (বিগত ২ দিন)' : 'Manager Vault (Last 2 Days)'}
                 </Text>
               </TouchableOpacity>
             ) : (
@@ -13289,10 +13491,19 @@ export default function ManagerPanel({
       <DualVaultPinModal
         visible={showDualVaultModal}
         onClose={() => setShowDualVaultModal(false)}
-        isUnlocked={isMasterVaultActive}
-        onVaultStateChanged={(unlocked) => {
-          setIsMasterVaultActive(unlocked);
+        activeRole={activeVaultRole}
+        isUnlocked={isVaultActive}
+        onVaultStateChanged={(newRole, unlocked) => {
+          setActiveVaultRole(newRole);
           getShowcaseBookingIds().then(ids => setShowcaseBookingIds(ids || []));
+          if (newRole === VAULT_ROLES.ADMIN) {
+            setAdminNotice(lang ? '👑 সুপার এডমিন মাস্টার ভল্ট সক্রিয় (সর্বকালের ১০০% আজীবন ডাটা)' : '👑 Super Admin Master Vault Active (100% Records)');
+          } else if (newRole === VAULT_ROLES.MANAGER) {
+            setAdminNotice(lang ? '💼 ম্যানেজার ভল্ট সক্রিয় (বিগত ২ দিনের সকল রেকর্ড)' : '💼 Manager Vault Active (Last 2 Days Records)');
+          } else {
+            setAdminNotice(lang ? '🔒 সাধারণ দর্শক মোডে (DB-1) লক করা হয়েছে।' : '🔒 Locked to Auditor Mode (DB-1).');
+          }
+          setTimeout(() => setAdminNotice(''), 3500);
         }}
         lang={lang}
       />
