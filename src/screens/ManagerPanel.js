@@ -1341,19 +1341,32 @@ export default function ManagerPanel({
     }
   }, [isAdmin, managerSection, setManagerSection]);
 
-  // Pending payments list with verification actions
-  const [pendingPaymentsList, setPendingPaymentsList] = useState([
-    { id: 'pay-1', ref: 'PAY-8921', bookingId: 'DAC-1498', customer: 'Nabila Akter', phone: '+8801712345678', amount: 2500, method: 'bKash', trxId: '9J3K8L2P', time: '14 min ago' },
-    { id: 'pay-2', ref: 'PAY-8924', bookingId: 'CGP-2041', customer: 'Tanvir Hossain', phone: '+8801819876543', amount: 1500, method: 'Nagad', trxId: '7M4N9Q1W', time: '38 min ago' },
-    { id: 'pay-3', ref: 'PAY-8929', bookingId: 'DAC-1502', customer: 'Farzana Yasmin', phone: '+8801911223344', amount: 4000, method: 'bKash', trxId: '5X8Y2Z9A', time: '1 hour ago' },
+  // Filter helper to permanently exclude legacy false/test bookings
+  const LEGACY_TEST_BOOKING_IDS = new Set([
+    'DAC-1495', 'FC-23357', 'FC-23837', 'FC-28770', 'FC-33777', 'FC-45626',
+    'FC-59641', 'FC-66575', 'FC-69880', 'FC-71488', 'FC-74425', 'FC-79649',
+    'FC-89023', 'FC-95920', 'FC-99381', 'OFF-DAC-16959', 'OFF-DAC-39364',
+    'OFF-DAC-41056', 'OFF-DAC-49872', 'OFF-DAC-59135', 'OFF-DAC-65578',
+    'OFF-DAC-65986', 'OFF-DAC-83135', 'OFF-DAC-83852',
+    'DAC-1498', 'CGP-2041', 'DAC-1502', 'DAC-1455', 'CGP-1994', 'ZYL-890'
   ]);
 
-  // Refund requests list with approval actions
-  const [refundRequestsList, setRefundRequestsList] = useState([
-    { id: 'ref-1', ticketId: 'REF-1092', bookingId: 'DAC-1455', customer: 'Kamal Hossain', amount: 3500, reason: 'Flight cancelled by Biman Bangladesh', date: 'Today, 11:20 AM', status: 'pending' },
-    { id: 'ref-2', ticketId: 'REF-1095', bookingId: 'CGP-1994', customer: 'Rumana Chowdhury', amount: 2500, reason: 'Passenger emergency medical rescheduling', date: 'Yesterday', status: 'pending' },
-    { id: 'ref-3', ticketId: 'REF-1099', bookingId: 'ZYL-890', customer: 'Jahangir Alam', amount: 1500, reason: 'Duplicate payment on Visa gateway', date: '2 days ago', status: 'pending' },
-  ]);
+  const isFalseBooking = (b) => {
+    if (!b) return true;
+    const id = String(b.id || b.bookingId || '').trim();
+    if (LEGACY_TEST_BOOKING_IDS.has(id)) return true;
+    const cust = String(b.customer || b.passengerName || b.name || '').toLowerCase().trim();
+    if (['ishaujhyaods', 'fdhgf', 'teradstfyg', 'sohel', 'nazzim', 'somiya', 'tithi', 'taslima'].includes(cust)) {
+      return true;
+    }
+    return false;
+  };
+
+  // Pending payments list with verification actions (starts clean from scratch - 0 mock payments)
+  const [pendingPaymentsList, setPendingPaymentsList] = useState([]);
+
+  // Refund requests list with approval actions (starts clean from scratch - 0 mock refunds)
+  const [refundRequestsList, setRefundRequestsList] = useState([]);
 
   // Staff availability & duty roster state
   const [localStaffRoster, setLocalStaffRoster] = useState(DEFAULT_STAFF_ROSTER);
@@ -1592,24 +1605,12 @@ export default function ManagerPanel({
       if (!isMounted || !val) return;
       try {
         const stored = JSON.parse(val);
-        if (Array.isArray(stored) && stored.length > 0) {
-          setAllPlatformBookings(prev => {
-            const map = new Map(prev.map(b => [String(b.id), b]));
-            let changed = false;
-            stored.forEach(rawB => {
-              const norm = normalizeBookingForManager(rawB);
-              if (norm && !map.has(String(norm.id))) {
-                map.set(String(norm.id), norm);
-                changed = true;
-              }
-            });
-            if (changed) {
-              const merged = Array.from(map.values());
-              merged.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
-              return merged;
-            }
-            return prev;
-          });
+        if (Array.isArray(stored)) {
+          const cleanStored = stored.filter(b => b && !isFalseBooking(b));
+          if (cleanStored.length !== stored.length) {
+            AsyncStorage.setItem('@flightcare_bookings', JSON.stringify(cleanStored)).catch(() => {});
+          }
+          setAllPlatformBookings(cleanStored.map(normalizeBookingForManager));
         }
       } catch (e) {
         console.warn('Error reading @flightcare_bookings in ManagerPanel:', e);
@@ -1619,51 +1620,15 @@ export default function ManagerPanel({
     // Real-time listener for any new or modified bookings from Cloud Firestore
     const unsubCloud = listenToCloudBookings(
       cloudBookings => {
-        if (!isMounted || !Array.isArray(cloudBookings) || cloudBookings.length === 0) return;
-        setAllPlatformBookings(prev => {
-          const map = new Map(prev.map(b => [String(b.id), b]));
-          let changed = false;
-          cloudBookings.forEach(rawB => {
-            const norm = normalizeBookingForManager(rawB);
-            if (!norm) return;
-            const existing = map.get(String(norm.id));
-            if (!existing) {
-              map.set(String(norm.id), norm);
-              changed = true;
-            } else if (
-              existing.status !== norm.status ||
-              existing.paymentStatus !== norm.paymentStatus ||
-              existing.staff !== norm.staff ||
-              existing.staffId !== norm.staffId
-            ) {
-              map.set(String(norm.id), { ...existing, ...norm });
-              changed = true;
-            }
-          });
-          if (changed) {
-            const merged = Array.from(map.values());
-            merged.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
-            return merged;
-          }
-          return prev;
-        });
+        if (!isMounted) return;
+        const validList = Array.isArray(cloudBookings)
+          ? cloudBookings.filter(b => b && !isFalseBooking(b))
+          : [];
+        setAllPlatformBookings(validList.map(normalizeBookingForManager));
 
         // Also sync parent bookings prop if provided
         if (typeof setBookings === 'function') {
-          setBookings(curr => {
-            const currMap = new Map((curr || []).map(b => [String(b.id), b]));
-            let parentChanged = false;
-            cloudBookings.forEach(cb => {
-              if (cb && (cb.id || cb.bookingId)) {
-                const id = String(cb.id || cb.bookingId);
-                if (!currMap.has(id)) {
-                  currMap.set(id, cb);
-                  parentChanged = true;
-                }
-              }
-            });
-            return parentChanged ? Array.from(currMap.values()) : curr;
-          });
+          setBookings(validList.map(normalizeBookingForManager));
         }
       },
       err => console.warn('[ManagerPanel] Real-time cloud bookings sync notice:', err?.message)
@@ -1677,34 +1642,9 @@ export default function ManagerPanel({
 
   // 2. Synchronize parent bookings into manager view whenever updated
   useEffect(() => {
-    if (Array.isArray(bookings) && bookings.length > 0) {
-      setAllPlatformBookings(prev => {
-        const map = new Map(prev.map(b => [String(b.id), b]));
-        let changed = false;
-        bookings.forEach(rawB => {
-          const norm = normalizeBookingForManager(rawB);
-          if (!norm) return;
-          const existing = map.get(String(norm.id));
-          if (!existing) {
-            map.set(String(norm.id), norm);
-            changed = true;
-          } else if (
-            existing.status !== norm.status ||
-            existing.paymentStatus !== norm.paymentStatus ||
-            existing.staff !== norm.staff ||
-            existing.staffId !== norm.staffId
-          ) {
-            map.set(String(norm.id), { ...existing, ...norm });
-            changed = true;
-          }
-        });
-        if (changed) {
-          const merged = Array.from(map.values());
-          merged.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
-          return merged;
-        }
-        return prev;
-      });
+    if (Array.isArray(bookings)) {
+      const valid = bookings.filter(b => b && !isFalseBooking(b));
+      setAllPlatformBookings(valid.map(normalizeBookingForManager));
     }
   }, [bookings]);
 

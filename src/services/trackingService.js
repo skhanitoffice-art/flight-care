@@ -312,7 +312,7 @@ export function getOrCreateTrackingSession(booking, staffOverride = null) {
       phone: staffMember.phone,
       email: staffMember.email,
       rating: staffMember.rating || 4.9,
-      completedServices: staffMember.completedServices || 142,
+      completedServices: Number(staffMember.completedServices) || 0,
       battery: 89,
       status: 'en_route', // 'at_station' | 'en_route' | 'at_meeting_point' | 'with_passenger'
       badgeNumber: staffMember.badgeNumber || `CAAB-FC-${String(staffMember.id || '892').replace(/[^0-9]/g, '') || '892'}`,

@@ -973,6 +973,27 @@ export default function App() {
   const BOOKINGS_STORAGE = '@flightcare_bookings';
   const DEVICE_BOOKINGS_STORAGE = '@flightcare_device_booking_ids_v2';
   AsyncStorage.removeItem('@flightcare_device_booking_ids').catch(() => {});
+
+  // Legacy false test booking filter
+  const LEGACY_TEST_BOOKING_IDS = new Set([
+    'DAC-1495', 'FC-23357', 'FC-23837', 'FC-28770', 'FC-33777', 'FC-45626',
+    'FC-59641', 'FC-66575', 'FC-69880', 'FC-71488', 'FC-74425', 'FC-79649',
+    'FC-89023', 'FC-95920', 'FC-99381', 'OFF-DAC-16959', 'OFF-DAC-39364',
+    'OFF-DAC-41056', 'OFF-DAC-49872', 'OFF-DAC-59135', 'OFF-DAC-65578',
+    'OFF-DAC-65986', 'OFF-DAC-83135', 'OFF-DAC-83852',
+    'DAC-1498', 'CGP-2041', 'DAC-1502', 'DAC-1455', 'CGP-1994', 'ZYL-890'
+  ]);
+
+  const isFalseBooking = (b) => {
+    if (!b) return true;
+    const id = String(b.id || b.bookingId || '').trim();
+    if (LEGACY_TEST_BOOKING_IDS.has(id)) return true;
+    const cust = String(b.customer || b.passengerName || b.name || b.passenger_information?.name || '').toLowerCase().trim();
+    if (['ishaujhyaods', 'fdhgf', 'teradstfyg', 'sohel', 'nazzim', 'somiya', 'tithi', 'taslima'].includes(cust)) {
+      return true;
+    }
+    return false;
+  };
   const NOTIFICATIONS_STORAGE = '@flightcare_notifications';
   const PROFILE_STORAGE = '@flightcare_profile';
   const SESSION_STORAGE = '@flightcare_customer_session';
@@ -1197,15 +1218,21 @@ export default function App() {
           try {
             const parsedDev = JSON.parse(deviceBookingsVal);
             if (Array.isArray(parsedDev)) {
-              setDeviceCreatedBookingIds(parsedDev);
+              const cleanDev = parsedDev.filter(id => id && !LEGACY_TEST_BOOKING_IDS.has(String(id).trim()));
+              setDeviceCreatedBookingIds(cleanDev);
+              AsyncStorage.setItem(DEVICE_BOOKINGS_STORAGE, JSON.stringify(cleanDev)).catch(() => {});
             }
           } catch {}
         }
         if (bookingsVal) {
           try {
             const parsed = JSON.parse(bookingsVal);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setBookings(parsed.map(normalizeCustomerBooking));
+            if (Array.isArray(parsed)) {
+              const cleanParsed = parsed.filter(b => b && !isFalseBooking(b));
+              if (cleanParsed.length !== parsed.length) {
+                AsyncStorage.setItem(BOOKINGS_STORAGE, JSON.stringify(cleanParsed)).catch(() => {});
+              }
+              setBookings(cleanParsed.map(normalizeCustomerBooking));
             }
           } catch {}
         }
@@ -1306,34 +1333,36 @@ export default function App() {
     // 1. Cloud Bookings Real-time Listener
     const unsubBookings = listenToCloudBookings(
       cloudBookings => {
-        if (Array.isArray(cloudBookings) && cloudBookings.length > 0) {
-          setBookings(current => {
-            const cloudMap = new Map();
-            cloudBookings.forEach(cb => {
-              if (cb && (cb.id || cb.bookingId)) {
-                const norm = normalizeCustomerBooking(cb);
-                cloudMap.set(String(norm.id), norm);
-              }
-            });
+        if (!Array.isArray(cloudBookings)) return;
+        setBookings(current => {
+          const cloudMap = new Map();
+          cloudBookings.forEach(cb => {
+            if (cb && (cb.id || cb.bookingId) && !isFalseBooking(cb)) {
+              const norm = normalizeCustomerBooking(cb);
+              cloudMap.set(String(norm.id), norm);
+            }
+          });
 
-            // Keep local draft or unsynced offline records
-            (current || []).forEach(localB => {
-              if (localB && localB.id && !cloudMap.has(String(localB.id))) {
+          // Keep local draft or unsynced offline records only if real and recent (< 15 mins)
+          (current || []).forEach(localB => {
+            if (localB && localB.id && !isFalseBooking(localB) && !cloudMap.has(String(localB.id))) {
+              const ageMinutes = (Date.now() - new Date(localB.createdAt || localB.date || 0).getTime()) / 60000;
+              if (ageMinutes < 15) {
                 cloudMap.set(String(localB.id), localB);
               }
-            });
-
-            const merged = Array.from(cloudMap.values());
-            merged.sort((a, b) => {
-              const timeA = new Date(a.createdAt || a.date || 0).getTime();
-              const timeB = new Date(b.createdAt || b.date || 0).getTime();
-              return timeB - timeA;
-            });
-
-            AsyncStorage.setItem(BOOKINGS_STORAGE, JSON.stringify(merged)).catch(() => {});
-            return merged;
+            }
           });
-        }
+
+          const merged = Array.from(cloudMap.values());
+          merged.sort((a, b) => {
+            const timeA = new Date(a.createdAt || a.date || 0).getTime();
+            const timeB = new Date(b.createdAt || b.date || 0).getTime();
+            return timeB - timeA;
+          });
+
+          AsyncStorage.setItem(BOOKINGS_STORAGE, JSON.stringify(merged)).catch(() => {});
+          return merged;
+        });
       },
       err => console.warn('[Cloud Firestore] Real-time bookings sync notice:', err?.message)
     );

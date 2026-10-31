@@ -705,7 +705,7 @@ export default function OfficerProfileModal({
                     }}
                   >
                     <Text style={{ fontSize: 24, fontWeight: '900', color: '#0284C7' }}>
-                      {officer.completedServices || 142}+
+                      {Number(officer.completedServices) || 0}
                     </Text>
                     <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#0369A1', marginTop: 4, textAlign: 'center' }}>
                       {lang ? 'সম্পন্ন সার্ভিস' : 'Services Completed'}
@@ -715,7 +715,7 @@ export default function OfficerProfileModal({
                     </Text>
                     <View style={{ marginTop: 6, backgroundColor: '#E0F2FE', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#BAE6FD' }}>
                       <Text style={{ fontSize: 11, fontWeight: '800', color: '#0284C7' }}>
-                        +{pointsBreakdown[0]?.points || ((officer.completedServices || 142) * 10)} {lang ? 'পয়েন্ট' : 'pts'}
+                        +{pointsBreakdown[0]?.points || ((Number(officer.completedServices) || 0) * 10)} {lang ? 'পয়েন্ট' : 'pts'}
                       </Text>
                     </View>
                   </View>

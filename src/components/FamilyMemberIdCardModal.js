@@ -453,25 +453,25 @@ export default function FamilyMemberIdCardModal({
     }
 
     // 3. Operational Field Protocol Officers (Escorts / Greeters on Flight Duties)
-    const completedCount = member.completedServices || member.totalServices || '120+';
+    const completedCount = Number(member.completedServices || member.totalServices || 0);
     return [
       {
         label: isBn ? 'কাস্টমার রেটিং' : 'Rating Score',
-        val: '⭐ 5.0 / 5.0',
+        val: completedCount > 0 ? '⭐ 5.0 / 5.0' : (isBn ? 'নতুন অফিসার' : 'New Officer'),
         bg: '#FEF3C7',
         border: '#FDE68A',
         text: '#B45309',
       },
       {
         label: isBn ? 'সম্পন্ন প্রোটোকল' : 'Protocols Handled',
-        val: `✈️ ${completedCount} ${isBn ? 'সার্ভিসেস' : 'Services'}`,
+        val: `✈️ ${completedCount} ${isBn ? (completedCount === 1 ? 'সার্ভিস' : 'সার্ভিসেস') : (completedCount === 1 ? 'Service' : 'Services')}`,
         bg: '#EFF6FF',
         border: '#DBEAFE',
         text: '#1D4ED8',
       },
       {
         label: isBn ? 'অন-টাইম উপস্থিতি' : 'Punctuality',
-        val: '⏱️ 99.8% On-Time',
+        val: completedCount > 0 ? '⏱️ 99.8% On-Time' : '⏱️ 100% On-Time',
         bg: '#ECFDF5',
         border: '#A7F3D0',
         text: '#047857',
