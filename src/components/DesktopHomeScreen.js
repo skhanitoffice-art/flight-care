@@ -31,6 +31,7 @@ import { SERVICES, getAddonAsset } from '../constants/data';
 import DatePickerModal from './DatePickerModal';
 import AdditionalServicesModal from './AdditionalServicesModal';
 import AnimatedServiceCard from './AnimatedServiceCard';
+import QuickBookingModal from './QuickBookingModal';
 import { isValidFlightNumber, isValidFlightDate, createAddonDetails } from '../utils/helpers';
 import {
   searchFlightSuggestions,
@@ -256,6 +257,7 @@ export default function DesktopHomeScreen({
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
   const [showServicesModal, setShowServicesModal] = useState(false);
+  const [showQuickBookingModal, setShowQuickBookingModal] = useState(false);
   const [hoveredPackage, setHoveredPackage] = useState(null);
   const [hoveredAddonCard, setHoveredAddonCard] = useState(false);
   const [flightSuggestions, setFlightSuggestions] = useState([]);
@@ -326,80 +328,7 @@ export default function DesktopHomeScreen({
   };
 
   const handleBookNow = () => {
-    const newErrors = {};
-    const trimmedFlight = (flightNumber || '').trim();
-    const trimmedDate = (serviceDate || '').trim();
-
-    if (!trimmedFlight) {
-      newErrors.flightNumber = lang
-        ? 'অনুগ্রহ করে ফ্লাইট নম্বর দিন (যেমন: BG-084, EK-582)'
-        : 'Please enter flight number (e.g. BG-084, EK-582)';
-    } else if (!isValidFlightNumber(trimmedFlight)) {
-      newErrors.flightNumber = lang
-        ? 'সঠিক ফ্লাইট নম্বর ফরম্যাট দিন (যেমন: BG-084, EK-582, BS-101)'
-        : 'Invalid flight number format (e.g. BG-084, EK-582, BS-101)';
-    }
-
-    if (!trimmedDate) {
-      newErrors.serviceDate = lang
-        ? 'অনুগ্রহ করে সেবার তারিখ নির্বাচন করুন'
-        : 'Please select service date';
-    } else if (!isValidFlightDate(trimmedDate)) {
-      newErrors.serviceDate = lang
-        ? 'সঠিক তারিখ দিন (DD-MM-YYYY)'
-        : 'Enter a valid date (DD-MM-YYYY)';
-    } else if (isPastFlightDate(trimmedDate)) {
-      newErrors.serviceDate = lang
-        ? 'অতীতের কোনো তারিখ নির্বাচন করা যাবে না'
-        : 'Cannot select a past date';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setErrors({});
-    const matchedService =
-      (serviceCatalog && serviceCatalog.length ? serviceCatalog : SERVICES).find(
-        s => s.cat === direction
-      ) || SERVICES[0];
-
-    const liveInfo = (selectedFlightData && selectedFlightData.direction === direction)
-      ? selectedFlightData
-      : getLiveFlightStatus(trimmedFlight, direction);
-
-    if (startBooking) {
-      startBooking(
-        matchedService,
-        selectedAddons,
-        selectedPackage,
-        direction,
-        {
-          fno: liveInfo?.fno || trimmedFlight.toUpperCase(),
-          airline: liveInfo?.airline || '',
-          airlineBn: liveInfo?.airlineBn || '',
-          route: liveInfo?.route || '',
-          origin: liveInfo?.origin || '',
-          originBn: liveInfo?.originBn || '',
-          destination: liveInfo?.destination || '',
-          destinationBn: liveInfo?.destinationBn || '',
-          terminal: liveInfo?.terminal || '',
-          terminalBn: liveInfo?.terminalBn || '',
-          gate: liveInfo?.gate || '',
-          time: liveInfo?.scheduled || '',
-          scheduled: liveInfo?.scheduled || '',
-          status: liveInfo?.status || '',
-          liveRadar: !!liveInfo?.liveRadar,
-          date: trimmedDate,
-          passengers: passengerCount,
-          name: '',
-          phone: '',
-          email: '',
-          addonDetails,
-        }
-      );
-    }
+    setShowQuickBookingModal(true);
   };
 
   const handleProceedBookingFromModal = (customAddons = selectedAddons, customDetails = addonDetails, options = {}) => {
@@ -1774,29 +1703,15 @@ export default function DesktopHomeScreen({
                       if (srv.id === 'bb2car') {
                         setDirection('arr');
                         setSelectedPackage('first');
-                        if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
                       } else if (srv.id === 'gate2bb') {
                         setDirection('dep');
                         setSelectedPackage('first');
-                        if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
                       } else {
                         if (!selectedAddons.includes(srv.id)) {
                           setSelectedAddons(prev => [...prev, srv.id]);
                         }
-                        if (navigateToSubPage) {
-                          navigateToSubPage('additional_services', {
-                            selectedAddons: [...new Set([...selectedAddons, srv.id])],
-                            setSelectedAddons,
-                            addonDetails,
-                            setAddonDetails,
-                            onProceedBooking: handleProceedBookingFromModal,
-                            flightNumber,
-                            serviceDate,
-                          });
-                        } else {
-                          setShowServicesModal(true);
-                        }
                       }
+                      setShowQuickBookingModal(true);
                     }}
                   />
                 </View>
@@ -2095,6 +2010,26 @@ export default function DesktopHomeScreen({
         onProceedBooking={handleProceedBookingFromModal}
         flightNumber={flightNumber}
         serviceDate={serviceDate}
+      />
+
+      {/* Quick Booking Form Modal with Smooth Animation */}
+      <QuickBookingModal
+        visible={showQuickBookingModal}
+        onClose={() => setShowQuickBookingModal(false)}
+        startBooking={startBooking}
+        initialData={{
+          direction,
+          flightNumber,
+          serviceDate,
+          passengerCount,
+          selectedPackage,
+          selectedAddons,
+          addonDetails,
+          name: profile?.name || '',
+          phone: profile?.phone || '',
+        }}
+        lang={lang}
+        airport={airport}
       />
     </View>
   );
