@@ -34,7 +34,6 @@ import DesktopHomeScreen from '../components/DesktopHomeScreen';
 import DesktopFooter from '../components/DesktopFooter';
 import DatePickerModal from '../components/DatePickerModal';
 import AdditionalServicesModal from '../components/AdditionalServicesModal';
-import QuickBookingModal from '../components/QuickBookingModal';
 import Parallax3DAtmosphere from '../components/Parallax3DAtmosphere';
 import { isValidFlightNumber, isValidFlightDate, createAddonDetails } from '../utils/helpers';
 import {
@@ -108,7 +107,6 @@ export default function HomeScreen({
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [showServicesModal, setShowServicesModal] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
-  const [showQuickBookingModal, setShowQuickBookingModal] = useState(false);
   const [errors, setErrors] = useState({});
   const [flightSuggestions, setFlightSuggestions] = useState([]);
   const [showFlightSuggestions, setShowFlightSuggestions] = useState(false);
@@ -175,7 +173,74 @@ export default function HomeScreen({
   };
 
   const handleBookNow = () => {
-    setShowQuickBookingModal(true);
+    const newErrors = {};
+    const trimmedFlight = (flightNumber || '').trim();
+    const trimmedDate = (serviceDate || '').trim();
+
+    if (!trimmedFlight) {
+      newErrors.flightNumber = lang === 1
+        ? 'অনুগ্রহ করে ফ্লাইট নম্বর দিন (যেমন: BG-084, EK-582)'
+        : 'Please enter flight number (e.g. BG-084, EK-582)';
+    } else if (!isValidFlightNumber(trimmedFlight)) {
+      newErrors.flightNumber = lang === 1
+        ? 'সঠিক ফ্লাইট নম্বর ফরম্যাট দিন (যেমন: BG-084, EK-582, BS-101)'
+        : 'Invalid flight number format (e.g. BG-084, EK-582, BS-101)';
+    }
+
+    if (!trimmedDate) {
+      newErrors.serviceDate = lang === 1
+        ? 'অনুগ্রহ করে সেবার তারিখ নির্বাচন করুন'
+        : 'Please select service date';
+    } else if (!isValidFlightDate(trimmedDate)) {
+      newErrors.serviceDate = isPastFlightDate(trimmedDate)
+        ? (lang === 1 ? 'অতীতের তারিখ গ্রহণযোগ্য নয়। আজকের বা ভবিষ্যতের তারিখ দিন।' : 'Past dates are not allowed. Please choose today or a future date.')
+        : (lang === 1 ? 'সঠিক তারিখ দিন (DD-MM-YYYY)' : 'Enter a valid date (DD-MM-YYYY)');
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+    const matchedService =
+      (serviceCatalog && serviceCatalog.length ? serviceCatalog : SERVICES).find(
+        s => s.cat === direction
+      ) || SERVICES[0];
+
+    const liveInfo = (selectedFlightData && selectedFlightData.direction === direction)
+      ? selectedFlightData
+      : getLiveFlightStatus(trimmedFlight, direction);
+
+    startBooking(
+      matchedService,
+      selectedAddons,
+      selectedPackage,
+      direction,
+      {
+        fno: liveInfo?.fno || trimmedFlight.toUpperCase(),
+        airline: liveInfo?.airline || '',
+        airlineBn: liveInfo?.airlineBn || '',
+        route: liveInfo?.route || '',
+        origin: liveInfo?.origin || '',
+        originBn: liveInfo?.originBn || '',
+        destination: liveInfo?.destination || '',
+        destinationBn: liveInfo?.destinationBn || '',
+        terminal: liveInfo?.terminal || '',
+        terminalBn: liveInfo?.terminalBn || '',
+        gate: liveInfo?.gate || '',
+        time: liveInfo?.scheduled || '',
+        scheduled: liveInfo?.scheduled || '',
+        status: liveInfo?.status || '',
+        liveRadar: !!liveInfo?.liveRadar,
+        date: trimmedDate,
+        passengers: passengerCount,
+        name: '',
+        phone: '',
+        email: '',
+        addonDetails,
+      }
+    );
   };
 
   const handleProceedBookingFromModal = (customAddons = selectedAddons, customDetails = addonDetails, options = {}) => {
@@ -1575,26 +1640,6 @@ export default function HomeScreen({
           if (errors.serviceDate) setErrors(e => ({ ...e, serviceDate: null }));
         }}
         selectedDate={serviceDate}
-      />
-
-      {/* Quick Booking Form Modal with Smooth Animation */}
-      <QuickBookingModal
-        visible={showQuickBookingModal}
-        onClose={() => setShowQuickBookingModal(false)}
-        startBooking={startBooking}
-        initialData={{
-          direction,
-          flightNumber,
-          serviceDate,
-          passengerCount,
-          selectedPackage,
-          selectedAddons,
-          addonDetails,
-          name: profile?.name || '',
-          phone: profile?.phone || '',
-        }}
-        lang={lang}
-        airport={airport}
       />
 
       {/* Top Header Navigation Dropdown / Drawer Modal */}
