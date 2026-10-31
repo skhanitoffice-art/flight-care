@@ -123,6 +123,8 @@ import MobileTabs from './src/components/MobileTabs';
 import DesktopHeader from './src/components/DesktopHeader';
 import DesktopFooter from './src/components/DesktopFooter';
 import FlightIntroSplash from './src/components/FlightIntroSplash';
+import FloatingHelpButton from './src/components/FloatingHelpButton';
+import QuickBookingModal from './src/components/QuickBookingModal';
 
 import HomeScreen from './src/screens/HomeScreen';
 import DetailScreen from './src/screens/DetailScreen';
@@ -265,6 +267,7 @@ export default function App() {
   const [managedAirports, setManagedAirports] = useState(DEFAULT_MANAGED_AIRPORTS);
   const [airport, setAirport] = useState(DEFAULT_MANAGED_AIRPORTS[0]);
   const [showAirportModal, setShowAirportModal] = useState(false);
+  const [showGlobalQuickBooking, setShowGlobalQuickBooking] = useState(false);
   const [serviceCatalog, setServiceCatalog] = useState(SERVICES);
   const [addonCatalog, setAddonCatalog] = useState(ADDONS);
   const [pricingConfig, setPricingConfig] = useState(DEFAULT_PRICING_CONFIG);
@@ -5187,6 +5190,13 @@ export default function App() {
             lang={lang}
           />
         )}
+
+        {/* Floating Help Speed Dial (WhatsApp, Direct Call, Instant Booking) */}
+        <FloatingHelpButton
+          lang={lang}
+          isWide={responsive.isWide}
+          onOpenBooking={() => setShowGlobalQuickBooking(true)}
+        />
       </View>
       <Modal
         transparent
@@ -5583,6 +5593,15 @@ export default function App() {
         onClose={handleCloseReviewModal}
         onReviewSubmitted={handleReviewSubmitted}
         lang={lang}
+      />
+
+      {/* Global Quick Booking Modal triggered from Floating Help Button */}
+      <QuickBookingModal
+        visible={showGlobalQuickBooking}
+        onClose={() => setShowGlobalQuickBooking(false)}
+        startBooking={startBooking}
+        lang={lang}
+        airport={airport}
       />
 
       {/* 3D Airplane Flight Takeoff & Sky Cloud Intro Splash Animation */}
