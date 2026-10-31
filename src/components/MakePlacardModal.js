@@ -1,7 +1,7 @@
 // src/components/MakePlacardModal.js
 // Flight Care Enterprise - VIP Airport Protocol Placard Maker & Super Admin History Portal
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   View,
@@ -11,6 +11,7 @@ import {
   ScrollView,
   Image,
   Platform,
+  ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
 import {
@@ -25,6 +26,10 @@ import {
   downloadPlacardImage,
   printPlacardDirect,
 } from '../services/placardService';
+import {
+  searchFlightSuggestions,
+  searchLiveFlightsFromAviationStack,
+} from '../services/flightService';
 import DatePickerModal from './DatePickerModal';
 
 const PLACARD_TEMPLATE_IMAGE = require('../../assets/placard_template.png');
@@ -62,6 +67,84 @@ export default function MakePlacardModal({
 
   // Dynamic DatePicker Modal state (Like Home & Booking Wizard in Photo 2 & 3)
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Live Radar & Flight Suggestions states (Matching Photo 1 API Integration)
+  const [flightSuggestions, setFlightSuggestions] = useState([]);
+  const [showFlightSuggestions, setShowFlightSuggestions] = useState(false);
+  const [isSearchingAviation, setIsSearchingAviation] = useState(false);
+  const searchDebounceTimer = useRef(null);
+
+  const fetchFlightSuggestions = (rawVal) => {
+    const upper = (rawVal || '').toUpperCase();
+    const queryToUse = upper.trim() || 'BG';
+
+    // 1. Instant local matches (0ms response)
+    const localMatches = searchFlightSuggestions(queryToUse, 'arr');
+    if (localMatches && localMatches.length > 0) {
+      setFlightSuggestions(localMatches);
+      setShowFlightSuggestions(true);
+    }
+
+    // 2. Query AviationStack Live Flight API strictly for Dhaka
+    if (searchDebounceTimer.current) clearTimeout(searchDebounceTimer.current);
+    searchDebounceTimer.current = setTimeout(async () => {
+      try {
+        setIsSearchingAviation(true);
+        const liveResults = await searchLiveFlightsFromAviationStack(queryToUse, 'arr');
+        if (liveResults && liveResults.length > 0) {
+          const seen = new Set();
+          const merged = [];
+          for (const f of liveResults) {
+            if (!seen.has(f.fno)) {
+              seen.add(f.fno);
+              merged.push(f);
+            }
+          }
+          for (const f of localMatches || []) {
+            if (!seen.has(f.fno)) {
+              seen.add(f.fno);
+              merged.push(f);
+            }
+          }
+          setFlightSuggestions(merged.slice(0, 15));
+          setShowFlightSuggestions(true);
+        } else if (localMatches && localMatches.length > 0) {
+          setFlightSuggestions(localMatches.slice(0, 15));
+          setShowFlightSuggestions(true);
+        }
+      } catch (e) {
+        console.warn('AviationStack search error in MakePlacardModal:', e);
+      } finally {
+        setIsSearchingAviation(false);
+      }
+    }, 300);
+  };
+
+  const handleFlightChange = (rawVal) => {
+    const upper = (rawVal || '').toUpperCase();
+    setFlightNumber(upper);
+    if (upper.trim()) {
+      fetchFlightSuggestions(upper);
+    } else {
+      setShowFlightSuggestions(false);
+    }
+  };
+
+  const handleOpenFlightSuggestions = () => {
+    const query = flightNumber === 'XY-312' || !flightNumber.trim() ? 'BG' : flightNumber;
+    fetchFlightSuggestions(query);
+    setShowFlightSuggestions(true);
+  };
+
+  const handleSelectFlight = (item) => {
+    setFlightNumber(item.fno);
+    setShowFlightSuggestions(false);
+    if (item.date && !serviceDate) {
+      setServiceDate(formatPlacardDate(item.date));
+    }
+    setStatusNotice(isBn ? `✓ ফ্লাইট ${item.fno} (${item.airline || ''}) নির্বাচন করা হয়েছে` : `✓ Selected flight ${item.fno}`);
+    setTimeout(() => setStatusNotice(''), 3000);
+  };
 
   // Sync initialBooking if provided
   useEffect(() => {
@@ -790,15 +873,31 @@ export default function MakePlacardModal({
                     </Text>
                   </View>
 
-                  {/* 3. FLIGHT NUMBER (Optional) */}
-                  <View style={{ marginBottom: 16 }}>
+                  {/* 3. FLIGHT NUMBER (Optional) with Live Radar API & Autocomplete Dropdown (Matching Image 1) */}
+                  <View style={{ marginBottom: 16, position: 'relative', zIndex: 100 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                       <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#1E293B' }}>
                         ✈️ {isBn ? 'ফ্লাইট নম্বর (ঐচ্ছিক):' : 'Flight Number (Optional):'}
                       </Text>
-                      <Text style={{ fontSize: 11, color: '#64748B' }}>
-                        {isBn ? 'যেমন: XY-312, BG-084' : 'e.g. XY-312, BG-084'}
-                      </Text>
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={handleOpenFlightSuggestions}
+                        style={{
+                          backgroundColor: '#E0F2FE',
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                          borderRadius: 6,
+                          borderWidth: 1,
+                          borderColor: '#BAE6FD',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#0284C7' }}>
+                          ⚡ {isBn ? 'লাইভ রাডার ফ্লাইট সাজেশন ▾' : 'Live Flight Radar ▾'}
+                        </Text>
+                      </TouchableOpacity>
                     </View>
 
                     {/* Quick Flight Chips */}
@@ -806,7 +905,12 @@ export default function MakePlacardModal({
                       {['XY-312', 'BG-084', 'EK-582', 'QR-638', 'SV-804', 'VIP ESCORT'].map(f => (
                         <TouchableOpacity
                           key={f}
-                          onPress={() => setFlightNumber(f)}
+                          onPress={() => {
+                            setFlightNumber(f);
+                            if (f !== 'VIP ESCORT') {
+                              fetchFlightSuggestions(f);
+                            }
+                          }}
                           style={{
                             paddingHorizontal: 8,
                             paddingVertical: 3,
@@ -829,24 +933,154 @@ export default function MakePlacardModal({
                       ))}
                     </View>
 
-                    <TextInput
-                      value={flightNumber}
-                      onChangeText={setFlightNumber}
-                      placeholder="e.g. XY-312 or BG-084"
-                      placeholderTextColor="#94A3B8"
-                      autoCapitalize="characters"
-                      style={{
-                        backgroundColor: '#FFFFFF',
-                        borderWidth: 1.5,
-                        borderColor: '#CBD5E1',
-                        borderRadius: 10,
-                        paddingHorizontal: 12,
-                        paddingVertical: 9,
-                        fontSize: 13.5,
-                        fontWeight: '700',
-                        color: '#0F172A',
-                      }}
-                    />
+                    {/* Interactive Input with Live Search on Click / Typing */}
+                    <View style={{ position: 'relative' }}>
+                      <TextInput
+                        value={flightNumber}
+                        onChangeText={handleFlightChange}
+                        onFocus={handleOpenFlightSuggestions}
+                        placeholder={isBn ? "যেমন: BG-084 বা EK-582" : "e.g. BG-084 or EK-582"}
+                        placeholderTextColor="#94A3B8"
+                        autoCapitalize="characters"
+                        style={{
+                          backgroundColor: '#FFFFFF',
+                          borderWidth: 1.5,
+                          borderColor: showFlightSuggestions ? '#0284C7' : '#CBD5E1',
+                          borderRadius: 10,
+                          paddingHorizontal: 12,
+                          paddingVertical: 9,
+                          fontSize: 13.5,
+                          fontWeight: '700',
+                          color: '#0F172A',
+                          paddingRight: isSearchingAviation ? 90 : 36,
+                        }}
+                      />
+                      {isSearchingAviation && (
+                        <View style={{ position: 'absolute', right: 10, top: 10, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <ActivityIndicator size="small" color="#0284C7" />
+                          <Text style={{ fontSize: 9.5, color: '#0284C7', fontWeight: '700' }}>
+                            {isBn ? 'স্ক্যান...' : 'Scanning...'}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* LIVE RADAR & FLIGHT SUGGESTIONS DROPDOWN (Matches Image 1 Exactly) */}
+                    {showFlightSuggestions && flightSuggestions.length > 0 && (
+                      <View
+                        style={{
+                          marginTop: 6,
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: 10,
+                          borderWidth: 1.5,
+                          borderColor: '#BAE6FD',
+                          maxHeight: 290,
+                          overflow: 'hidden',
+                          shadowColor: '#0284C7',
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.2,
+                          shadowRadius: 10,
+                          elevation: 8,
+                          zIndex: 999,
+                        }}
+                      >
+                        {/* Header matching Image 1 */}
+                        <View
+                          style={{
+                            backgroundColor: '#F0F9FF',
+                            paddingHorizontal: 10,
+                            paddingVertical: 7,
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#BAE6FD',
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>
+                              {isBn ? '✈️ লাইভ রাডার ও জনপ্রিয় সাজেশন' : '✈️ LIVE RADAR & FLIGHT SUGGESTIONS'}
+                            </Text>
+                            {isSearchingAviation && (
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                <ActivityIndicator size="small" color="#0284C7" />
+                                <Text style={{ fontSize: 9.5, color: '#0284C7', fontWeight: '700' }}>
+                                  {isBn ? 'লাইভ স্ক্যান...' : 'Scanning...'}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                          <TouchableOpacity onPress={() => setShowFlightSuggestions(false)}>
+                            <Text style={{ fontSize: 13, color: '#64748B', fontWeight: '800', paddingHorizontal: 4 }}>✕</Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        {/* Suggestions List */}
+                        <ScrollView
+                          nestedScrollEnabled
+                          keyboardShouldPersistTaps="handled"
+                          style={{ maxHeight: 245 }}
+                          contentContainerStyle={{ paddingVertical: 2 }}
+                        >
+                          {flightSuggestions.map((item, idx) => (
+                            <TouchableOpacity
+                              key={`${item.fno}_${idx}`}
+                              activeOpacity={0.7}
+                              onPress={() => handleSelectFlight(item)}
+                              style={{
+                                paddingHorizontal: 10,
+                                paddingVertical: 8,
+                                borderBottomWidth: idx === flightSuggestions.length - 1 ? 0 : 1,
+                                borderBottomColor: '#F1F5F9',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                backgroundColor: item.liveRadar ? '#F8FAFC' : '#FFFFFF',
+                              }}
+                            >
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                                <Text style={{ fontSize: 16 }}>{item.logo || '✈️'}</Text>
+                                <View style={{ flex: 1, minWidth: 0 }}>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                    <Text style={{ fontSize: 13, fontWeight: '800', color: '#0284C7' }}>
+                                      {item.fno}
+                                    </Text>
+                                    {item.liveRadar && (
+                                      <View style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 4, borderWidth: 1, borderColor: '#86EFAC' }}>
+                                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#15803D' }}>
+                                          ● {isBn ? 'লাইভ রাডার' : 'Live Radar'}
+                                        </Text>
+                                      </View>
+                                    )}
+                                    <Text style={{ fontSize: 11.5, color: '#475569', fontWeight: '600' }} numberOfLines={1}>
+                                      {isBn ? (item.airlineBn || item.airline) : item.airline}
+                                    </Text>
+                                  </View>
+                                  <Text style={{ fontSize: 10.5, color: '#64748B' }} numberOfLines={1}>
+                                    {isBn
+                                      ? `${item.originBn || item.origin} ➔ ${item.destinationBn || item.destination}`
+                                      : `${item.origin} ➔ ${item.destination}`}
+                                    {item.scheduled ? ` • ⏱️ ${item.scheduled}` : ''}
+                                  </Text>
+                                </View>
+                              </View>
+                              <View style={{ alignItems: 'flex-end', gap: 2 }}>
+                                {item.terminal ? (
+                                  <View style={{ backgroundColor: '#F0F9FF', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#BAE6FD' }}>
+                                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#0369A1' }}>{item.terminal}</Text>
+                                  </View>
+                                ) : null}
+                                {item.status ? (
+                                  <Text style={{ fontSize: 9.5, color: '#10B981', fontWeight: '700' }}>
+                                    {isBn ? (item.statusBn || item.status) : item.status}
+                                  </Text>
+                                ) : null}
+                              </View>
+                            </TouchableOpacity>
+                          ))}
+                        </ScrollView>
+                      </View>
+                    )}
                   </View>
 
                   {/* Action Buttons: Save & Reset */}
