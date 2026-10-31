@@ -9,9 +9,11 @@ import {
   Modal,
   Platform,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import DesktopHeader from './DesktopHeader';
 import DesktopFooter from './DesktopFooter';
+import Parallax3DAtmosphere from './Parallax3DAtmosphere';
 import {
   ArrivalIcon,
   DepartureIcon,
@@ -266,6 +268,7 @@ export default function DesktopHomeScreen({
   const [isSearchingAviation, setIsSearchingAviation] = useState(false);
   const [errors, setErrors] = useState({});
   const searchDebounceTimer = useRef(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const handleFlightInputChange = (rawVal, customDir = null) => {
     const dirToUse = customDir || direction;
@@ -380,7 +383,10 @@ export default function DesktopHomeScreen({
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
+    <View style={{ flex: 1, backgroundColor: '#F8FAFC', position: 'relative' }}>
+      {/* 0. 3D Parallax Sky Atmosphere (Clouds, 3D Planes & Atmospheric Horizon) */}
+      <Parallax3DAtmosphere scrollY={scrollY} isMobile={false} />
+
       {/* 1. Desktop Top Header */}
       <DesktopHeader
         lang={lang}
@@ -403,16 +409,25 @@ export default function DesktopHomeScreen({
         notifications={notifications}
       />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+        style={{ flex: 1, backgroundColor: 'transparent', zIndex: 1 }}
+      >
         {/* 2. Main Hero Section (Image 1 Split Layout) */}
         <View
           style={{
             width: '100%',
-            backgroundColor: '#F1F5F9',
+            backgroundColor: 'transparent',
             paddingVertical: 36,
             alignItems: 'center',
             borderBottomWidth: 1,
-            borderBottomColor: '#E2E8F0',
+            borderBottomColor: 'rgba(226, 232, 240, 0.7)',
           }}
         >
           <View
@@ -1473,11 +1488,12 @@ export default function DesktopHomeScreen({
         <View
           style={{
             width: '100%',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: 'rgba(255, 255, 255, 0.90)',
             borderBottomWidth: 1,
             borderBottomColor: '#E2E8F0',
             paddingVertical: 20,
             alignItems: 'center',
+            backdropFilter: 'blur(10px)',
           }}
         >
           <View

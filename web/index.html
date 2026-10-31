@@ -246,6 +246,55 @@
         animation: fcIconWiggle 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
       }
     </style>
+    <!-- 3D Parallax Sky Atmosphere Styles -->
+    <style id="flightcare-parallax-atmosphere-styles">
+      @keyframes fcPlaneFloat {
+        0%, 100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-8px) rotate(0.8deg);
+        }
+      }
+      @keyframes fcCloudDriftSlow {
+        0%, 100% {
+          transform: translateX(0px);
+        }
+        50% {
+          transform: translateX(18px);
+        }
+      }
+      @keyframes fcCloudDriftReverse {
+        0%, 100% {
+          transform: translateX(0px);
+        }
+        50% {
+          transform: translateX(-20px);
+        }
+      }
+      @keyframes fcContrailPulse {
+        0%, 100% {
+          opacity: 0.5;
+          filter: blur(3px);
+        }
+        50% {
+          opacity: 0.85;
+          filter: blur(2px);
+        }
+      }
+      .fc-parallax-plane {
+        animation: fcPlaneFloat 4.2s ease-in-out infinite !important;
+      }
+      .fc-parallax-cloud-1 {
+        animation: fcCloudDriftSlow 12s ease-in-out infinite !important;
+      }
+      .fc-parallax-cloud-2 {
+        animation: fcCloudDriftReverse 14s ease-in-out infinite !important;
+      }
+      .fc-parallax-contrail {
+        animation: fcContrailPulse 2.8s ease-in-out infinite !important;
+      }
+    </style>
   </head>
 
   <body>

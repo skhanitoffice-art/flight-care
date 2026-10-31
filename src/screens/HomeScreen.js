@@ -11,6 +11,7 @@ import {
   Linking,
   Keyboard,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { s } from '../styles/styles';
 import { PKGS, PACKAGE_FEATURES, SERVICES, ADDONS, getAddonAsset } from '../constants/data';
@@ -34,6 +35,7 @@ import DesktopFooter from '../components/DesktopFooter';
 import DatePickerModal from '../components/DatePickerModal';
 import AdditionalServicesModal from '../components/AdditionalServicesModal';
 import QuickBookingModal from '../components/QuickBookingModal';
+import Parallax3DAtmosphere from '../components/Parallax3DAtmosphere';
 import { isValidFlightNumber, isValidFlightDate, createAddonDetails } from '../utils/helpers';
 import {
   searchFlightSuggestions,
@@ -113,6 +115,7 @@ export default function HomeScreen({
   const [selectedFlightData, setSelectedFlightData] = useState(null);
   const [isSearchingAviation, setIsSearchingAviation] = useState(false);
   const searchDebounceTimer = useRef(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
   const [showNavMenu, setShowNavMenu] = useState(false);
   const unreadCount = (notifications || []).filter(n => !n.read).length;
 
@@ -222,17 +225,25 @@ export default function HomeScreen({
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={{
-        paddingHorizontal: responsive.isPhone ? 16 : 24,
-        paddingTop: 18,
-        paddingBottom: 115,
-        alignItems: 'center',
-      }}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="on-drag"
-    >
+    <View style={{ flex: 1, backgroundColor: '#F8FAFC', position: 'relative' }}>
+      <Parallax3DAtmosphere scrollY={scrollY} isMobile={true} />
+      <ScrollView
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+        contentContainerStyle={{
+          paddingHorizontal: responsive.isPhone ? 16 : 24,
+          paddingTop: 18,
+          paddingBottom: 115,
+          alignItems: 'center',
+        }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        style={{ flex: 1, backgroundColor: 'transparent', zIndex: 1 }}
+      >
       <View style={{ width: '100%', maxWidth: 460 }}>
           {/* Mobile FlightCare Brand Header Bar */}
           <View
@@ -1818,5 +1829,6 @@ export default function HomeScreen({
         </TouchableOpacity>
       </Modal>
     </ScrollView>
+  </View>
   );
 }
