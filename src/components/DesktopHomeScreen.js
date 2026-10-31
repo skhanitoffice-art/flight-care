@@ -33,6 +33,7 @@ import { SERVICES, getAddonAsset } from '../constants/data';
 import DatePickerModal from './DatePickerModal';
 import AdditionalServicesModal from './AdditionalServicesModal';
 import AnimatedServiceCard from './AnimatedServiceCard';
+import HeroImageSlider from './HeroImageSlider';
 import { isValidFlightNumber, isValidFlightDate, createAddonDetails } from '../utils/helpers';
 import {
   searchFlightSuggestions,
@@ -592,27 +593,8 @@ export default function DesktopHomeScreen({
                 {lang ? 'বিমানবন্দরে মিট অ্যান্ড গ্রিট সেবা - ঢাকা' : 'Airport Meet & Greet in Dhaka'}
               </Text>
 
-              {/* Hostess and couple photograph */}
-              <View
-                style={{
-                  width: '100%',
-                  borderRadius: 18,
-                  overflow: 'hidden',
-                  borderWidth: 1,
-                  borderColor: '#CBD5E1',
-                  shadowColor: '#0F172A',
-                  shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 14,
-                  backgroundColor: '#E2E8F0',
-                }}
-              >
-                <Image
-                  source={require('../../assets/concierge_couple.jpg')}
-                  style={{ width: '100%', height: 320 }}
-                  resizeMode="cover"
-                />
-              </View>
+              {/* Continuous Auto-Swapping Hero Image Slider */}
+              <HeroImageSlider lang={lang} height={325} />
             </View>
 
             {/* Right Column: Floating White Booking Card */}
