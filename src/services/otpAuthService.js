@@ -4,11 +4,9 @@ import {
   recordFailedOtpAttempt,
   resetFailedOtpAttempts,
 } from './otpRateLimiter.js';
-// src/services/otpAuthService.js
-// Flight Care Complete OTP Verification & Challenge Lifecycle Engine
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sendLiveSms } from './smsGateway.js';
+import { saveCommunicationLog } from './communication.js';
 
 const OTP_CHALLENGE_STORE_KEY = '@flightcare_active_otp_challenges';
 
@@ -23,11 +21,57 @@ export function generateOtpCode() {
 }
 
 /**
- * Creates and dispatches a customer registration OTP
+ * Dispatch OTP via email endpoint (PHP mailer on Hostinger/server)
+ */
+async function dispatchEmailOtp({ email, name, code, phone = '' }) {
+  if (!email || !email.includes('@')) return { sent: false };
+  try {
+    const endpoints = [
+      '/api/auth/send_otp.php',
+      'https://flightcaresbd.com/api/auth/send_otp.php',
+    ];
+    let dispatched = false;
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name, otp: code, phone, type: 'REGISTRATION' }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.ok) {
+            dispatched = true;
+            break;
+          }
+        }
+      } catch (e) {
+        // Continue to fallback
+      }
+    }
+    // Record communication log
+    saveCommunicationLog({
+      type: 'EMAIL_OTP',
+      recipient: email,
+      subject: `Flight Care OTP: ${code}`,
+      otp: code,
+      status: dispatched ? 'delivered' : 'simulated',
+    }).catch(() => {});
+
+    return { sent: dispatched, simulated: !dispatched };
+  } catch (err) {
+    console.warn('dispatchEmailOtp error:', err);
+    return { sent: false, simulated: true };
+  }
+}
+
+/**
+ * Creates and dispatches a customer registration OTP (Mobile SMS + Gmail)
  */
 export async function createRegistrationOtpChallenge({ name, phone, email, password }) {
+  const rateTarget = phone || email || 'customer';
   // Anti-Bot & Rate Limiting Enforcement
-  const rateCheck = await checkOtpRateLimit(phone);
+  const rateCheck = await checkOtpRateLimit(rateTarget);
   if (!rateCheck.allowed) {
     return {
       ok: false,
@@ -44,8 +88,8 @@ export async function createRegistrationOtpChallenge({ name, phone, email, passw
     challengeId,
     type: 'REGISTRATION',
     name,
-    phone,
-    email,
+    phone: phone || '',
+    email: email || '',
     password,
     code,
     expiresAt,
@@ -56,22 +100,41 @@ export async function createRegistrationOtpChallenge({ name, phone, email, passw
     await AsyncStorage.setItem(OTP_CHALLENGE_STORE_KEY, JSON.stringify(Array.from(activeChallenges.entries())));
   } catch (e) {}
 
-  const smsMessage = `[Flight Care] আপনার ওটিপি ভেরিফিকেশন কোড: ${code}। এটি ৫ মিনিটের জন্য প্রযোজ্য। কাউকে এটি শেয়ার করবেন না।`;
+  let smsDelivered = false;
+  let smsSimulated = false;
 
-  const smsResult = await sendLiveSms({
-    to: phone,
-    message: smsMessage,
-    otp: code,
-    title: 'Registration OTP',
-  });
-  await recordOtpDispatch(phone);
+  // 1. Dispatch SMS if phone provided
+  if (phone) {
+    const smsMessage = `[Flight Care] আপনার ওটিপি ভেরিফিকেশন কোড: ${code}। এটি ৫ মিনিটের জন্য প্রযোজ্য। কাউকে এটি শেয়ার করবেন না।`;
+    const smsResult = await sendLiveSms({
+      to: phone,
+      message: smsMessage,
+      otp: code,
+      title: 'Registration OTP',
+    });
+    smsDelivered = smsResult.delivered;
+    smsSimulated = smsResult.simulated;
+    await recordOtpDispatch(phone);
+  }
+
+  // 2. Dispatch Email/Gmail if email provided
+  let emailResult = { sent: false };
+  if (email) {
+    emailResult = await dispatchEmailOtp({ email, name, code, phone });
+    await recordOtpDispatch(email);
+  }
 
   return {
     ok: true,
     data: {
       challenge_id: challengeId,
-      message: 'OTP dispatched successfully to your phone number via SMS.',
-      simulated: smsResult.simulated,
+      code,
+      phone,
+      email,
+      message: 'OTP dispatched successfully via SMS / Email.',
+      smsDelivered,
+      smsSimulated,
+      emailSent: emailResult.sent,
     },
   };
 }
@@ -79,7 +142,7 @@ export async function createRegistrationOtpChallenge({ name, phone, email, passw
 /**
  * Verifies a registration OTP challenge securely
  */
-export async function verifyRegistrationOtpChallenge(challengeId, phone, inputCode) {
+export async function verifyRegistrationOtpChallenge(challengeId, identifier, inputCode) {
   const cleanCode = String(inputCode || '').replace(/\D/g, '').trim();
   let challenge = activeChallenges.get(challengeId);
 
@@ -93,14 +156,22 @@ export async function verifyRegistrationOtpChallenge(challengeId, phone, inputCo
     } catch (e) {}
   }
 
-  // Ultra-robust match: if challengeId changed or resend occurred, match by phone digits & code
+  // Ultra-robust match: if challengeId changed or resend occurred, match by phone digits, email, or code
   if (!challenge || String(challenge.code).trim() !== cleanCode) {
-    const cleanPhoneDigits = String(phone || '').replace(/\D/g, '').slice(-10);
+    const cleanId = String(identifier || '').trim().toLowerCase();
+    const cleanPhoneDigits = cleanId.replace(/\D/g, '').slice(-10);
+
     for (const [id, c] of activeChallenges.entries()) {
       const cPhoneDigits = String(c.phone || '').replace(/\D/g, '').slice(-10);
+      const cEmail = String(c.email || '').trim().toLowerCase();
       const isCodeMatch = String(c.code).trim() === cleanCode;
-      const isPhoneMatch = !cleanPhoneDigits || !cPhoneDigits || cPhoneDigits === cleanPhoneDigits;
-      if (isCodeMatch && isPhoneMatch && Date.now() <= (c.expiresAt || Date.now() + 600000)) {
+
+      const isIdMatch =
+        !cleanId ||
+        (cleanPhoneDigits && cPhoneDigits && cPhoneDigits === cleanPhoneDigits) ||
+        (cleanId.includes('@') && cEmail && cEmail === cleanId);
+
+      if (isCodeMatch && isIdMatch && Date.now() <= (c.expiresAt || Date.now() + 600000)) {
         challenge = c;
         challengeId = id;
         break;
@@ -121,10 +192,11 @@ export async function verifyRegistrationOtpChallenge(challengeId, phone, inputCo
   const user = {
     id: Date.now(),
     name: challenge?.name || 'Customer',
-    phone: phone || challenge?.phone || '+880 1712 345678',
-    email: challenge?.email || '',
+    phone: challenge?.phone || (identifier && !identifier.includes('@') ? identifier : '+880 1347 570001'),
+    email: challenge?.email || (identifier && identifier.includes('@') ? identifier : ''),
     role: 'customer',
-    phone_verified: true,
+    phone_verified: Boolean(challenge?.phone),
+    email_verified: Boolean(challenge?.email),
     phone_verified_at: new Date().toISOString(),
   };
 
@@ -132,21 +204,28 @@ export async function verifyRegistrationOtpChallenge(challengeId, phone, inputCo
 
   // Clean challenge immediately upon successful verification (single-use token)
   activeChallenges.delete(challengeId);
+  try {
+    await AsyncStorage.setItem(OTP_CHALLENGE_STORE_KEY, JSON.stringify(Array.from(activeChallenges.entries())));
+  } catch (e) {}
 
-  await resetFailedOtpAttempts(phone);
+  if (challenge?.phone) await resetFailedOtpAttempts(challenge.phone);
+  if (challenge?.email) await resetFailedOtpAttempts(challenge.email);
+
   return {
     ok: true,
     token,
     user,
+    challenge,
   };
 }
 
 /**
  * Resends OTP for an active challenge
  */
-export async function resendOtpChallenge(challengeId, phone) {
+export async function resendOtpChallenge(challengeId, identifier) {
+  const rateTarget = identifier || 'customer';
   // Anti-Bot & Rate Limiting Enforcement on Resend
-  const rateCheck = await checkOtpRateLimit(phone);
+  const rateCheck = await checkOtpRateLimit(rateTarget);
   if (!rateCheck.allowed) {
     return {
       ok: false,
@@ -166,28 +245,43 @@ export async function resendOtpChallenge(challengeId, phone) {
   } else {
     challenge = {
       challengeId,
-      phone,
+      phone: identifier && !identifier.includes('@') ? identifier : '',
+      email: identifier && identifier.includes('@') ? identifier : '',
       code,
       expiresAt,
     };
     activeChallenges.set(challengeId, challenge);
   }
 
-  const smsMessage = `[Flight Care] আপনার নতুন ওটিপি কোড: ${code}। এটি ৫ মিনিটের জন্য কার্যকর।`;
-  const smsResult = await sendLiveSms({
-    to: phone,
-    message: smsMessage,
-    otp: code,
-    title: 'Resent OTP',
-  });
-  await recordOtpDispatch(phone);
+  // 1. Resend SMS if phone exists
+  if (challenge.phone) {
+    const smsMessage = `[Flight Care] আপনার নতুন ওটিপি কোড: ${code}। এটি ৫ মিনিটের জন্য কার্যকর।`;
+    await sendLiveSms({
+      to: challenge.phone,
+      message: smsMessage,
+      otp: code,
+      title: 'Resent OTP',
+    });
+    await recordOtpDispatch(challenge.phone);
+  }
+
+  // 2. Resend Email if email exists
+  if (challenge.email) {
+    await dispatchEmailOtp({
+      email: challenge.email,
+      name: challenge.name || 'Customer',
+      code,
+      phone: challenge.phone,
+    });
+    await recordOtpDispatch(challenge.email);
+  }
 
   return {
     ok: true,
     data: {
       challenge_id: challengeId,
-      message: 'OTP resent successfully to your phone number via SMS.',
-      simulated: smsResult.simulated,
+      code,
+      message: 'OTP resent successfully via SMS / Email.',
     },
   };
 }
