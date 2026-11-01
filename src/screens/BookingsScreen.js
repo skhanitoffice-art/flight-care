@@ -20,6 +20,7 @@ import LiveTrackingModal from '../components/LiveTrackingModal';
 import BookingInvoiceModal from '../components/BookingInvoiceModal';
 import VipPlacardModal from '../components/VipPlacardModal';
 import ScreenHeaderBar from '../components/ScreenHeaderBar';
+import { isFirebaseConfigured, getFirestoreDoc } from '../services/firebase';
 import ServiceCompletionReviewModal from '../components/ServiceCompletionReviewModal';
 import { addOfficerReview } from '../services/officerService';
 import { dispatchStaffNotification, STAFF_NOTIFICATION_TYPES } from '../services/communication';
@@ -57,6 +58,31 @@ export default function BookingsScreen({
   const [localTrackingBooking, setLocalTrackingBooking] = useState(null);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isCloudSearching, setIsCloudSearching] = useState(false);
+
+  const handleSearchGoogleCloud = async () => {
+    const q = searchInput.trim().replace(/^#/, '');
+    if (!q) return;
+    setIsCloudSearching(true);
+    try {
+      if (isFirebaseConfigured()) {
+        const cloudRes = await getFirestoreDoc('bookings', q);
+        if (cloudRes && cloudRes.ok && cloudRes.exists && cloudRes.data) {
+          const found = { id: q, ...cloudRes.data };
+          setLocalTrackingBooking(found);
+        } else {
+          Alert.alert(
+            lang ? 'বুকিং পাওয়া যায়নি' : 'Booking Not Found',
+            lang ? `গুগল ক্লাউডে #${q} বুকিং রেফারেন্সের কোনো তথ্য পাওয়া যায়নি।` : `No booking record found for #${q} on Google Cloud.`
+          );
+        }
+      }
+    } catch (e) {
+      console.warn('Google Cloud search error:', e);
+    } finally {
+      setIsCloudSearching(false);
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -262,7 +288,33 @@ export default function BookingsScreen({
           </View>
 
           {!visibleBookings.length && !bookingsLoading ? (
-            <Text style={s.muted}>{t('none')}</Text>
+            <View style={{ paddingVertical: 18, alignItems: 'center' }}>
+              <Text style={[s.muted, { textAlign: 'center', marginBottom: 12 }]}>{t('none')}</Text>
+              {searchInput.trim().length >= 4 && (
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  disabled={isCloudSearching}
+                  onPress={handleSearchGoogleCloud}
+                  style={{
+                    backgroundColor: '#0284C7',
+                    paddingVertical: 10,
+                    paddingHorizontal: 16,
+                    borderRadius: 10,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Text style={{ fontSize: 16 }}>☁️</Text>
+                  <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}>
+                    {isCloudSearching
+                      ? (lang ? 'গুগল ক্লাউডে খোঁজা হচ্ছে...' : 'Searching Google Cloud...')
+                      : (lang ? `গুগল ক্লাউড এপিআই দিয়ে #${searchInput.trim()} ট্র্যাক করুন` : `Track #${searchInput.trim()} via Google Cloud API`)}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           ) : (
             visibleBookings.map(booking => {
               const customStages = normalizeWorkflowStages(booking.workflow);

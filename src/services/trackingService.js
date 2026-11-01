@@ -1,5 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEFAULT_STAFF_ROSTER } from '../constants/data';
+import {
+  isFirebaseConfigured,
+  getFirestoreDoc,
+  saveFirestoreDoc,
+  subscribeDoc,
+} from './firebase';
 
 const TRACKING_STORAGE_KEY = '@flightcare_live_tracking_sessions_v1';
 
@@ -220,8 +226,25 @@ export function subscribeToTrackingUpdates(bookingId, callback) {
     listeners.set(idStr, new Set());
   }
   listeners.get(idStr).add(callback);
+
+  // Connect Google Cloud Firestore Real-Time Broadcast Stream
+  let cloudUnsub = () => {};
+  if (isFirebaseConfigured()) {
+    try {
+      cloudUnsub = subscribeDoc('tracking_sessions', idStr, (cloudData) => {
+        if (cloudData && cloudData.exists && cloudData.officer && cloudData.passenger) {
+          sessionsCache.set(idStr, cloudData);
+          callback(cloudData);
+        }
+      });
+    } catch (e) {
+      console.warn('[Google Cloud Tracking] Cloud subscription warning:', e);
+    }
+  }
+
   return () => {
     listeners.get(idStr)?.delete(callback);
+    cloudUnsub();
   };
 }
 
@@ -234,6 +257,17 @@ function notifyTrackingListeners(bookingId, session) {
       } catch (e) {
         console.error('Error in tracking update callback:', e);
       }
+    });
+  }
+
+  // Real-time broadcast sync to Google Cloud Firestore
+  if (isFirebaseConfigured() && session) {
+    saveFirestoreDoc('tracking_sessions', idStr, {
+      ...session,
+      lastCloudSync: new Date().toISOString(),
+      cloudProvider: 'Google Cloud Platform (HSIA Tracking API)',
+    }).catch(err => {
+      console.warn('[Google Cloud Tracking] Real-time sync failed:', err.message);
     });
   }
 }
@@ -521,12 +555,17 @@ export function getAllActiveTrackingSessions(bookings = []) {
 const GOOGLE_MAPS_KEY_STORAGE = '@flightcare_google_maps_api_key';
 
 let inMemoryGoogleMapsKey =
-  (typeof process !== 'undefined' && process.env && (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY)) || '';
+  (typeof process !== 'undefined' &&
+    process.env &&
+    (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ||
+      process.env.GOOGLE_MAPS_API_KEY ||
+      process.env.EXPO_PUBLIC_FIREBASE_API_KEY)) ||
+  'AIzaSyBgd8fyyYu_A9cbx_SYEdB52HFNoZ575M8';
 
 export async function getGoogleMapsApiKey() {
   try {
     const saved = await AsyncStorage.getItem(GOOGLE_MAPS_KEY_STORAGE);
-    if (saved) return saved;
+    if (saved && saved.trim()) return saved.trim();
   } catch {}
   return inMemoryGoogleMapsKey;
 }

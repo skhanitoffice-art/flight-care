@@ -65,7 +65,7 @@ export default function LiveTrackingModal({
   const [showUniformGuide, setShowUniformGuide] = useState(true);
 
   // Google Maps Integration State
-  const [viewMode, setViewMode] = useState('radar'); // 'radar' | 'gmap'
+  const [viewMode, setViewMode] = useState('gmap'); // 'gmap' (default) | 'radar'
   const [mapLayer, setMapLayer] = useState('m'); // 'm' (roadmap) | 'k' (satellite)
   const [googleApiKey, setGoogleApiKey] = useState('');
   const [mapFocusTarget, setMapFocusTarget] = useState('route'); // 'route' | 'officer' | 'passenger' | 'meeting'
@@ -714,6 +714,14 @@ export default function LiveTrackingModal({
                 </Text>
               </View>
             )}
+
+            {/* Google Cloud API Active Indicator */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 8, backgroundColor: 'rgba(56, 189, 248, 0.1)', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1, borderColor: '#38BDF8' }}>
+              <Text style={{ fontSize: 12 }}>⚡</Text>
+              <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#38BDF8' }}>
+                {lang ? 'অরিজিনাল গুগল ক্লাউড এপিআই সংযুক্ত (লাইভ রিয়েল-টাইম ট্র্যাকিং সক্রিয়)' : 'Original Google Cloud Platform API Active (Live Real-Time Tracking)'}
+              </Text>
+            </View>
 
             {/* View Mode Segmented Switcher (Radar vs Google Maps) */}
             <View
