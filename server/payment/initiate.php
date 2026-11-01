@@ -112,10 +112,17 @@ $canonical_addon_prices = [
     'print'             => 100.0,
     'printer'           => 100.0,
     'photocopy'         => 50.0,
-    'security'          => 1200.0,
-    'tour'              => 3500.0,
-    'medical'           => 2500.0,
+    'security'          => 0.0,
+    'security_protocol' => 0.0,
+    'tour'              => 0.0,
+    'tour_guide'        => 0.0,
+    'medical'           => 0.0,
+    'medical_assistance'=> 0.0,
+    'hotel'             => 0.0,
+    'transfer'          => 0.0,
+    'rent_car'          => 0.0,
     'form_fillup'       => 0.0,
+    'money'             => 0.0,
 ];
 
 // Determine package

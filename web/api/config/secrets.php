@@ -48,3 +48,4 @@ return [
         'manager_hash' => 'cd0ceaec6c93bbad9e8154467b62de809f8cdc7972132064dba41c48fc709999',
     ]
 ];
+

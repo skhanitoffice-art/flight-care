@@ -1373,6 +1373,16 @@ export default function App() {
           try {
             const parsed = JSON.parse(pricingVal);
             if (parsed && typeof parsed === 'object') {
+              // Sanitize any legacy cached additional services to ensure quote-based guidance services stay On Request
+              const quoteIds = ['medical', 'security', 'tour', 'hotel', 'form_fillup', 'money', 'transfer'];
+              if (parsed.additionalServices && typeof parsed.additionalServices === 'object') {
+                quoteIds.forEach(qid => {
+                  if (parsed.additionalServices[qid]) {
+                    parsed.additionalServices[qid].price = null;
+                    parsed.additionalServices[qid].unit = 'quote';
+                  }
+                });
+              }
               setPricingConfig(parsed);
             }
           } catch {}

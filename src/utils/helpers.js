@@ -448,64 +448,64 @@ export const calculateBookingPricing = (w = {}, addonCatalog = ADDONS, pricingCo
   const totalStaffCharge = isOnlyAddons ? 0 : (extraStaffCharge + dedicatedStaffCharge);
 
   // 4. Additional Services (Add-ons)
+  // STRICT RULE: If an addon is On Request / Quote in catalog OR config,
+  // NO price is ever added to the payable total. Only when an explicit fixed price exists is it charged.
   const selectedAddons = Array.isArray(w.addons) ? w.addons : [];
-  const addonLines = selectedAddons
-    .filter(id => id !== 'transfer')
-    .map(id => {
-      const addonCfg = cfg.additionalServices?.[id];
-      const catalogItem = (addonCatalog || ADDONS).find(item => item.id === id) || ADDONS.find(item => item.id === id);
-      const name = addonCfg?.name || catalogItem?.n || [id, id];
-      const configuredPrice = addonCfg?.price ?? catalogItem?.p;
-      const unitPrice = configuredPrice == null ? null : Number(configuredPrice);
+  const quoteServiceIds = new Set(['hotel', 'medical', 'security', 'tour', 'form_fillup', 'money', 'transfer']);
 
-      let quantity = 1;
-      if (id === 'wrap') {
-        quantity = Math.max(1, Number(w.addonDetails?.wrap?.bags) || 1);
-      } else if (id === 'wheel') {
-        quantity = Math.max(1, Number(w.addonDetails?.wheel?.count) || 1);
-      } else if (id === 'lounge') {
-        quantity = Number(w.addonDetails?.lounge?.count) || passengerCount;
-      } else if (id === 'print') {
-        quantity = Math.max(1, Number(w.addonDetails?.print?.count) || 1);
-      } else if (id === 'photocopy') {
-        quantity = Math.max(1, Number(w.addonDetails?.photocopy?.count) || 1);
-      } else if (id === 'visa' || id === 'visa_on_arrival') {
-        quantity = Math.max(1, Number(w.addonDetails?.visa?.count || w.addonDetails?.visa_on_arrival?.count) || passengerCount);
-      }
+  const addonLines = selectedAddons.map(id => {
+    const addonCfg = cfg.additionalServices?.[id];
+    const catalogItem = (addonCatalog || ADDONS).find(item => item.id === id) || ADDONS.find(item => item.id === id);
+    const name = addonCfg?.name || catalogItem?.n || [id, id];
 
-      const amount = unitPrice == null ? null : unitPrice * quantity;
-      return {
-        id,
-        name,
-        quantity,
-        unitPrice,
-        amount,
-        unit: addonCfg?.unit || catalogItem?.priceUnit || 'request',
-      };
-    });
+    const isQuote =
+      quoteServiceIds.has(id) ||
+      catalogItem?.priceUnit === 'quote' ||
+      catalogItem?.p == null ||
+      addonCfg?.unit === 'quote' ||
+      addonCfg?.price == null;
+
+    const configuredPrice = isQuote ? null : (addonCfg?.price ?? catalogItem?.p);
+    const unitPrice = (isQuote || configuredPrice == null) ? null : Number(configuredPrice);
+
+    let quantity = 1;
+    if (id === 'wrap') {
+      quantity = Math.max(1, Number(w.addonDetails?.wrap?.bags) || 1);
+    } else if (id === 'wheel') {
+      quantity = Math.max(1, Number(w.addonDetails?.wheel?.count) || 1);
+    } else if (id === 'lounge') {
+      quantity = Number(w.addonDetails?.lounge?.count) || passengerCount;
+    } else if (id === 'print') {
+      quantity = Math.max(1, Number(w.addonDetails?.print?.count) || 1);
+    } else if (id === 'photocopy') {
+      quantity = Math.max(1, Number(w.addonDetails?.photocopy?.count) || 1);
+    } else if (id === 'visa' || id === 'visa_on_arrival') {
+      quantity = Math.max(1, Number(w.addonDetails?.visa?.count || w.addonDetails?.visa_on_arrival?.count) || passengerCount);
+    } else if (id === 'food') {
+      quantity = Math.max(1, Number(w.addonDetails?.food?.count) || 1);
+    }
+
+    const amount = (isQuote || unitPrice == null) ? null : unitPrice * quantity;
+    return {
+      id,
+      name,
+      quantity,
+      unitPrice,
+      amount,
+      unit: addonCfg?.unit || catalogItem?.priceUnit || 'request',
+    };
+  });
 
   const totalAddonsCharge = addonLines.reduce((sum, line) => sum + (line.amount || 0), 0);
   const quoteRequired = addonLines.some(line => line.amount == null);
 
   // 5. Vehicle Type (Airport Transfers)
-  // Only include vehicle transfer IF the user explicitly selected 'transfer' in addons
+  // Rent a Car Guidance is On Request (Quote Required), so no advance charge is added
   const hasVehicleTransfer = selectedAddons.includes('transfer');
   let vehicleCategory = 'sedan';
   let vehicleConfig = null;
   let vehicleCharge = 0;
   let isBothWays = false;
-
-  if (hasVehicleTransfer) {
-    vehicleCategory = String(w.addonDetails?.transfer?.vehicle_category || w.vehicleType || 'sedan').toLowerCase();
-    vehicleConfig = cfg.vehicleRates?.[vehicleCategory] || cfg.vehicleRates?.sedan || {
-      id: 'sedan',
-      name: ['Sedan', 'সেডান'],
-      basePrice: 1200,
-    };
-    isBothWays = Boolean(w.addonDetails?.transfer?.pickup && w.addonDetails?.transfer?.dropoff);
-    const baseVehiclePrice = Number(vehicleConfig.basePrice || 1200);
-    vehicleCharge = Math.round(baseVehiclePrice * (isBothWays ? 1.9 : 1.0));
-  }
 
   // 6. Other Business Rules
   // A. Airport Surcharges
