@@ -1899,6 +1899,32 @@ export default function DesktopHomeScreen({
                     activeOpacity={0.85}
                     onPress={() => {
                       if (typeof window !== 'undefined') {
+                        window.location.href = 'tel:+8801347570002';
+                      }
+                    }}
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      paddingHorizontal: 18,
+                      paddingVertical: 12,
+                      borderRadius: 10,
+                      borderWidth: 1,
+                      borderColor: 'rgba(255,255,255,0.2)',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Text style={{ fontSize: 15 }}>📞</Text>
+                    <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#FFFFFF' }}>
+                      01347-570002
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => {
+                      if (typeof window !== 'undefined') {
                         window.location.href = 'mailto:corporate@flightcaresbd.com';
                       }
                     }}
