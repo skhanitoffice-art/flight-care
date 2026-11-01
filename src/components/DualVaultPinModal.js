@@ -469,8 +469,8 @@ export default function DualVaultPinModal({
 
                     <TextInput
                       placeholder={changeRole === VAULT_ROLES.ADMIN
-                        ? (lang ? 'বর্তমান পিন (ডিফল্ট: 7860)' : 'Current PIN (Default: 7860)')
-                        : (lang ? 'বর্তমান পিন (ডিফল্ট: 2440)' : 'Current PIN (Default: 2440)')}
+                        ? (lang ? 'বর্তমান সুপার এডমিন পিন' : 'Current Super Admin PIN')
+                        : (lang ? 'বর্তমান ম্যানেজার পিন' : 'Current Manager PIN')}
                       value={oldPin}
                       onChangeText={setOldPin}
                       keyboardType="numeric"
@@ -552,7 +552,7 @@ export default function DualVaultPinModal({
                       </Text>
                     </View>
                     <Text style={{ fontSize: 10, color: '#64748B', marginTop: 4 }}>
-                      {lang ? 'পিন: 2440' : 'PIN: 2440'}
+                      {lang ? '🔒 সুরক্ষিত ভল্ট' : '🔒 Secure Vault'}
                     </Text>
                   </TouchableOpacity>
 
@@ -598,7 +598,7 @@ export default function DualVaultPinModal({
                       </Text>
                     </View>
                     <Text style={{ fontSize: 10, color: '#64748B', marginTop: 4 }}>
-                      {lang ? 'পিন: 7860' : 'PIN: 7860'}
+                      {lang ? '🔐 সুরক্ষিত মাস্টার' : '🔐 Master Shield'}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -617,8 +617,8 @@ export default function DualVaultPinModal({
                 <TextInput
                   placeholder={
                     selectedTargetRole === VAULT_ROLES.MANAGER
-                      ? (lang ? 'ম্যানেজার পিন (যেমন: 2440)' : 'Enter Manager PIN (e.g. 2440)')
-                      : (lang ? 'সুপার এডমিন পিন (যেমন: 7860)' : 'Enter Super Admin PIN (e.g. 7860)')
+                      ? (lang ? 'ম্যানেজার সিক্রেট পিন লিখুন' : 'Enter Manager Secret PIN')
+                      : (lang ? 'সুপার এডমিন মাস্টার পিন লিখুন' : 'Enter Super Admin Master PIN')
                   }
                   value={pin}
                   onChangeText={t => {
@@ -673,9 +673,9 @@ export default function DualVaultPinModal({
                 {/* Helpful Guidance */}
                 <View style={{ backgroundColor: '#F8FAFC', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
                   <Text style={{ fontSize: 10.5, color: '#64748B', lineHeight: 15, textAlign: 'center' }}>
-                    💡 {lang
-                      ? 'টিপস: যেকোনো ঘরে সরাসরি ২৪৪০ লিখলে ম্যানেজার ভল্ট এবং ৭৮৬০ লিখলে সুপার এডমিন ভল্ট আনলক হবে।'
-                      : 'Tip: Entering 2440 unlocks Manager Vault (2 days) and 7860 unlocks Super Admin Vault (all-time).'}
+                    🛡️ {lang
+                      ? 'ভল্ট সুরক্ষার স্বার্থে পিন সর্বদা সম্পূর্ণ গোপন রাখুন। ৫ বার ভুল পিন প্রদানে অ্যাকাউন্ট নিরাপত্তা সাময়িক লক হবে।'
+                      : 'Keep your vault PIN confidential. 5 consecutive incorrect attempts will trigger security cooldown.'}
                   </Text>
                 </View>
               </View>

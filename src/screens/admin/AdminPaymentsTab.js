@@ -1117,7 +1117,7 @@ export default function AdminPaymentsTab({
                 }}
               >
                 <Text style={{ fontSize: 12, fontFamily: Platform.OS === 'web' ? 'monospace' : 'System', color: '#38BDF8' }}>
-                  {`EXPO_PUBLIC_PAYMENT_STORE_ID=your_live_store_id\nEXPO_PUBLIC_PAYMENT_STORE_PASS=your_live_store_password\nEXPO_PUBLIC_PAYMENT_MODE=live`}
+                  {`FC_STORE_ID=flightcaresbd0live\nFC_STORE_PASSWD=•••••••••••• (Protected in server/config/secrets.php)\nEXPO_PUBLIC_PAYMENT_MODE=live`}
                 </Text>
               </View>
 

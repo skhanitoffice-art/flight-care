@@ -8,10 +8,10 @@
  * 2. Manager Vault (Database 2A - ম্যানেজার ভল্ট):
  *    - Designed for Operations Managers with 2-Day Rolling visibility.
  *    - Stores and displays all bookings of the last 2 days (today, yesterday, within 48h).
- *    - Protected by Manager Secret PIN (Default: 2440).
+ *    - Protected by Manager Secret PIN.
  * 3. Super Admin Master Vault (Database 2B - সুপার এডমিন ভল্ট):
  *    - Full, 100% lifetime real platform database with all customer bookings across all time.
- *    - Protected by Super Admin Master PIN (Default: 7860).
+ *    - Protected by Super Admin Master PIN.
  *    - Full administrative controls, unmasked exports, and stealth configuration.
  */
 
@@ -179,8 +179,8 @@ export async function toggleBookingShowcaseStatus(bookingId) {
  * Unlock either Manager Vault or Super Admin Vault by PIN.
  * If requestedRole is specified, checks against that role's PIN.
  * If requestedRole is null, auto-detects based on PIN:
- * - 7860 -> Super Admin Master Vault (100% all-time records)
- * - 2440 -> Manager Vault (Last 2 days records)
+ * - Server/Salted hash verification for Super Admin Master Vault
+ * - Server/Salted hash verification for Manager Vault
  */
 export async function unlockVault(pin, requestedRole = null) {
   if (!pin) {

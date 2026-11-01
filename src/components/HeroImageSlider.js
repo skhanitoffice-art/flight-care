@@ -72,13 +72,13 @@ export default function HeroImageSlider({ lang = 1, height = 330 }) {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 700,
+        duration: 400,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(zoomAnim, {
         toValue: 1.04,
-        duration: 4000,
+        duration: 2400,
         easing: Easing.linear,
         useNativeDriver: true,
       }),
@@ -100,13 +100,13 @@ export default function HeroImageSlider({ lang = 1, height = 330 }) {
     transitionToSlide(index);
   };
 
-  // Auto-swap loop every 3800ms
+  // Auto-swap loop every 2200ms
   useEffect(() => {
     if (isPaused) return;
 
     autoSwapTimer.current = setInterval(() => {
       nextSlide();
-    }, 3800);
+    }, 2200);
 
     return () => {
       if (autoSwapTimer.current) clearInterval(autoSwapTimer.current);
@@ -151,13 +151,7 @@ export default function HeroImageSlider({ lang = 1, height = 330 }) {
       {/* Subtle Vignette Gradient at Bottom for Text Contrast */}
       <View pointerEvents="none" style={styles.bottomVignette} />
 
-      {/* Top Left: Verified HSIA Protocol Badge */}
-      <View style={styles.topBadge}>
-        <View style={styles.liveIndicatorDot} />
-        <Text style={styles.topBadgeText}>
-          {isBn ? 'ঢাকা বিমানবন্দর লাইভ প্রোটোকল' : 'Live HSIA Airport Protocol'}
-        </Text>
-      </View>
+
 
       {/* Top Right: Slide Counter Badge */}
       <View style={styles.counterBadge}>

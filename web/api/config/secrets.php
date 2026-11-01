@@ -41,8 +41,6 @@ return [
     ],
 
     // 5. Dual-Vault Secret PIN Hashes (Salted with FC_SEC_VAULT_2026_@94a19!)
-    // Admin Master PIN: 7860
-    // Manager Rolling PIN: 2440
     'vault' => [
         'admin_hash' => '2e92b97cf20e7af7247dce07c22579b60892247c33ce3456edc1af19f26954eb',
         'manager_hash' => 'cd0ceaec6c93bbad9e8154467b62de809f8cdc7972132064dba41c48fc709999',
