@@ -175,9 +175,11 @@ import {
   dispatchBookingLifecycleNotifications,
   filterNotificationsForRole,
 } from './src/services/notificationService.js';
+import { initAntiTheftProtection } from './src/services/antiTheftProtection';
 
-// Inject 3D Web Styles when running in web browser
+// Inject 3D Web Styles & Anti-Theft Shield when running in web browser
 injectWeb3DStyles();
+initAntiTheftProtection();
 
 const getInitialWebRoute = () => {
   if (Platform.OS !== 'web' || typeof window === 'undefined') {

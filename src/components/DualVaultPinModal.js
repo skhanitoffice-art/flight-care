@@ -10,8 +10,6 @@ import {
 } from 'react-native';
 import {
   VAULT_ROLES,
-  DEFAULT_ADMIN_PIN,
-  DEFAULT_MANAGER_PIN,
   getActiveVaultRole,
   unlockVault,
   lockMasterVault,

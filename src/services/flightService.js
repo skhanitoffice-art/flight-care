@@ -1315,8 +1315,7 @@ export const formatAviationStackFlight = (item, targetDirection = 'arr') => {
  * Strictly queries Dhaka Airport (DAC) arrivals ('&arr_iata=DAC') or departures ('&dep_iata=DAC').
  */
 export const searchLiveFlightsFromAviationStack = async (query, targetDirection = 'arr') => {
-  const apiKey = getVaultSecret('AVIATION_API_KEY', 'EXPO_PUBLIC_AVIATION_API_KEY');
-  if (!apiKey || !query) return [];
+  if (!query) return [];
 
   const cleanInput = convertBnDigitsToEn(String(query)).trim().toUpperCase();
   const cleanKey = cleanInput.replace(/[\s-]/g, '');
@@ -1331,14 +1330,13 @@ export const searchLiveFlightsFromAviationStack = async (query, targetDirection 
   try {
     let url = '';
     const hasDigits = /\d/.test(cleanKey);
-    const dacFilter = dir === 'dep' ? '&dep_iata=DAC' : '&arr_iata=DAC';
+    const baseUrl = typeof window !== 'undefined' && window.location ? window.location.origin : 'https://flightcaresbd.com';
 
     if (hasDigits) {
-      // Specific flight query for Dhaka arrival/departure
-      url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&flight_iata=${encodeURIComponent(cleanKey)}${dacFilter}&limit=10`;
+      // Query via Secure Server-Side Radar Proxy (API keys hidden on server)
+      url = `${baseUrl}/api/flights/radar.php?flight_iata=${encodeURIComponent(cleanKey)}&limit=10`;
     } else {
-      // Airline code query for Dhaka arrival/departure
-      url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&airline_iata=${encodeURIComponent(cleanKey)}${dacFilter}&limit=15`;
+      url = `${baseUrl}/api/flights/radar.php?airline_iata=${encodeURIComponent(cleanKey)}&limit=15`;
     }
 
     const res = await fetch(url);

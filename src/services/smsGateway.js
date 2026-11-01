@@ -109,14 +109,55 @@ export async function sendLiveSms({ to, message, otp = null, title = 'SMS Alert'
 
   let deliveryResult = {
     ok: true,
-    provider: config.provider,
+    provider: 'Greenweb BD',
     delivered: false,
     simulated: true,
     message,
     phone: cleanPhone,
   };
 
-  // 1. Live Greenweb BD Gateway (api.greenweb.com.bd)
+  // 1. Primary: Dispatch via Secure Server-Side SMS Proxy (/api/sms/send.php)
+  // Keeps API tokens completely hidden on the server away from browser inspect
+  try {
+    const baseUrl = typeof window !== 'undefined' && window.location ? window.location.origin : 'https://flightcaresbd.com';
+    const serverRes = await fetch(`${baseUrl}/api/sms/send.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: cleanPhone,
+        message,
+        otp,
+      }),
+    });
+    if (serverRes.ok) {
+      const serverJson = await serverRes.json();
+      if (serverJson.ok) {
+        deliveryResult = {
+          ok: true,
+          provider: serverJson.provider || 'Greenweb BD',
+          delivered: true,
+          simulated: false,
+          gatewayResponse: 'Dispatched via Server Shield Proxy',
+        };
+        // Log & return
+        await saveCommunicationLog({
+          type: 'sms',
+          to: cleanPhone,
+          message,
+          delivered: true,
+          provider: deliveryResult.provider,
+          title,
+          timestamp: new Date().toISOString(),
+          status: 'success',
+        }).catch(() => {});
+        return deliveryResult;
+      }
+    }
+  } catch (serverErr) {
+    console.warn('[SMS Gateway] Server proxy dispatch notice:', serverErr?.message);
+  }
+
+  // 2. Direct fallback if running in standalone test environment with local API key
   if (config.apiKey && config.provider === SMS_PROVIDERS.GREENWEB_BD) {
     try {
       const url = `https://api.greenweb.com.bd/api.php?token=${encodeURIComponent(config.apiKey)}&to=${encodeURIComponent(cleanPhone)}&message=${encodeURIComponent(message)}`;

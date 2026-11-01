@@ -32,7 +32,7 @@ Options -Indexes +FollowSymLinks
 # ===============================================================
 
 # Block any direct HTTP access to API files, environment files, source code & backups
-<FilesMatch "(^#.*#|\.(bak|conf|dist|fla|in[ci]|log|psd|sh|sql|sw[op]|env.*|lock|md|ts|tsx|map|key|pem|cert|crt|p12)|api\.js|apiCore\.js|App\.js|package\.json|package-lock\.json|firebase\.json|firestore\.indexes\.json|app\.json|eas\.json|\.env|\.git.*)$">
+<FilesMatch "(^#.*#|\.(bak|conf|dist|fla|in[ci]|log|psd|sh|sql|sw[op]|env.*|lock|md|ts|tsx|map|key|pem|cert|crt|p12)|api\.js|apiCore\.js|App\.js|package\.json|package-lock\.json|firebase\.json|firestore\.indexes\.json|app\.json|eas\.json|\.env|\.git.*|secrets\.php|credentials\.php|config\.local\.php)$">
   Order allow,deny
   Deny from all
 </FilesMatch>
@@ -42,6 +42,16 @@ Options -Indexes +FollowSymLinks
   Order allow,deny
   Deny from all
 </FilesMatch>
+
+# ===============================================================
+# 2.5 HTTP SECURITY HEADERS (Anti-Clickjacking, Anti-Sniffing & XSS Shield)
+# ===============================================================
+<IfModule mod_headers.c>
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
 
 # ===============================================================
 # 3. URL REWRITES & HOSTING REDIRECTS

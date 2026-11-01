@@ -124,14 +124,9 @@ export function verifyAuthSecret(input, expectedHash, salt = AUTH_SALT) {
 }
 
 // Encrypted Credential Stores (XOR Masked + Reverse Base64)
+// SENSITIVE SECRETS HAVE BEEN MIGRATED TO SERVER/CONFIG/SECRETS.PHP
 const VAULT = {
-  // AviationStack Live Flight Radar API
-  AVIATION_API_KEY: '=kmYqlGO88DO5kzO8ImP7wmb4k2a8g2Pt1mbst2bi5jY',
-  // Greenweb BD Telecom SMS & OTP API
-  SMS_API_KEY: '=gjY8s2a84zb+I2Y/wGb88TO+8Wbpp2PvtzOol2YolDOspmbjl2YoNWbrxGap5maoJWaq52a',
-  // SSLCommerz Production Merchant Key
-  PAYMENT_STORE_PASS: 'th2auxGbbkmackxGr9hHesBb',
-  // Google Firebase Cloud Production API Key
+  // Google Firebase Cloud Production Web Key
   FIREBASE_API_KEY: 'idxbt9GA1QBHSg2bY4zHDkQBigTOjtRBvMwIjwjY+0DGjkwOgMxG',
 };
 

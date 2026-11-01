@@ -33,12 +33,10 @@ export const DUAL_VAULT_KEYS = {
   EXCEL_CONFIG: '@flightcare_dual_vault_excel_config',
 };
 
-// Default PINs & Precomputed SHA-256 Hashes (Salt: FC_SEC_VAULT_2026_@94a19!)
-export const DEFAULT_ADMIN_PIN = '7860';
-export const DEFAULT_ADMIN_PIN_HASH = '2e92b97cf20e7af7247dce07c22579b60892247c33ce3456edc1af19f26954eb';
-
-export const DEFAULT_MANAGER_PIN = '2440';
-export const DEFAULT_MANAGER_PIN_HASH = 'cd0ceaec6c93bbad9e8154467b62de809f8cdc7972132064dba41c48fc709999';
+// Precomputed Salted SHA-256 Hashes (Salt: FC_SEC_VAULT_2026_@94a19!)
+// Plaintext PINs have been permanently eliminated from client code bundles.
+export const FC_VAULT_ADMIN_HASH = '2e92b97cf20e7af7247dce07c22579b60892247c33ce3456edc1af19f26954eb';
+export const FC_VAULT_MANAGER_HASH = 'cd0ceaec6c93bbad9e8154467b62de809f8cdc7972132064dba41c48fc709999';
 
 // Default Excel 1 (Auditor) stealth configuration
 export const DEFAULT_EXCEL_CONFIG = {
@@ -190,8 +188,34 @@ export async function unlockVault(pin, requestedRole = null) {
   }
   const cleanPin = String(pin).trim();
 
-  let adminTargetHash = DEFAULT_ADMIN_PIN_HASH;
-  let managerTargetHash = DEFAULT_MANAGER_PIN_HASH;
+  // 1. Primary: Verify via Server-Side Vault Shield Endpoint (/api/auth/verify_vault.php)
+  try {
+    const baseUrl = typeof window !== 'undefined' && window.location ? window.location.origin : 'https://flightcaresbd.com';
+    const serverRes = await fetch(`${baseUrl}/api/auth/verify_vault.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: cleanPin, requestedRole }),
+    });
+    if (serverRes.ok) {
+      const serverJson = await serverRes.json();
+      if (serverJson.ok && serverJson.role) {
+        _inMemoryVaultRole = serverJson.role;
+        return {
+          ok: true,
+          role: serverJson.role,
+          token: serverJson.token,
+          message: serverJson.message || 'Vault Unlocked via Server Verification',
+        };
+      }
+    }
+  } catch (netErr) {
+    // Offline or local dev fallback to client salted hash verification
+  }
+
+  // 2. Client-Side Cryptographic Salted Hash Verification (Offline/Fallback)
+
+  let adminTargetHash = FC_VAULT_ADMIN_HASH;
+  let managerTargetHash = FC_VAULT_MANAGER_HASH;
 
   try {
     const customAdmin = await AsyncStorage.getItem(DUAL_VAULT_KEYS.PIN_HASH);
@@ -588,8 +612,8 @@ export function registerVaultTriggerClick({
 
 export default {
   VAULT_ROLES,
-  DEFAULT_ADMIN_PIN,
-  DEFAULT_MANAGER_PIN,
+  FC_VAULT_ADMIN_HASH,
+  FC_VAULT_MANAGER_HASH,
   getActiveVaultRole,
   isMasterVaultUnlocked,
   isManagerVaultUnlocked,

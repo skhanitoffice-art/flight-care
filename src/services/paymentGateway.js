@@ -66,7 +66,7 @@ export const BANK_CARD_CONFIG = {
 // Official SSLCOMMERZ (এসএসএল কমার্জ) Gateway Configuration - Live Integration
 export const SSLCOMMERZ_CONFIG = {
   STORE_ID: process.env.EXPO_PUBLIC_PAYMENT_STORE_ID || 'flightcaresbd0live',
-  STORE_PASSWD: getVaultSecret('PAYMENT_STORE_PASS', 'EXPO_PUBLIC_PAYMENT_STORE_PASS'),
+  STORE_PASSWD: 'SERVER_MANAGED_SECRET', // Protected on server /api/payment/
   STORE_NAME: 'flightcaresbd',
   MERCHANT_NAME: 'Flight Care Protocol Ltd.',
   MERCHANT_NAME_BN: 'ফ্লাইট কেয়ার প্রটোকল লিমিটেড',
@@ -886,7 +886,8 @@ export const verifySslCommerzPayment = async (valIdOrObj, pTrxId, pBookingId, pE
   // If live val_id from SSLCOMMERZ REST validator is supplied:
   if (valId && !valId.startsWith('VAL') && !valId.startsWith('TEST') && !valId.startsWith('PAY-')) {
     try {
-      const valUrl = `${SSLCOMMERZ_CONFIG.LIVE_VALIDATION_URL}?val_id=${encodeURIComponent(valId)}&store_id=${encodeURIComponent(SSLCOMMERZ_CONFIG.STORE_ID)}&store_passwd=${encodeURIComponent(SSLCOMMERZ_CONFIG.STORE_PASSWD)}&v=1&format=json`;
+      const baseUrl = typeof window !== 'undefined' && window.location ? window.location.origin : 'https://flightcaresbd.com';
+      const valUrl = `${baseUrl}/api/payment/verify.php?bookingId=${encodeURIComponent(bookingId)}&valId=${encodeURIComponent(valId)}`;
       const res = await fetch(valUrl);
       if (res.ok) {
         const json = await res.json();

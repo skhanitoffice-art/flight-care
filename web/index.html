@@ -295,6 +295,129 @@
         animation: fcContrailPulse 2.8s ease-in-out infinite !important;
       }
     </style>
+
+    <!-- Anti-Theft & Source Code Protection Shield -->
+    <style id="fc-anti-theft-shield">
+      /* Disable text selection, dragging, and inspect highlights across the site */
+      *, *::before, *::after {
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+        -webkit-touch-callout: none !important;
+      }
+      /* Allow text selection ONLY in form inputs and textareas so users can type and edit their bookings */
+      input, textarea, [contenteditable="true"] {
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
+      }
+      /* Disable dragging of images */
+      img {
+        -webkit-user-drag: none !important;
+        user-drag: none !important;
+        pointer-events: auto;
+      }
+    </style>
+
+    <script id="fc-anti-theft-guard">
+      (function() {
+        // 1. Frame Defense (Anti-Clickjacking / Anti-Iframe Embedding)
+        try {
+          if (window.top !== window.self) {
+            window.top.location = window.self.location;
+          }
+        } catch(e) {}
+
+        // 2. Disable Context Menu (Right Click)
+        document.addEventListener('contextmenu', function(e) {
+          var t = e.target;
+          if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return true;
+          e.preventDefault();
+          return false;
+        }, { capture: true });
+
+        // 3. Block Keyboard Shortcuts (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S, Ctrl+P)
+        document.addEventListener('keydown', function(e) {
+          var isCtrl = e.ctrlKey || e.metaKey;
+          var isShift = e.shiftKey;
+          var key = (e.key || '').toLowerCase();
+          var code = e.keyCode || e.which;
+
+          // F12
+          if (code === 123 || key === 'f12') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+          // Ctrl+Shift+I, J, C, K
+          if (isCtrl && isShift && (key === 'i' || key === 'j' || key === 'c' || key === 'k')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+          // Ctrl+U (View Source)
+          if (isCtrl && key === 'u') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+          // Ctrl+S (Save Page)
+          if (isCtrl && key === 's') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+          // Ctrl+P (Print Page)
+          if (isCtrl && key === 'p') {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+        }, { capture: true });
+
+        // 4. Block Drag & Drop
+        document.addEventListener('dragstart', function(e) {
+          e.preventDefault();
+          return false;
+        }, { capture: true });
+
+        // 5. Block Copy outside inputs
+        document.addEventListener('copy', function(e) {
+          var t = document.activeElement;
+          if (!t || (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA')) {
+            e.preventDefault();
+            return false;
+          }
+        }, { capture: true });
+
+        // 6. Production Console Silencer
+        if (!window.location.hostname.includes('localhost')) {
+          try {
+            var noop = function() {};
+            console.log = noop;
+            console.info = noop;
+            console.debug = noop;
+            console.dir = noop;
+            console.table = noop;
+            console.warn = noop;
+          } catch(e) {}
+        }
+
+        // 7. DevTools Window Resize Detection & Auto-Wiper
+        try {
+          var threshold = 160;
+          var check = function() {
+            if ((window.outerWidth - window.innerWidth > threshold) || (window.outerHeight - window.innerHeight > threshold)) {
+              try { console.clear(); } catch(e) {}
+            }
+          };
+          window.addEventListener('resize', check);
+          setInterval(check, 2000);
+        } catch(e) {}
+      })();
+    </script>
   </head>
 
   <body>

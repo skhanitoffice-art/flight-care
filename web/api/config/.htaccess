@@ -1,0 +1,3 @@
+# Block direct HTTP access to server-side config files
+Order deny,allow
+Deny from all
