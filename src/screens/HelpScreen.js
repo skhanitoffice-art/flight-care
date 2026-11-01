@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { s } from '../styles/styles';
 import { FAQ } from '../constants/data';
-import { SUPPORT_PHONE, SUPPORT_EMAIL } from '../constants/theme';
+import { SUPPORT_PHONE, SUPPORT_PHONE_2, SUPPORT_EMAIL } from '../constants/theme';
 import ScreenHeaderBar from '../components/ScreenHeaderBar';
 
 export default function HelpScreen({
@@ -53,16 +53,17 @@ export default function HelpScreen({
     return matchesCategory && matchesSearch;
   });
 
-  const supportPhoneDigits = SUPPORT_PHONE.replace(/\D/g, '');
-  const whatsappUrl =
-    supportPhoneDigits.length >= 7
-      ? `https://wa.me/${supportPhoneDigits}?text=${encodeURIComponent(
-          'Hello, I need FlightCare support.'
-        )}`
-      : '';
+  const phone1 = SUPPORT_PHONE || '01347-570001';
+  const phone2 = SUPPORT_PHONE_2 || '01347-570002';
+  const digits1 = '8801347570001';
+  const digits2 = '8801347570002';
+
+  const waText = encodeURIComponent('Hello, I need FlightCare support.');
+  const whatsappUrl1 = `https://wa.me/${digits1}?text=${waText}`;
+  const whatsappUrl2 = `https://wa.me/${digits2}?text=${waText}`;
   const emailUrl = SUPPORT_EMAIL
     ? `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('FlightCare support')}`
-    : '';
+    : 'mailto:support@flightcare.app?subject=FlightCare%20support';
 
   const openContact = async url => {
     try {
@@ -94,19 +95,34 @@ export default function HelpScreen({
       <View style={s.supportContactPanel}>
         <Text style={s.widgetTitle}>{t('contactSupport')}</Text>
         <Text style={s.supportContactHint}>{t('contactSupportHint')}</Text>
-        {whatsappUrl ? (
-          <TouchableOpacity
-            accessibilityRole="link"
-            style={s.supportContactAction}
-            onPress={() => openContact(whatsappUrl)}
-          >
-            <Text style={s.supportContactIcon}>◉</Text>
-            <Text style={s.supportContactText}>
-              {t('wa')} · {SUPPORT_PHONE}
-            </Text>
-            <Text style={s.searchResultArrow}>›</Text>
-          </TouchableOpacity>
-        ) : null}
+        
+        {/* WhatsApp Support Button 1 */}
+        <TouchableOpacity
+          accessibilityRole="link"
+          style={s.supportContactAction}
+          onPress={() => openContact(whatsappUrl1)}
+        >
+          <Text style={s.supportContactIcon}>💬</Text>
+          <Text style={s.supportContactText}>
+            {t('wa')} · {phone1}
+          </Text>
+          <Text style={s.searchResultArrow}>›</Text>
+        </TouchableOpacity>
+
+        {/* WhatsApp Support Button 2 */}
+        <TouchableOpacity
+          accessibilityRole="link"
+          style={s.supportContactAction}
+          onPress={() => openContact(whatsappUrl2)}
+        >
+          <Text style={s.supportContactIcon}>💬</Text>
+          <Text style={s.supportContactText}>
+            {t('wa')} · {phone2}
+          </Text>
+          <Text style={s.searchResultArrow}>›</Text>
+        </TouchableOpacity>
+
+        {/* Email Support Button */}
         {emailUrl ? (
           <TouchableOpacity
             accessibilityRole="link"
@@ -119,11 +135,6 @@ export default function HelpScreen({
             </Text>
             <Text style={s.searchResultArrow}>›</Text>
           </TouchableOpacity>
-        ) : null}
-        {!whatsappUrl && !emailUrl ? (
-          <Text style={s.supportContactUnavailable}>
-            {t('supportContactUnavailable')}
-          </Text>
         ) : null}
       </View>
 

@@ -19,8 +19,9 @@ export const C = {
   roseLight: '#FFE4E6',
 };
 
-export const SUPPORT_PHONE = process.env.EXPO_PUBLIC_SUPPORT_PHONE || '+880 1700-000000';
-export const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@flightcare.com.bd';
+export const SUPPORT_PHONE = process.env.EXPO_PUBLIC_SUPPORT_PHONE || '01347-570001';
+export const SUPPORT_PHONE_2 = process.env.EXPO_PUBLIC_SUPPORT_PHONE_2 || '01347-570002';
+export const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@flightcare.app';
 export const SETTINGS_STORAGE = '@flightcare/settings';
 export const DEFAULT_NOTIFICATION_PREFERENCES = { in_app: true, email: false, sms: false };
 

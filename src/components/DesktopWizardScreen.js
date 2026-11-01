@@ -3466,12 +3466,12 @@ https://flightcare.app/track/${bookingCode}
 
             <View style={{ gap: 10 }}>
               <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }}>
-                <Text style={{ fontSize: 12, color: '#64748B' }}>{lang ? 'হটলাইন' : 'Hotline'}</Text>
-                <Text style={{ fontSize: 16, fontWeight: '800', color: '#0284C7' }}>+880 1712 345678</Text>
+                <Text style={{ fontSize: 12, color: '#64748B' }}>{lang ? 'হটলাইন ও WhatsApp' : 'Hotline & WhatsApp'}</Text>
+                <Text style={{ fontSize: 15, fontWeight: '800', color: '#0284C7' }}>01347-570001 / 01347-570002</Text>
               </View>
               <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }}>
                 <Text style={{ fontSize: 12, color: '#64748B' }}>{lang ? 'ইমেইল' : 'Email'}</Text>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>support@flightcare.com</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>support@flightcare.app</Text>
               </View>
               <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }}>
                 <Text style={{ fontSize: 12, color: '#64748B' }}>{lang ? 'এয়ারপোর্ট ডেস্ক' : 'Airport Desk'}</Text>
