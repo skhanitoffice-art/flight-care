@@ -599,6 +599,86 @@ export default function BookingsScreen({
                     )}
                   </View>
 
+                  {/* Network Drop / Airport 3G Offline Resilience: Resume Payment Card */}
+                  {booking.paymentStatus !== 'paid' && booking.paymentStatus !== 'pay_after_service' && (
+                    <View
+                      style={{
+                        marginTop: 12,
+                        backgroundColor: '#FFFBEB',
+                        borderWidth: 1.5,
+                        borderColor: '#FDE68A',
+                        borderRadius: 10,
+                        padding: 12,
+                        gap: 8,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={{ fontSize: 14 }}>⚠️</Text>
+                          <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#92400E' }}>
+                            {lang ? 'পেমেন্ট সম্পন্ন হয়নি (ড্রপড/পেন্ডিং)' : 'Payment Incomplete / Dropped'}
+                          </Text>
+                        </View>
+                        <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                          <Text style={{ fontSize: 10, fontWeight: '800', color: '#B45309' }}>
+                            {lang ? 'নেটওয়ার্ক রেজিলিয়েন্স' : 'Network Resilience'}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <Text style={{ fontSize: 11.5, color: '#78350F', lineHeight: 16 }}>
+                        {lang
+                          ? 'বিমানবন্দরে দুর্বল ইন্টারনেট বা কানেকশন ড্রপ হলে পুনরায় পেমেন্ট সম্পূর্ণ করতে নিচের বাটনে চাপ দিন:'
+                          : 'If connection dropped at the airport, resume and complete payment securely via SSLCOMMERZ:'}
+                      </Text>
+
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
+                        <TouchableOpacity
+                          disabled={paymentBusyId === String(booking.id)}
+                          style={{
+                            backgroundColor: '#0284C7',
+                            paddingHorizontal: 14,
+                            paddingVertical: 8,
+                            borderRadius: 8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 6,
+                          }}
+                          onPress={() => {
+                            if (typeof startSslCommerzPayment === 'function') {
+                              startSslCommerzPayment(booking);
+                            } else if (typeof startCardPayment === 'function') {
+                              startCardPayment(booking);
+                            } else {
+                              startBkashPayment(booking);
+                            }
+                          }}
+                        >
+                          <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '800' }}>
+                            {paymentBusyId === String(booking.id) ? '…' : (lang ? '🔄 পুনরায় পেমেন্ট (SSLCOMMERZ)' : '🔄 Resume & Pay via SSLCOMMERZ')}
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          disabled={paymentBusyId === String(booking.id)}
+                          style={{
+                            backgroundColor: '#FFFFFF',
+                            borderWidth: 1,
+                            borderColor: '#CBD5E1',
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 8,
+                          }}
+                          onPress={() => verifyBookingPayment(booking)}
+                        >
+                          <Text style={{ color: '#475569', fontSize: 12, fontWeight: '700' }}>
+                            {paymentBusyId === String(booking.id) ? '…' : (lang ? 'স্ট্যাটাস যাচাই' : 'Verify Status')}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+
                   {/* Action links */}
                   {booking.paymentStatus === 'pending' && (
                     <View style={[s.row, { flexWrap: 'wrap', marginTop: 10, alignItems: 'center' }]}>

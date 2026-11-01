@@ -252,6 +252,21 @@ const getInitialReceiptParamFromUrl = () => {
   return null;
 };
 
+const getInitialTrackBookingParamFromUrl = () => {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
+  try {
+    const s = new URLSearchParams(window.location.search || '');
+    const p = s.get('trackBooking') || s.get('track') || s.get('tracking') || s.get('bookingId') || s.get('booking');
+    if (p) return p;
+    if (window.location.hash) {
+      const hash = window.location.hash.replace(/^#\/?/, '');
+      const hs = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : hash);
+      return hs.get('trackBooking') || hs.get('track') || hs.get('tracking') || hs.get('bookingId') || hs.get('booking') || null;
+    }
+  } catch {}
+  return null;
+};
+
 export default function App() {
   const [lang, setLangState] = useState(0); // 0=en 1=bn (Default: English)
   const [userSelectedLang, setUserSelectedLang] = useState(false);
@@ -451,6 +466,10 @@ export default function App() {
   const [scannedFamilyMember, setScannedFamilyMember] = useState(() => initialFamilyMemberSync);
   const [showFamilyMemberIdCard, setShowFamilyMemberIdCard] = useState(() => Boolean(initialDeepParam));
 
+  // Direct Guest Tracking Link Support (?trackBooking=FC-XXXXX)
+  const initialTrackBookingId = getInitialTrackBookingParamFromUrl();
+  const [trackedBookingHandled, setTrackedBookingHandled] = useState(false);
+
   // Direct Money Receipt Modal (Deep Link / Standalone URL View)
   const initialReceiptId = getInitialReceiptParamFromUrl();
   const [showReceiptModal, setShowReceiptModal] = useState(() => Boolean(initialReceiptId));
@@ -472,6 +491,44 @@ export default function App() {
     }
     return null;
   });
+
+  // Effect to resolve Guest Universal Tracking Link (?trackBooking=FC-XXXXX)
+  useEffect(() => {
+    if (!initialTrackBookingId || trackedBookingHandled) return;
+    const cleanId = String(initialTrackBookingId).replace(/^#/, '').trim();
+    if (!cleanId) return;
+
+    // Check in existing state bookings
+    const found = (bookings || []).find(b =>
+      String(b.id || '').replace(/^#/, '').toLowerCase() === cleanId.toLowerCase()
+    );
+
+    if (found) {
+      setDetail(found);
+      setTab('bookings');
+      setTrackedBookingHandled(true);
+      return;
+    }
+
+    // Check directly in localStorage if state is loading
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('fc_bookings_v2') || localStorage.getItem('flightcare_bookings') || '[]';
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const localFound = parsed.find(b =>
+            String(b.id || '').replace(/^#/, '').toLowerCase() === cleanId.toLowerCase()
+          );
+          if (localFound) {
+            setDetail(localFound);
+            setTab('bookings');
+            setTrackedBookingHandled(true);
+            return;
+          }
+        }
+      } catch {}
+    }
+  }, [bookings, initialTrackBookingId, trackedBookingHandled]);
 
   // Automatic Service Completion Review Popup State for Verified Passengers
   const [completionReviewBooking, setCompletionReviewBooking] = useState(null);

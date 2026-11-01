@@ -1167,7 +1167,10 @@ export const isPastFlightDate = value => {
   if (match) {
     const [, day, month, year] = match.map(Number);
     const date = new Date(year, month - 1, day, 23, 59, 59);
-    const today = new Date();
+    // Use Bangladesh Standard Time (BST = UTC+6)
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const today = new Date(utc + (3600000 * 6));
     today.setHours(0, 0, 0, 0);
     return date < today;
   }

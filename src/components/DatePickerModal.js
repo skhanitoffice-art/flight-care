@@ -7,6 +7,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
+import { getBangladeshNow } from '../utils/helpers';
 
 const MONTHS_EN = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -41,7 +42,7 @@ export default function DatePickerModal({
   selectedDate,
   lang = 0,
 }) {
-  const today = useMemo(() => new Date(), []);
+  const today = useMemo(() => getBangladeshNow(), []);
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0-11
   const [pickedYear, setPickedYear] = useState(today.getFullYear());
@@ -128,7 +129,7 @@ export default function DatePickerModal({
   };
 
   const selectQuick = (daysToAdd) => {
-    const target = new Date();
+    const target = new Date(today.getTime());
     target.setDate(today.getDate() + daysToAdd);
     const tYear = target.getFullYear();
     const tMonth = target.getMonth();
@@ -189,9 +190,14 @@ export default function DatePickerModal({
               <Text style={{ fontSize: 17, fontWeight: '800', color: '#0F172A' }}>
                 {lang === 1 ? 'সেবার তারিখ নির্বাচন করুন' : 'Select Service Date'}
               </Text>
-              <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                {lang === 1 ? 'ফ্লাইটের আগমন বা প্রস্থানের তারিখ' : 'Flight arrival or departure date'}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                <View style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, borderWidth: 1, borderColor: '#BAE6FD' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '900', color: '#0369A1' }}>BST (GMT+6)</Text>
+                </View>
+                <Text style={{ fontSize: 11.5, color: '#64748B' }}>
+                  {lang === 1 ? 'বাংলাদেশ সময় অনুযায়ী নির্ধারিত' : 'Bangladesh Standard Time'}
+                </Text>
+              </View>
             </View>
 
             <TouchableOpacity

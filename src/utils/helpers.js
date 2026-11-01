@@ -69,10 +69,48 @@ export const isValidEmailAddress = value => {
 };
 export const isValidEmail = isValidEmailAddress;
 
+/**
+ * International IATA / ICAO Flight Number Validation & Normalization
+ * Standard:
+ * - 2-character IATA code (2 letters like BG, EK, QR, SV, BS; or letter+digit like 6E, G9, J9)
+ * - or 3-letter ICAO code (BBC, UAE, QTR, SVA)
+ * - followed by optional space/hyphen and 1 to 4 digits (e.g. 084, 582, 101, 1858)
+ */
 export const isValidFlightNumber = value => {
   if (!value) return false;
-  const cleaned = String(value).trim();
-  return /^(?:[A-Za-z]{2,3}|[A-Za-z][0-9]|[0-9][A-Za-z])[\s-]?[0-9]{1,4}$/i.test(cleaned);
+  const cleaned = String(value).trim().toUpperCase();
+  return /^([A-Z]{2,3}|[A-Z][0-9]|[0-9][A-Z])[\s-]?([0-9]{1,4}[A-Z]?)$/.test(cleaned);
+};
+
+export const formatFlightNumber = value => {
+  if (!value) return '';
+  const cleaned = String(value).trim().toUpperCase();
+  const match = cleaned.match(/^([A-Z]{2,3}|[A-Z][0-9]|[0-9][A-Z])[\s-]?([0-9]{1,4}[A-Z]?)$/);
+  if (match) {
+    return `${match[1]}-${match[2]}`;
+  }
+  return cleaned;
+};
+
+/**
+ * Bangladesh Standard Time (BST / UTC+6) Utilities
+ * Ensures accurate date calculations regardless of passenger's local timezone.
+ */
+export const getBangladeshNow = () => {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  return new Date(utc + (3600000 * 6)); // Bangladesh UTC+6
+};
+
+export const getBangladeshDateString = (dayOffset = 0) => {
+  const bdDate = getBangladeshNow();
+  if (dayOffset !== 0) {
+    bdDate.setDate(bdDate.getDate() + dayOffset);
+  }
+  const day = String(bdDate.getDate()).padStart(2, '0');
+  const month = String(bdDate.getMonth() + 1).padStart(2, '0');
+  const year = bdDate.getFullYear();
+  return `${day}-${month}-${year}`;
 };
 
 export const isValidPassportNumber = value => {
@@ -221,7 +259,7 @@ export const isPastFlightDate = value => {
   if (match) {
     const [, day, month, year] = match.map(Number);
     const date = new Date(year, month - 1, day, 23, 59, 59);
-    const today = new Date();
+    const today = getBangladeshNow();
     today.setHours(0, 0, 0, 0);
     return date < today;
   }
@@ -240,7 +278,7 @@ export const isValidFlightDate = (value, allowPast = false) => {
       return false;
     }
     if (!allowPast) {
-      const today = new Date();
+      const today = getBangladeshNow();
       today.setHours(0, 0, 0, 0);
       if (date < today) return false;
     }
@@ -249,7 +287,7 @@ export const isValidFlightDate = (value, allowPast = false) => {
   const parsed = Date.parse(value);
   if (isNaN(parsed)) return false;
   if (!allowPast) {
-    const today = new Date();
+    const today = getBangladeshNow();
     today.setHours(0, 0, 0, 0);
     if (new Date(parsed) < today) return false;
   }

@@ -34,7 +34,7 @@ import DatePickerModal from './DatePickerModal';
 import AdditionalServicesModal from './AdditionalServicesModal';
 import AnimatedServiceCard from './AnimatedServiceCard';
 import HeroImageSlider from './HeroImageSlider';
-import { isValidFlightNumber, isValidFlightDate, createAddonDetails } from '../utils/helpers';
+import { isValidFlightNumber, formatFlightNumber, isValidFlightDate, getBangladeshDateString, createAddonDetails } from '../utils/helpers';
 import {
   searchFlightSuggestions,
   getLiveFlightStatus,
@@ -762,9 +762,12 @@ export default function DesktopHomeScreen({
               <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16, zIndex: 50 }}>
                 {/* Flight Number (EditText with validation & Auto-Complete) */}
                 <View style={{ flex: 1.1, position: 'relative', zIndex: 100 }}>
-                  <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#64748B', marginBottom: 5 }}>
-                    {lang ? 'ফ্লাইট নম্বর *' : 'Flight number *'}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                    <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#64748B' }}>
+                      {lang ? 'ফ্লাইট নম্বর *' : 'Flight number *'}
+                    </Text>
+                    <Text style={{ fontSize: 9.5, color: '#94A3B8', fontWeight: '600' }}>IATA/ICAO</Text>
+                  </View>
                   <View
                     style={{
                       flexDirection: 'row',
@@ -798,7 +801,12 @@ export default function DesktopHomeScreen({
                       }}
                       onChangeText={handleFlightInputChange}
                       onBlur={() => {
-                        if (flightNumber.trim() && !isValidFlightNumber(flightNumber)) {
+                        const formatted = formatFlightNumber(flightNumber);
+                        if (formatted && formatted !== flightNumber) {
+                          setFlightNumber(formatted);
+                        }
+                        const toCheck = (formatted || flightNumber).trim();
+                        if (toCheck && !isValidFlightNumber(toCheck)) {
                           setErrors(e => ({
                             ...e,
                             flightNumber: lang
@@ -938,9 +946,14 @@ export default function DesktopHomeScreen({
 
                 {/* Service Date (EditText + Date Picker Modal) */}
                 <View style={{ flex: 1.1 }}>
-                  <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#64748B', marginBottom: 5 }}>
-                    {lang ? 'সেবার তারিখ *' : 'Service date *'}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                    <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#64748B' }}>
+                      {lang ? 'সেবার তারিখ *' : 'Service date *'}
+                    </Text>
+                    <View style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, borderWidth: 1, borderColor: '#BAE6FD' }}>
+                      <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#0369A1' }}>🇧🇩 BST (GMT+6)</Text>
+                    </View>
+                  </View>
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setShowDateModal(true)}
@@ -985,6 +998,46 @@ export default function DesktopHomeScreen({
                       <Text style={{ fontSize: 12 }}>📅</Text>
                     </View>
                   </TouchableOpacity>
+
+                  {/* Quick Date Chips (BST) */}
+                  <View style={{ flexDirection: 'row', gap: 5, marginTop: 5 }}>
+                    {[
+                      { offset: 0, labelEn: 'Today', labelBn: 'আজ' },
+                      { offset: 1, labelEn: 'Tomorrow', labelBn: 'আগামীকাল' },
+                      { offset: 2, labelEn: '+2 Days', labelBn: '+২ দিন' },
+                    ].map(chip => {
+                      const chipDate = getBangladeshDateString(chip.offset);
+                      const isSelected = serviceDate === chipDate;
+                      return (
+                        <TouchableOpacity
+                          key={chip.offset}
+                          onPress={() => {
+                            setServiceDate(chipDate);
+                            setErrors(e => ({ ...e, serviceDate: null }));
+                          }}
+                          style={{
+                            paddingHorizontal: 7,
+                            paddingVertical: 2.5,
+                            borderRadius: 6,
+                            backgroundColor: isSelected ? '#0284C7' : '#F1F5F9',
+                            borderWidth: 1,
+                            borderColor: isSelected ? '#0284C7' : '#E2E8F0',
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              fontWeight: '700',
+                              color: isSelected ? '#FFFFFF' : '#475569',
+                            }}
+                          >
+                            {lang ? chip.labelBn : chip.labelEn}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
                   {errors.serviceDate ? (
                     <Text style={{ color: '#EF4444', fontSize: 11, marginTop: 4, fontWeight: '700' }}>
                       ⚠️ {errors.serviceDate}

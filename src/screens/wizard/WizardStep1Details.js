@@ -27,7 +27,9 @@ import {
 } from '../../components/Icons';
 import {
   isValidFlightNumber,
+  formatFlightNumber,
   isValidFlightDate,
+  getBangladeshDateString,
   isValidPassengerName,
   isValidMobileNumber,
   isValidEmailAddress,
@@ -1281,7 +1283,12 @@ export default function WizardStep1Details({
                     }
                   }}
                   onBlur={() => {
-                    if ((wiz.fno || '').trim() && !isValidFlightNumber(wiz.fno)) {
+                    const formatted = formatFlightNumber(wiz.fno || '');
+                    if (formatted && formatted !== wiz.fno) {
+                      setWiz(c => ({ ...c, fno: formatted }));
+                    }
+                    const toCheck = (formatted || wiz.fno || '').trim();
+                    if (toCheck && !isValidFlightNumber(toCheck)) {
                       setErrors(e => ({
                         ...e,
                         flightNumber: lang
@@ -1371,9 +1378,15 @@ export default function WizardStep1Details({
 
             {/* 5. Service Date (Date Picker) */}
             <View style={{ marginBottom: 14 }}>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569', marginBottom: 6 }}>
-                {lang ? 'সেবার তারিখ *' : 'Service date *'}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>
+                  {lang ? 'সেবার তারিখ *' : 'Service date *'}
+                </Text>
+                <View style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, borderWidth: 1, borderColor: '#BAE6FD' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#0369A1' }}>🇧🇩 BST (GMT+6)</Text>
+                </View>
+              </View>
+
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => setShowDateModal(true)}
@@ -1407,13 +1420,53 @@ export default function WizardStep1Details({
                   <Text style={{ fontSize: 14 }}>📅</Text>
                 </View>
               </TouchableOpacity>
+
+              {/* Quick Date Selection Chips (BST) */}
+              <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+                {[
+                  { offset: 0, labelEn: 'Today', labelBn: 'আজ' },
+                  { offset: 1, labelEn: 'Tomorrow', labelBn: 'আগামীকাল' },
+                  { offset: 2, labelEn: '+2 Days', labelBn: '+২ দিন' },
+                ].map(chip => {
+                  const chipDate = getBangladeshDateString(chip.offset);
+                  const isSelected = wiz.date === chipDate;
+                  return (
+                    <TouchableOpacity
+                      key={chip.offset}
+                      onPress={() => {
+                        setWiz(c => ({ ...c, date: chipDate }));
+                        setErrors(e => ({ ...e, serviceDate: null }));
+                      }}
+                      style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 6,
+                        backgroundColor: isSelected ? '#0284C7' : '#F1F5F9',
+                        borderWidth: 1,
+                        borderColor: isSelected ? '#0284C7' : '#E2E8F0',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          fontWeight: '700',
+                          color: isSelected ? '#FFFFFF' : '#475569',
+                        }}
+                      >
+                        {lang ? chip.labelBn : chip.labelEn}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
               {errors.serviceDate ? (
                 <Text style={{ color: '#EF4444', fontSize: 11, marginTop: 4, fontWeight: '600' }}>
                   ⚠️ {errors.serviceDate}
                 </Text>
               ) : (wiz.date || '').trim() && isValidFlightDate(wiz.date) ? (
                 <Text style={{ color: '#059669', fontSize: 11, marginTop: 4, fontWeight: '700' }}>
-                  ✓ {lang ? 'বৈধ তারিখ' : 'Valid date'}
+                  ✓ {lang ? 'বৈধ তারিখ (বাংলাদেশ সময় BST)' : 'Valid date (BST GMT+6)'}
                 </Text>
               ) : null}
             </View>

@@ -58,8 +58,10 @@ import {
   isValidMobileNumber,
   isValidEmailAddress,
   isValidFlightNumber,
+  formatFlightNumber,
   isValidFlightDate,
   isPastFlightDate,
+  getBangladeshDateString,
   sanitizePhoneNumber,
   extractLocalPhoneDigits,
   calculateBookingPricing,
@@ -322,29 +324,29 @@ export default function DesktopWizardScreen({
 🎫 *বুকিং রেফারেন্স:* #${bookingCode}
 👤 *যাত্রীর নাম:* ${passengerName || 'যাত্রী'}
 ✈️ *ফ্লাইট:* ${(wiz.fno || 'BG-084').toUpperCase()}
-📅 *তারিখ:* ${wiz.date || 'তারিখ উল্লেখ নেই'}
+📅 *তারিখ (BST):* ${wiz.date || 'তারিখ উল্লেখ নেই'}
 📍 *বিমানবন্দর:* ${airportLabel}
 🎯 *সার্ভিস:* ${sDir} • ${pkgName}
 💰 *পরিশোধিত অর্থ:* ৳${totalAmount} ${paymentMethod === 'pay_after_service' ? '(সার্ভিস পরবর্তী পেমেন্ট)' : '(পেমেন্ট সম্পন্ন)'}${trxTxt}
 
-📍 *প্রোটোকল অফিসার লাইভ ট্র্যাকিং:*
-https://flightcare.app/track/${bookingCode}
+📍 *সরাসরি লাইভ ট্র্যাকিং ও ডিজিটাল প্ল্যাকার্ড:*
+https://flightcaresbd.com/?trackBooking=${bookingCode}
 ━━━━━━━━━━━━━━━━━━
-📞 ২৪/৭ হেল্পলাইন: +880 1712-345678`
+📞 ২৪/৭ হটলাইন: 01347-570001 / 01347-570002`
       : `🛫 *Flight Care — Airport Protocol Booking Voucher*
 ━━━━━━━━━━━━━━━━━━
 🎫 *Booking Reference:* #${bookingCode}
 👤 *Passenger:* ${passengerName || 'Passenger'}
 ✈️ *Flight:* ${(wiz.fno || 'BG-084').toUpperCase()}
-📅 *Date:* ${wiz.date || 'Not specified'}
+📅 *Date (BST):* ${wiz.date || 'Not specified'}
 📍 *Airport:* ${airportLabel}
 🎯 *Service:* ${sDir} • ${pkgName}
 💰 *Amount Paid:* ৳${totalAmount} ${paymentMethod === 'pay_after_service' ? '(Pay After Service)' : '(Confirmed)'}${trxTxt}
 
-📍 *Live Track Protocol Officer:*
-https://flightcare.app/track/${bookingCode}
+📍 *Live Tracking & Digital Placard Link:*
+https://flightcaresbd.com/?trackBooking=${bookingCode}
 ━━━━━━━━━━━━━━━━━━
-📞 24/7 Hotline: +880 1712-345678`;
+📞 24/7 Hotline: 01347-570001 / 01347-570002`;
 
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(messageText)}`;
     Linking.openURL(whatsappUrl).catch(() => {
@@ -1515,16 +1517,23 @@ https://flightcare.app/track/${bookingCode}
                           }
                         }}
                         onBlur={() => {
-                          if ((wiz.fno || '').trim() && !isValidFlightNumber(wiz.fno)) {
+                          const formatted = formatFlightNumber(wiz.fno);
+                          if (formatted && formatted !== wiz.fno) {
+                            setWiz(c => ({ ...c, fno: formatted }));
+                          }
+                          const checkFno = (formatted || wiz.fno || '').trim();
+                          if (checkFno && !isValidFlightNumber(checkFno)) {
                             setErrors(e => ({
                               ...e,
                               flightNumber: lang
-                                ? 'সঠিক ফ্লাইট নম্বর ফরম্যাট দিন (যেমন: BG-084, EK-582, BS-101)'
-                                : 'Invalid flight number format (e.g. BG-084, EK-582, BS-101)',
+                                ? 'সঠিক আন্তর্জাতিক ফ্লাইট নম্বর দিন (যেমন: BG-084, EK-582, QR-638, SV-804)'
+                                : 'Invalid flight number. Use standard airline code + number (e.g. BG-084, EK-582, QR-638, SV-804)',
                             }));
+                          } else {
+                            setErrors(e => ({ ...e, flightNumber: null }));
                           }
                         }}
-                        placeholder={lang ? 'যেমন: BG-084, EK-582' : 'e.g. BG-084, EK-582'}
+                        placeholder={lang ? 'যেমন: BG-084, EK-582, QR-638' : 'e.g. BG-084, EK-582, QR-638'}
                         placeholderTextColor="#94A3B8"
                         autoCapitalize="characters"
                       />
@@ -1609,9 +1618,14 @@ https://flightcare.app/track/${bookingCode}
 
                   {/* Service Date (Date Picker) */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginBottom: 6 }}>
-                      {lang ? 'সেবার তারিখ *' : 'Service date *'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155' }}>
+                        {lang ? 'সেবার তারিখ *' : 'Service date *'}
+                      </Text>
+                      <View style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, borderWidth: 1, borderColor: '#BAE6FD' }}>
+                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#0369A1' }}>🇧🇩 BST (GMT+6)</Text>
+                      </View>
+                    </View>
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={() => setShowDateModal(true)}
@@ -1656,13 +1670,54 @@ https://flightcare.app/track/${bookingCode}
                         <Text style={{ fontSize: 13 }}>📅</Text>
                       </View>
                     </TouchableOpacity>
+
+                    {/* Quick Date Chips (Bangladesh Standard Time BST / GMT+6) */}
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 7 }}>
+                      {[
+                        { labelEn: 'Today', labelBn: 'আজ', offset: 0 },
+                        { labelEn: 'Tomorrow', labelBn: 'আগামীকাল', offset: 1 },
+                        { labelEn: '+2 Days', labelBn: '+২ দিন', offset: 2 },
+                      ].map(chip => {
+                        const targetDate = getBangladeshDateString(chip.offset);
+                        const isSelected = wiz.date === targetDate;
+                        return (
+                          <TouchableOpacity
+                            key={chip.offset}
+                            activeOpacity={0.7}
+                            onPress={() => {
+                              setWiz(c => ({ ...c, date: targetDate }));
+                              if (errors.serviceDate) setErrors(e => ({ ...e, serviceDate: null }));
+                            }}
+                            style={{
+                              paddingHorizontal: 10,
+                              paddingVertical: 4,
+                              borderRadius: 6,
+                              backgroundColor: isSelected ? '#0284C7' : '#F1F5F9',
+                              borderWidth: 1,
+                              borderColor: isSelected ? '#0284C7' : '#CBD5E1',
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontSize: 11,
+                                fontWeight: '700',
+                                color: isSelected ? '#FFFFFF' : '#475569',
+                              }}
+                            >
+                              {lang ? chip.labelBn : chip.labelEn}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
                     {errors.serviceDate ? (
                       <Text style={{ color: '#EF4444', fontSize: 11, marginTop: 4, fontWeight: '700' }}>
                         ⚠️ {errors.serviceDate}
                       </Text>
                     ) : (wiz.date || '').trim() && isValidFlightDate(wiz.date) ? (
                       <Text style={{ color: '#059669', fontSize: 11, marginTop: 4, fontWeight: '700' }}>
-                        ✓ {lang ? 'বৈধ তারিখ' : 'Valid date'}
+                        ✓ {lang ? 'বৈধ তারিখ (বাংলাদেশ সময় BST)' : 'Valid date (BST GMT+6)'}
                       </Text>
                     ) : null}
                   </View>
@@ -2811,6 +2866,87 @@ https://flightcare.app/track/${bookingCode}
                       ? 'ই-টিকেট ও বিমানবন্দরে সাক্ষাতের স্থান সংক্রান্ত পূর্ণ বিবরণ এসএমএস এবং ইমেইলে সফলভাবে প্রেরণ করা হয়েছে।'
                       : 'Full booking e-ticket and meeting spot directions have been sent to your Email and SMS.'}
                   </Text>
+                </View>
+
+                {/* Guest Direct Tracking Link & Cloud Persistence Card */}
+                <View
+                  style={{
+                    backgroundColor: '#F8FAFC',
+                    borderRadius: 12,
+                    padding: 14,
+                    marginTop: 14,
+                    borderWidth: 1.5,
+                    borderColor: '#E2E8F0',
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontSize: 16 }}>🔗</Text>
+                      <Text style={{ fontSize: 13, fontWeight: '800', color: '#0F172A' }}>
+                        {lang ? 'সরাসরি ট্র্যাকিং ও ক্লাউড লিংক' : 'Direct Tracking & Cloud Link'}
+                      </Text>
+                    </View>
+                    <View style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#BAE6FD' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '800', color: '#0369A1' }}>
+                        {lang ? 'গেস্ট ও পার্মানেন্ট অ্যাক্সেস' : 'Guest & Cloud Access'}
+                      </Text>
+                    </View>
+                  </View>
+                  
+                  <Text style={{ fontSize: 11.5, color: '#64748B', marginBottom: 10, lineHeight: 16 }}>
+                    {lang
+                      ? 'ক্যাশ বা হিস্ট্রি মুছে গেলেও নিচের ইউনিভার্সাল ট্র্যাকিং লিংকের মাধ্যমে যেকোনো ব্রাউজার বা ডিভাইস থেকে বুকিং স্ট্যাটাস ও ডিজিটাল ভিআইপি প্ল্যাকার্ড পাওয়া যাবে:'
+                      : 'Even if browser cache is cleared, access live booking status and digital VIP placard anytime via this universal link:'}
+                  </Text>
+
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: '#CBD5E1',
+                      paddingHorizontal: 10,
+                      paddingVertical: 8,
+                      gap: 8,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        flex: 1,
+                        fontSize: 12,
+                        fontFamily: Platform.OS === 'web' ? 'monospace' : undefined,
+                        color: '#0369A1',
+                        fontWeight: '700',
+                      }}
+                      numberOfLines={1}
+                    >
+                      {`https://flightcaresbd.com/?trackBooking=${bookingCode}`}
+                    </Text>
+
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        const trackUrl = `https://flightcaresbd.com/?trackBooking=${bookingCode}`;
+                        if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+                          navigator.clipboard.writeText(trackUrl);
+                        }
+                        setCopiedId(true);
+                        setTimeout(() => setCopiedId(false), 3000);
+                      }}
+                      style={{
+                        backgroundColor: copiedId ? '#DCFCE7' : '#0284C7',
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderRadius: 6,
+                      }}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: copiedId ? '#15803D' : '#FFFFFF' }}>
+                        {copiedId ? (lang ? 'কপি হয়েছে!' : 'Copied!') : (lang ? 'লিংক কপি' : 'Copy Link')}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             )}
