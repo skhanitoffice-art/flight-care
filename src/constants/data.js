@@ -137,19 +137,19 @@ export const GUIDANCE_ITEMS = [
     ],
   },
   {
-    id: 'money',
-    icon: '💱',
-    image: require('../../assets/money_exchange.webp'),
-    name: ['Money Exchange', 'মানি এক্সচেঞ্জ'],
-    addon: 'money',
+    id: 'form_fillup',
+    icon: '📝',
+    image: require('../../assets/form_fillup.webp'),
+    name: ['Form Fillup', 'ফর্ম পূরণ'],
+    addon: 'form_fillup',
     bg: '#FFFFFF',
-    border: '#FACC15',
-    shadow: '#CA8A04',
+    border: '#0284C7',
+    shadow: '#0369A1',
     points: [
-      ['Exchange rate information.', 'বৈদেশিক মুদ্রার লাইভ এক্সচেঞ্জ রেটের তথ্য।'],
-      ['Locations of trusted exchange points.', 'বিমানবন্দরের নির্ভরযোগ্য এক্সচেঞ্জ বুথের অবস্থান।'],
-      ['Advice on currency conversion.', 'মুদ্রা রূপান্তর ও কারেন্সি এক্সচেঞ্জ পরামর্শ।'],
-      ['Tips on local currency use.', 'স্থানীয় মুদ্রা ব্যবহার ও লেনদেনের টিপস।'],
+      ['Embarkation and disembarkation form filling.', 'ইমিগ্রেশন আগমন ও বহির্গমন কার্ড বা ফর্ম পূরণ সহায়তা।'],
+      ['Customs declaration form assistance.', 'কাস্টমস ডিক্লারেশন ও ব্যাগেজ ফর্ম পূরণ সহায়তা।'],
+      ['Visa on arrival application form assistance.', 'অন-অ্যারাইভাল ভিসা আবেদন ফরম নির্ভুলভাবে পূরণে সহায়তা।'],
+      ['Fast error-free documentation support.', 'ভ্রমণ সংক্রান্ত কাগজপত্র ও ফর্ম দ্রুত ও নির্ভুল পূরণ।'],
     ],
   },
   {
@@ -241,7 +241,7 @@ export const BOOKING_ADDON_ORDER = [
   { key: 'visa', addonId: 'visa', icon: '🛂', image: require('../../assets/visa_immigration.webp'), name: ['Visa Immigration', 'ভিসা ও ইমিগ্রেশন'] },
   { key: 'print', addonId: 'print', icon: '🖨️', image: require('../../assets/printer.webp'), name: ['Print', 'প্রিন্ট সেবা'] },
   { key: 'photocopy', addonId: 'photocopy', icon: '📄', image: require('../../assets/photocopy.webp'), name: ['PhotoCopy', 'ফটোকপি সেবা'] },
-  { key: 'money', addonId: 'money', icon: '💱', image: require('../../assets/money_exchange.webp'), name: ['Money Exchange', 'মানি এক্সচেঞ্জ'] },
+  { key: 'form_fillup', addonId: 'form_fillup', icon: '📝', image: require('../../assets/form_fillup.webp'), name: ['Form Fillup', 'ফর্ম পূরণ'] },
   { key: 'hotel', addonId: 'hotel', icon: '🏨', image: require('../../assets/hotel.webp'), name: ['Hotel Services', 'হোটেল সার্ভিসেস'] },
   { key: 'food', addonId: 'food', icon: '🍱', image: require('../../assets/food.webp'), name: ['Food', 'খাবার'] },
   { key: 'medical', addonId: 'medical', medicalService: 'medical', icon: '🩺', image: require('../../assets/medical_assistance.webp'), name: ['Medical Assistance', 'মেডিকেল সহায়তা'] },
@@ -327,7 +327,8 @@ export const DEFAULT_PRICING_CONFIG = {
     security: { id: 'security', name: ['Security Protocol Escort', 'নিরাপত্তা প্রোটোকল'], price: 1200, unit: 'request', active: true },
     tour: { id: 'tour', name: ['Transit Tour Guide', 'ট্রানজিট ট্যুর গাইড'], price: 3500, unit: 'request', active: true },
     hotel: { id: 'hotel', name: ['Hotel Services', 'হোটেল সার্ভিসেস'], price: null, unit: 'quote', active: true },
-    money: { id: 'money', name: ['Money Exchange', 'মানি এক্সচেঞ্জ'], price: null, unit: 'quote', active: true },
+    form_fillup: { id: 'form_fillup', name: ['Form Fillup', 'ফর্ম পূরণ'], price: null, unit: 'quote', active: true },
+    money: { id: 'money', name: ['Form Fillup', 'ফর্ম পূরণ'], price: null, unit: 'quote', active: true },
   },
   vehicleRates: {
     sedan: { id: 'sedan', name: ['Sedan Car (1-3 Pax)', 'সেডান কার (১-৩ জন)'], basePrice: 1200, capacity: '3 Pax + 2 Bags', active: true },
@@ -383,7 +384,7 @@ export const ADDONS = [
   { id: 'visa', ic: '🛂', image: require('../../assets/visa_immigration.webp'), p: 1500, priceUnit: 'person', govtFeeUsd: 50, n: ['Visa On Arrival', 'অন অ্যারাইভাল ভিসা'], d: ['Document pre-verification & visa on arrival support. Service charge ৳1,500/passenger. ($50 USD Govt Fee is payable directly by passenger at the airport counter).', '৪টি আবশ্যক ডকুমেন্ট যাচাই ও অন-অ্যারাইভাল ভিসা সহায়তা। সার্ভিস চার্জ ১৫০০ টাকা/জন। (৫০ ইউএস ডলার সরকারি ফি যাত্রীকে বিমানবন্দরে কাউন্টারে সরাসরি জমা দিতে হবে)।'] },
   { id: 'print', ic: '🖨️', image: require('../../assets/printer.webp'), p: 100, priceUnit: 'request', n: ['Print', 'প্রিন্ট সেবা'], d: ['Printing boarding passes, visas, tickets, and travel documents.', 'বোর্ডিং পাস, ভিসা, টিকিট ও ভ্রমণ ডকুমেন্টস প্রিন্টিং সেবা।'] },
   { id: 'photocopy', ic: '📄', image: require('../../assets/photocopy.webp'), p: 50, priceUnit: 'request', n: ['PhotoCopy', 'ফটোকপি সেবা'], d: ['Photocopying boarding passes, visas, tickets, and travel documents.', 'পাসপোর্ট, ভিসা, টিকিট ও ভ্রমণ ডকুমেন্টস ফটোকপি সেবা।'] },
-  { id: 'money', ic: '💱', image: require('../../assets/money_exchange.webp'), p: null, priceUnit: 'quote', n: ['Money Exchange', 'মানি এক্সচেঞ্জ'], d: ['Assistance and guidance for foreign currency exchange at the airport.', 'বিমানবন্দরে বৈদেশিক মুদ্রা বিনিময়ে সহায়তা ও দিকনির্দেশনা।'] },
+  { id: 'form_fillup', ic: '📝', image: require('../../assets/form_fillup.webp'), p: null, priceUnit: 'quote', n: ['Form Fillup', 'ফর্ম পূরণ'], d: ['Assistance with embarkation, disembarkation, customs declaration, and airport travel forms.', 'বিমানবন্দরে আগমন, বহির্গমন, কাস্টমস ও ইমিগ্রেশন ফর্ম নির্ভুলভাবে পূরণে সহায়তা।'] },
   { id: 'hotel', ic: '🏨', image: require('../../assets/hotel.webp'), p: null, priceUnit: 'quote', n: ['Hotel Services', 'হোটেল সার্ভিসেস'], d: ['Request hotel booking assistance for your trip.', 'ভ্রমণের জন্য হোটেল বুকিং সহায়তার অনুরোধ।'] },
   { id: 'food', ic: '🍱', image: require('../../assets/food.webp'), p: 500, priceUnit: 'request', n: ['Food', 'খাবার'], d: ['Request meal or dining service for your airport visit.', 'এয়ারপোর্টে মানসম্মত খাবার বা ডাইনিং সেবার অনুরোধ।'] },
   { id: 'medical', ic: '🩺', image: require('../../assets/medical_assistance.webp'), p: null, priceUnit: 'quote', medicalServices: ['medical', 'ambulance', 'emergency_transport'], n: ['Medical Assistance', 'মেডিকেল সহায়তা'], d: ['Request medical assistance, ambulance, or emergency transportation.', 'মেডিকেল সহায়তা, অ্যাম্বুলেন্স বা জরুরি পরিবহনের অনুরোধ।'] },
@@ -409,8 +410,11 @@ export const ADDON_ASSETS = {
   printer: require('../../assets/printer.webp'),
   print_docs: require('../../assets/printer.webp'),
   photocopy: require('../../assets/photocopy.webp'),
-  money: require('../../assets/money_exchange.webp'),
-  money_exchange: require('../../assets/money_exchange.webp'),
+  form_fillup: require('../../assets/form_fillup.webp'),
+  form: require('../../assets/form_fillup.webp'),
+  formfillup: require('../../assets/form_fillup.webp'),
+  money: require('../../assets/form_fillup.webp'),
+  money_exchange: require('../../assets/form_fillup.webp'),
   hotel: require('../../assets/hotel.webp'),
   food: require('../../assets/food.webp'),
   meal: require('../../assets/food.webp'),
@@ -473,7 +477,8 @@ export const getAddonAsset = (id) => {
   if (key.includes('visa')) return ADDON_ASSETS.visa;
   if (key.includes('photocopy')) return ADDON_ASSETS.photocopy;
   if (key.includes('print')) return ADDON_ASSETS.print;
-  if (key.includes('money') || key.includes('curr') || key.includes('cash') || key.includes('exchange')) return ADDON_ASSETS.money;
+  if (key.includes('form') || key.includes('fill') || key.includes('doc')) return ADDON_ASSETS.form_fillup;
+  if (key.includes('money') || key.includes('curr') || key.includes('cash') || key.includes('exchange')) return ADDON_ASSETS.form_fillup;
   if (key.includes('hotel') || key.includes('room') || key.includes('stay')) return ADDON_ASSETS.hotel;
   if (key.includes('food') || key.includes('meal') || key.includes('dining')) return ADDON_ASSETS.food;
   if (key.includes('medic') || key.includes('ambul') || key.includes('doctor')) return ADDON_ASSETS.medical;

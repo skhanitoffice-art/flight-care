@@ -347,6 +347,7 @@ export const createAddonDetails = () => ({
   visa_on_arrival: { notes: '', count: 1, invitationLetter: null, returnTicket: null, hotelBooking: null, passportCopy: null },
   print: { notes: '', count: 1 },
   photocopy: { notes: '', count: 1 },
+  form_fillup: { notes: '' },
   money: { notes: '' },
   hotel: { destination: '', notes: '' },
   food: { notes: '' },

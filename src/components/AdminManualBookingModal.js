@@ -60,7 +60,7 @@ export const AVAILABLE_ADDONS = [
   { id: 'visa', labelEn: 'Visa On Arrival', labelBn: 'অন অ্যারাইভাল ভিসা', price: 1500, icon: '🛂', image: ADDON_ASSETS.visa, priceUnit: 'person' },
   { id: 'print', labelEn: 'Print', labelBn: 'প্রিন্ট সেবা', price: 100, icon: '🖨️', image: ADDON_ASSETS.print, priceUnit: 'request' },
   { id: 'photocopy', labelEn: 'PhotoCopy', labelBn: 'ফটোকপি সেবা', price: 50, icon: '📄', image: ADDON_ASSETS.photocopy, priceUnit: 'request' },
-  { id: 'money', labelEn: 'Money Exchange', labelBn: 'মানি এক্সচেঞ্জ', price: 0, icon: '💱', image: ADDON_ASSETS.money, priceUnit: 'quote' },
+  { id: 'form_fillup', labelEn: 'Form Fillup', labelBn: 'ফর্ম পূরণ', price: 0, icon: '📝', image: ADDON_ASSETS.form_fillup, priceUnit: 'quote' },
   { id: 'hotel', labelEn: 'Hotel Services', labelBn: 'হোটেল সার্ভিসেস', price: 0, icon: '🏨', image: ADDON_ASSETS.hotel, priceUnit: 'quote' },
   { id: 'food', labelEn: 'Food', labelBn: 'খাবার', price: 500, icon: '🍱', image: ADDON_ASSETS.food, priceUnit: 'request' },
   { id: 'medical', labelEn: 'Medical Assistance', labelBn: 'মেডিকেল সহায়তা', price: 0, icon: '🩺', image: ADDON_ASSETS.medical, priceUnit: 'quote' },
