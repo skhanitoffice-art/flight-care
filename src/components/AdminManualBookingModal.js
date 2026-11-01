@@ -56,16 +56,16 @@ export const SERVICE_PACKAGES = [
 export const AVAILABLE_ADDONS = [
   { id: 'wheel', labelEn: 'Wheel Chair', labelBn: 'হুইলচেয়ার', price: 300, icon: '🦽', image: ADDON_ASSETS.wheel, priceUnit: 'person' },
   { id: 'wrap', labelEn: 'Luggage Wrapping', labelBn: 'লাগেজ র‍্যাপিং', price: 400, icon: '🧳', image: ADDON_ASSETS.wrap, priceUnit: 'bag' },
-  { id: 'transfer', labelEn: 'Rent a Car', labelBn: 'গাড়ি ভাড়া', price: 1200, icon: '🚘', image: ADDON_ASSETS.transfer, priceUnit: 'quote' },
+  { id: 'transfer', labelEn: 'Rent a Car Guidance', labelBn: 'গাড়ি ভাড়া গাইডেন্স', price: 1200, icon: '🚘', image: ADDON_ASSETS.transfer, priceUnit: 'quote' },
   { id: 'visa', labelEn: 'Visa On Arrival', labelBn: 'অন অ্যারাইভাল ভিসা', price: 1500, icon: '🛂', image: ADDON_ASSETS.visa, priceUnit: 'person' },
   { id: 'print', labelEn: 'Print', labelBn: 'প্রিন্ট সেবা', price: 100, icon: '🖨️', image: ADDON_ASSETS.print, priceUnit: 'request' },
   { id: 'photocopy', labelEn: 'PhotoCopy', labelBn: 'ফটোকপি সেবা', price: 50, icon: '📄', image: ADDON_ASSETS.photocopy, priceUnit: 'request' },
   { id: 'form_fillup', labelEn: 'Form Fillup', labelBn: 'ফর্ম পূরণ', price: 0, icon: '📝', image: ADDON_ASSETS.form_fillup, priceUnit: 'quote' },
-  { id: 'hotel', labelEn: 'Hotel Services', labelBn: 'হোটেল সার্ভিসেস', price: 0, icon: '🏨', image: ADDON_ASSETS.hotel, priceUnit: 'quote' },
-  { id: 'food', labelEn: 'Food', labelBn: 'খাবার', price: 500, icon: '🍱', image: ADDON_ASSETS.food, priceUnit: 'request' },
-  { id: 'medical', labelEn: 'Medical Assistance', labelBn: 'মেডিকেল সহায়তা', price: 0, icon: '🩺', image: ADDON_ASSETS.medical, priceUnit: 'quote' },
-  { id: 'tour', labelEn: 'Tour Guide', labelBn: 'ট্যুর গাইড', price: 0, icon: '🗺️', image: ADDON_ASSETS.tour, priceUnit: 'quote' },
-  { id: 'security', labelEn: 'Security Protocol', labelBn: 'নিরাপত্তা প্রোটোকল', price: 0, icon: '🛡️', image: ADDON_ASSETS.security, priceUnit: 'quote' },
+  { id: 'hotel', labelEn: 'Hotel Booking Guidance', labelBn: 'হোটেল বুকিং গাইডেন্স', price: 0, icon: '🏨', image: ADDON_ASSETS.hotel, priceUnit: 'quote' },
+  { id: 'food', labelEn: 'Food Guidance', labelBn: 'খাবার গাইডেন্স', price: 500, icon: '🍱', image: ADDON_ASSETS.food, priceUnit: 'request' },
+  { id: 'medical', labelEn: 'Medical Guidance', labelBn: 'মেডিকেল গাইডেন্স', price: 0, icon: '🩺', image: ADDON_ASSETS.medical, priceUnit: 'quote' },
+  { id: 'tour', labelEn: 'Tour Guidance', labelBn: 'ট্যুর গাইডেন্স', price: 0, icon: '🗺️', image: ADDON_ASSETS.tour, priceUnit: 'quote' },
+  { id: 'security', labelEn: 'Security Protocol Guidance', labelBn: 'নিরাপত্তা প্রোটোকল গাইডেন্স', price: 0, icon: '🛡️', image: ADDON_ASSETS.security, priceUnit: 'quote' },
 ];
 
 export default function AdminManualBookingModal({

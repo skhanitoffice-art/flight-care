@@ -165,7 +165,7 @@ const getFeaturedAirportServices = (lang = 0) => [
     badge: lang ? '২৪/৭ অন-কল' : '24/7 Available',
     category: lang ? 'এয়ারপোর্ট গাড়ি' : 'Airport Car',
     image: require('../../assets/rent_car.webp'),
-    n: ['Rent a Car / Airport Transfer', 'প্রাইভেট এয়ারপোর্ট গাড়ি ভাড়া'],
+    n: ['Rent a Car Guidance / Airport Transfer', 'প্রাইভেট এয়ারপোর্ট গাড়ি ভাড়া গাইডেন্স'],
     d: [
       'Choose airport pickup, drop-off, and a private AC vehicle (Sedan, Noah, HiAce) with vetted driver.',
       'আধুনিক এসি সেডান কার, নোয়া ও হাইয়েস মাইক্রোবাস, বিশ্বস্ত ড্রাইভার এবং সারাদেশে ড্রপ-অফ।'
@@ -211,7 +211,7 @@ const getFeaturedAirportServices = (lang = 0) => [
     badge: lang ? 'ভিআইপি প্রটোকল' : 'VIP Protocol',
     category: lang ? 'কাস্টমস প্রটোকল' : 'Fast-Track',
     image: require('../../assets/security_protocol.webp'),
-    n: ['Fast-Track Security Protocol', 'ফাস্ট-ট্র্যাক সিকিউরিটি ও কাস্টমস'],
+    n: ['Security Protocol Guidance', 'ফাস্ট-ট্র্যাক সিকিউরিটি ও কাস্টমস গাইডেন্স'],
     d: [
       'Request airport security protocol assistance and expedited clearance through customs channels.',
       'বিমানবন্দরে বিশেষ প্রটোকল ক্লিয়ারেন্স, কাস্টমস চ্যানেল দিয়ে দ্রুত প্রস্থান এবং অফিসিয়াল সঙ্গী।'
