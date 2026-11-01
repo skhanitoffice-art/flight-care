@@ -29,6 +29,16 @@ return [
         'sender_id' => getenv('FC_SMS_SENDER_ID') ?: 'FlightCare',
     ],
 
+    // 2.5 Support Office WhatsApp & Automated Notification Gateway
+    'whatsapp' => [
+        'support_phone' => '8801347570001',
+        'support_phone_display' => '01347-570001',
+        'provider' => getenv('FC_WHATSAPP_PROVIDER') ?: 'greenweb_bd',
+        'api_key' => getenv('FC_WHATSAPP_API_KEY') ?: (getenv('FC_SMS_API_KEY') ?: '140382043261792939406bc2932aa5e0375dcef66e98d5df11f8b'),
+        'api_url' => getenv('FC_WHATSAPP_API_URL') ?: 'https://api.greenweb.com.bd/api.php',
+        'instance_id' => getenv('FC_WHATSAPP_INSTANCE_ID') ?: '',
+    ],
+
     // 3. Aviation Live Flight Radar (AviationStack)
     'aviation' => [
         'api_key' => getenv('FC_AVIATION_API_KEY') ?: '8d8516477e2f13b46ad8faccbefb3083',

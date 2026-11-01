@@ -70,6 +70,11 @@ import {
 } from '../utils/helpers';
 import { getLiveFlightStatus } from '../services/flightService';
 import { getAddonAsset } from '../constants/data';
+import {
+  openSupportOfficeWhatsApp,
+  dispatchSupportOfficeWhatsAppAlert,
+} from '../services/whatsappService';
+
 
 export default function DesktopWizardScreen({
   wiz,
@@ -585,7 +590,8 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
       airport: wiz.airport || 'DAC',
     };
 
-    const effectiveMethod = (isZeroOrQuote || totalAmount <= 0) ? 'pay_after_service' : paymentMethod;
+    const effectiveMethod = (isZeroOrQuote || totalAmount <= 0) ? 'pay_after_service' : paymentMethod;
+
     if (effectiveMethod === 'pay_after_service') {
       setIsPaying(false);
       const postServiceResult = {
@@ -3430,6 +3436,32 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                   <Text style={{ fontSize: 16 }}>🏷️</Text>
                   <Text style={{ fontSize: 15, fontWeight: '800', color: '#FFFFFF' }}>
                     {lang ? 'ভিআইপি প্লেকার্ড দেখুন' : 'View VIP Placard'}
+                  </Text>
+                </TouchableOpacity>
+
+                                {/* Send to Support Office WhatsApp (+8801347570001) */}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => openSupportOfficeWhatsApp({ ...wiz, id: bookingCode, amount: totalAmount }, Boolean(lang))}
+                  style={{
+                    flex: 1.2,
+                    backgroundColor: '#059669',
+                    paddingVertical: 14,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'row',
+                    gap: 8,
+                    shadowColor: '#059669',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 4,
+                    elevation: 3,
+                  }}
+                >
+                  <Text style={{ fontSize: 16 }}>📱</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>
+                    {lang ? 'সাপোর্ট অফিসে পাঠান (০১৩৪৭-৫৭০০০১)' : 'Send to Support (01347-570001)'}
                   </Text>
                 </TouchableOpacity>
 

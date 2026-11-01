@@ -159,6 +159,7 @@ import {
   dispatchStaffNotification,
   STAFF_NOTIFICATION_TYPES,
 } from './src/services/communication';
+import { dispatchSupportOfficeWhatsAppAlert } from './src/services/whatsappService';
 import {
   checkAccountLockout,
   recordFailedLogin,
@@ -4852,6 +4853,10 @@ export default function App() {
       lang,
       notifyFn: notify,
     });
+
+    // Automated Notification to Support Office (01347-570001) via GreenWeb BD / WhatsApp Gateway
+    dispatchSupportOfficeWhatsAppAlert(booking).catch(() => {});
+
 
     if (booking.paymentStatus === 'paid') {
       dispatchMultiChannelNotification({

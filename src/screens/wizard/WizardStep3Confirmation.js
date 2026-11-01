@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,12 @@ import LiveTrackingModal from '../../components/LiveTrackingModal';
 import BookingInvoiceModal from '../../components/BookingInvoiceModal';
 import VipPlacardModal from '../../components/VipPlacardModal';
 import { getCalendarEventData } from '../../utils/helpers';
+import {
+  openSupportOfficeWhatsApp,
+  dispatchSupportOfficeWhatsAppAlert,
+  SUPPORT_OFFICE_PHONE_DISPLAY,
+} from '../../services/whatsappService';
+
 
 export default function WizardStep3Confirmation({
   wiz,
@@ -42,6 +48,18 @@ export default function WizardStep3Confirmation({
   const [showCalendarOptions, setShowCalendarOptions] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
   const [calendarSaved, setCalendarSaved] = useState(false);
+
+  // Auto-dispatch booking alert to Support Office (+8801347570001) via GreenWeb BD / BulkSMSBD
+  useEffect(() => {
+    if (currentBooking && (currentBooking.id || bookingCode)) {
+      dispatchSupportOfficeWhatsAppAlert({
+        ...currentBooking,
+        id: bookingCode,
+        amount: totalAmount,
+      }).catch(() => {});
+    }
+  }, [bookingCode]);
+
 
   // Passenger & Service Info
   const passengerName = (wiz.bookingForSomeoneElse ? wiz.passengerName || wiz.name : wiz.name) || (isBn ? 'সম্মানিত যাত্রী' : 'Valued Passenger');
@@ -504,6 +522,33 @@ https://flightcare.app/track/${bookingCode}
           <Text style={{ fontSize: 16 }}>🏷️</Text>
           <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
             {lang ? 'ভিআইপি প্লেকার্ড / নেমবোর্ড দেখুন ও ডাউনলোড' : 'View & Download VIP Placard'}
+          </Text>
+        </TouchableOpacity>
+
+                {/* Direct Send to Support Office WhatsApp (+8801347570001) */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => openSupportOfficeWhatsApp({ ...currentBooking, id: bookingCode, amount: totalAmount }, isBn)}
+          style={{
+            width: '100%',
+            backgroundColor: '#059669',
+            height: 48,
+            borderRadius: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'row',
+            gap: 8,
+            marginBottom: 10,
+            shadowColor: '#059669',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
+        >
+          <Text style={{ fontSize: 18 }}>📱</Text>
+          <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
+            {lang ? 'সাপোর্ট অফিসে বুকিং পাঠান (০১৩৪৭-৫৭০০০১)' : 'Send to Support Office (01347-570001)'}
           </Text>
         </TouchableOpacity>
 
