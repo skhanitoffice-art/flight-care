@@ -52,6 +52,10 @@ export default function SslCommerzPaymentModal({
         customerPhone: booking?.passengerPhone || booking?.phone || '',
         customerEmail: booking?.passengerEmail || booking?.email || '',
         packageName: booking?.packageName || 'Standard Protocol',
+        packageId: booking?.packageChoice || booking?.packageId || booking?.servicePackage || 'standard',
+        passengers: Number(booking?.passengers || booking?.passengerCount || 1),
+        addons: Array.isArray(booking?.addons) ? booking.addons : [],
+        couponCode: booking?.appliedPromoCode || booking?.couponCode || '',
       });
 
       if (res.ok && (res.gatewayUrl || res.GatewayPageURL)) {

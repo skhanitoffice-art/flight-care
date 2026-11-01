@@ -725,6 +725,10 @@ export const initiateSslCommerzPayment = async ({
   customerEmail = '',
   customerPhone = '',
   packageName = 'Standard Protocol',
+  packageId = 'standard',
+  passengers = 1,
+  addons = [],
+  couponCode = '',
 }) => {
   const safeId = String(bookingId || 'FC-PENDING').trim();
   const safeAmount = Number(amount) || 0;
@@ -753,6 +757,10 @@ export const initiateSslCommerzPayment = async ({
         customerEmail: customerEmail || 'passenger@flightcaresbd.com',
         customerPhone: customerPhone || '01700000000',
         packageName: packageName || 'Standard Protocol',
+        packageId,
+        passengers,
+        addons,
+        couponCode,
         clientOrigin,
       }),
     });

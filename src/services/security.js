@@ -550,7 +550,6 @@ export const MANAGER_ACCOUNTS = [
     phones: ['01347570013', '+8801347570013', '01347-570013'],
     email: 'sonia.manager@flightcaresbd.com',
     emails: ['sonia.manager@flightcaresbd.com', 'sonia@flightcaresbd.com', '01347570013@flightcaresbd.com'],
-    passwordHash: 'ca0da910852a33ca8641c6c9d0260150df0e31188ee716feeacde0ee478f3a63',
     role: 'manager',
     title: 'Duty Manager (Front Desk & Operations)',
     titleBn: 'ডিউটি ম্যানেজার (ফ্রন্ট ডেস্ক ও অপারেশন্স)',
@@ -565,7 +564,6 @@ export const MANAGER_ACCOUNTS = [
     phones: ['01347570017', '+8801347570017', '01347-570017'],
     email: 'taslima.manager@flightcaresbd.com',
     emails: ['taslima.manager@flightcaresbd.com', 'taslima@flightcaresbd.com', '01347570017@flightcaresbd.com'],
-    passwordHash: '387df630557a60756f55ef87f771d2367738c1f01154b4f885ae257449d940bd',
     role: 'manager',
     title: 'Duty Manager (Protocol Operations)',
     titleBn: 'ডিউটি ম্যানেজার (প্রোটোকল অপারেশন্স)',
@@ -842,4 +840,77 @@ export function verifyStaffPin(staffMember, inputPin) {
     return String(staffMember.pin).trim() === clean;
   }
   return false;
+}
+
+
+export async function verifyStaffPinServer(staffMember, inputPin) {
+  if (!staffMember || !inputPin) {
+    return { ok: false, error: 'Missing PIN or staff ID' };
+  }
+  const cleanPin = String(inputPin).trim();
+  const identifier = staffMember.id || staffMember.email || staffMember.phone;
+
+  const isLocal = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const baseUrl = isLocal 
+    ? 'http://localhost:8081' 
+    : (typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://flightcaresbd.com');
+
+  try {
+    const res = await fetch(`${baseUrl}/api/auth/verify_pin.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier, pin: cleanPin, role: 'staff' }),
+    });
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.warn('[Staff Auth Network Error]', err);
+    return { ok: false, error: 'Authentication service unreachable' };
+  }
+}
+
+export async function verifyManagerCredentialsServer(identifier, password) {
+  if (!identifier || !password) {
+    return { ok: false, reason: 'missing_credentials' };
+  }
+  const cleanId = String(identifier).trim();
+  const cleanPass = String(password).trim();
+
+  const isLocal = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const baseUrl = isLocal 
+    ? 'http://localhost:8081' 
+    : (typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://flightcaresbd.com');
+
+  try {
+    const res = await fetch(`${baseUrl}/api/auth/verify_pin.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: cleanId, pin: cleanPass, role: 'manager' }),
+    });
+    const data = await res.json();
+    if (data && data.ok) {
+      const matched = MANAGER_ACCOUNTS.find(m => m.id === data.user?.id || m.email === cleanId || m.phone === cleanId);
+      return {
+        ok: true,
+        token: data.token,
+        user: {
+          id: matched?.id || data.user?.id || cleanId,
+          name: matched?.name || 'Duty Manager',
+          nameBn: matched?.nameBn || 'ডিউটি ম্যানেজার',
+          email: matched?.email || `${cleanId}@flightcaresbd.com`,
+          phone: matched?.phone || cleanId,
+          role: matched?.role || 'manager',
+          title: matched?.title || 'Duty Manager (Operations)',
+          titleBn: matched?.titleBn || 'ডিউটি ম্যানেজার',
+          badgeNo: matched?.badgeNo || 'FC-MGR-LIVE',
+        }
+      };
+    }
+    return { ok: false, reason: 'unauthorized', message: data?.error || 'Invalid credentials' };
+  } catch (err) {
+    console.warn('[Manager Auth Network Error]', err);
+    return { ok: false, reason: 'unavailable' };
+  }
 }

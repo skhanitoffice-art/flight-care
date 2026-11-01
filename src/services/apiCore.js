@@ -7,6 +7,7 @@ import {
 	validateTokenRole,
 	isDemoLoginAllowed,
 	verifyManagerCredentials,
+	verifyManagerCredentialsServer,
 } from './security.js';
 import {
 	verifyTransactionWithGateway,
@@ -248,7 +249,17 @@ export {
 };
 
 export const managerLogin = async (email, password) => {
-	// 1. First priority: Dynamic Firebase Cloud Firestore & Auth authentication
+	// 1. First priority: Server-Side API authentication (/api/auth/verify_pin.php)
+	try {
+		const serverAuth = await verifyManagerCredentialsServer(email, password);
+		if (serverAuth && serverAuth.ok) {
+			return serverAuth;
+		}
+	} catch (err) {
+		console.warn('[Server Auth] Manager login check error:', err);
+	}
+
+	// 2. Second priority: Dynamic Firebase Cloud Firestore & Auth authentication
 	try {
 		const cloudAuth = await authenticateWithFirebaseCloud(email, password);
 		if (cloudAuth && cloudAuth.ok) {
@@ -258,7 +269,7 @@ export const managerLogin = async (email, password) => {
 		console.warn('[Firebase Cloud Auth] Login check error:', cloudErr);
 	}
 
-	// 2. Second priority: Local configured manager credentials (for offline/manager fallback)
+	// 3. Third priority: Local configured fallback
 	const localAuth = verifyManagerCredentials(email, password);
 	if (localAuth.ok) {
 		return {

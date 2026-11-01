@@ -66,7 +66,7 @@ Options -Indexes +FollowSymLinks
   RewriteRule ^(.*)$ https://flightcaresbd.com/$1 [R=301,L]
 
   # Allow direct execution of server payment endpoints
-  RewriteCond %{REQUEST_URI} ^/api/payment/.*\.php$ [NC]
+  RewriteCond %{REQUEST_URI} ^/api/.*\.php$ [NC]
   RewriteRule ^ - [L]
 
   # Single Page Application (SPA) Fallback Rewrite

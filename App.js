@@ -167,6 +167,7 @@ import {
   SECURITY_ACTIONS,
   isDemoLoginAllowed,
   verifyStaffPin,
+  verifyStaffPinServer,
 } from './src/services/security';
 import {
   dispatchNotification,
@@ -1410,7 +1411,7 @@ export default function App() {
 
       if (!paymentStatus) return;
 
-      // 1. Success Flow
+      // 1. Success Flow with Server-Side Verification (Anti-Bypass Shield)
       if (paymentStatus === 'success') {
         let pendingBooking = null;
         try {
@@ -1418,110 +1419,151 @@ export default function App() {
           if (raw) pendingBooking = JSON.parse(raw);
         } catch {}
 
-        const finalBookingId = paymentBookingId || pendingBooking?.id || `FC-${Math.floor(10000 + Math.random() * 90000)}`;
-        const finalTrxId = paymentValId || paymentBookingId || finalBookingId;
-        const finalAmount = Number(paymentAmount) || Number(pendingBooking?.amount) || 0;
-
-        const confirmedBooking = {
-          ...(pendingBooking || {}),
-          id: finalBookingId,
-          paymentStatus: 'paid',
-          paidMethod: 'sslcommerz',
-          method: 'sslcommerz',
-          status: 'confirmed',
-          trxId: finalTrxId,
-          valId: paymentValId,
-          cardType: paymentCardType || 'SSLCOMMERZ',
-          bankTranId: paymentBankTranId,
-          paidAt: new Date().toISOString(),
-          amount: finalAmount,
-          verificationNote: 'Verified by SSLCOMMERZ Official Live Gateway',
-        };
-
-        // Save locally to bookings list
-        setBookings(current => {
-          const updated = [confirmedBooking, ...current.filter(b => String(b.id) !== String(finalBookingId))];
-          AsyncStorage.setItem(BOOKINGS_STORAGE, JSON.stringify(updated)).catch(() => {});
-          return updated;
-        });
-
-        // Record device booking ID
-        setDeviceCreatedBookingIds(curr => {
-          const set = new Set(curr);
-          set.add(String(finalBookingId));
-          const arr = Array.from(set);
-          AsyncStorage.setItem(DEVICE_BOOKINGS_STORAGE, JSON.stringify(arr)).catch(() => {});
-          return arr;
-        });
-
-        // Save to payment histories
-        const paymentRecord = {
-          id: paymentValId || `SSLC-${Date.now()}`,
-          booking_id: finalBookingId,
-          amount: finalAmount,
-          status: 'paid',
-          method: `SSLCOMMERZ (${paymentCardType || 'Multi-Channel'})`,
-          trxId: finalTrxId,
-          valId: paymentValId,
-          cardType: paymentCardType,
-          bankTranId: paymentBankTranId,
-          created_at: new Date().toISOString(),
-        };
-
-        setCustomerPaymentHistory(curr => {
-          const updated = [paymentRecord, ...curr.filter(p => String(p.booking_id) !== String(finalBookingId))];
-          AsyncStorage.setItem(PAYMENTS_STORAGE, JSON.stringify(updated)).catch(() => {});
-          return updated;
-        });
-        setManagerPayments(curr => {
-          const updated = [paymentRecord, ...curr.filter(p => String(p.booking_id) !== String(finalBookingId))];
-          AsyncStorage.setItem(PAYMENTS_STORAGE, JSON.stringify(updated)).catch(() => {});
-          return updated;
-        });
-
-        // Sync with Cloud Firestore
-        if (isFirebaseConfigured() && typeof saveBookingToFirestore === 'function') {
-          saveBookingToFirestore(confirmedBooking).catch(e => console.warn('Cloud sync error:', e));
+        const finalBookingId = paymentBookingId || pendingBooking?.id;
+        if (!finalBookingId) {
+          console.warn('[Payment Security] Missing bookingId in payment return callback.');
+          return;
         }
 
-        // Transition Wizard to Step 3 (Payment Confirmation)
-        setWiz(curr => ({
-          ...(pendingBooking || curr),
-          ...confirmedBooking,
-          step: 3,
-          confirmedId: finalBookingId,
-          trxId: finalTrxId,
-          paidMethod: 'sslcommerz',
-          paymentStatus: 'paid',
-        }));
-        setTab('home');
-
-        // Clean up URL parameters and replace with /Payment3
+        // Clean up URL parameters immediately to prevent replay attacks
         if (window.history && window.history.replaceState) {
-          window.history.replaceState({ tab: 'home', wizStep: 3 }, '', '/Payment3');
+          window.history.replaceState({}, '', window.location.pathname || '/');
         }
 
-        // Clean up pending storage
-        try {
-          window.localStorage.removeItem('@flightcare/pending_ssl_booking');
-        } catch {}
+        // CRITICAL ANTI-BYPASS DEFENSE: Server-to-Server SSLCommerz Verification
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const verifyBase = isLocal ? 'http://localhost:8081' : (window.location.origin || 'https://flightcaresbd.com');
+        const verifyUrl = `${verifyBase}/api/payment/verify.php?bookingId=${encodeURIComponent(finalBookingId)}${paymentValId ? `&valId=${encodeURIComponent(paymentValId)}` : ''}`;
 
-        // Notify customer
-        notify(
-          lang ? 'পেমেন্ট সফল হয়েছে!' : 'Payment Confirmed!',
-          lang
-            ? `বুকিং #${finalBookingId} এর জন্য ৳${finalAmount.toLocaleString('en-US')} এসএসএল কমার্স এর মাধ্যমে সফলভাবে পরিশোধিত হয়েছে।`
-            : `Payment of ৳${finalAmount.toLocaleString('en-US')} received via SSLCOMMERZ for Booking #${finalBookingId}.`,
-          'booking',
-          { bookingId: finalBookingId }
-        );
+        fetch(verifyUrl)
+          .then(res => res.json())
+          .then(verifyData => {
+            if (verifyData && verifyData.ok && verifyData.isPaid === true) {
+              // GENUINE PAYMENT: Confirmed by SSLCommerz server!
+              const verifiedAmount = Number(verifyData.amount) || Number(paymentAmount) || Number(pendingBooking?.amount) || 0;
+              const finalTrxId = verifyData.valId || paymentValId || paymentBookingId || finalBookingId;
 
-        Alert.alert(
-          lang ? 'পেমেন্ট সফল হয়েছে!' : 'Payment Confirmed!',
-          lang
-            ? `আপনার এসএসএল কমার্স পেমেন্ট সফলভাবে গৃহীত হয়েছে এবং ভিআইপি এয়ারপোর্ট প্রোটোকল সার্ভিস বুকিং (#${finalBookingId}) নিশ্চিত করা হয়েছে।`
-            : `Your payment of ৳${finalAmount.toLocaleString('en-US')} was completed via SSLCOMMERZ. Booking #${finalBookingId} is confirmed.`
-        );
+              const confirmedBooking = {
+                ...(pendingBooking || {}),
+                id: finalBookingId,
+                paymentStatus: 'paid',
+                paidMethod: 'sslcommerz',
+                method: 'sslcommerz',
+                status: 'confirmed',
+                trxId: finalTrxId,
+                valId: verifyData.valId || paymentValId,
+                cardType: verifyData.cardType || paymentCardType || 'SSLCOMMERZ',
+                bankTranId: verifyData.bankTranId || paymentBankTranId,
+                paidAt: verifyData.timestamp || new Date().toISOString(),
+                amount: verifiedAmount,
+                verificationNote: `Verified by SSLCommerz Server (${verifyData.verifiedVia || 'official'})`,
+              };
+
+              // Save locally to bookings list
+              setBookings(current => {
+                const updated = [confirmedBooking, ...current.filter(b => String(b.id) !== String(finalBookingId))];
+                AsyncStorage.setItem(BOOKINGS_STORAGE, JSON.stringify(updated)).catch(() => {});
+                return updated;
+              });
+
+              // Record device booking ID
+              setDeviceCreatedBookingIds(curr => {
+                const set = new Set(curr);
+                set.add(String(finalBookingId));
+                const arr = Array.from(set);
+                AsyncStorage.setItem(DEVICE_BOOKINGS_STORAGE, JSON.stringify(arr)).catch(() => {});
+                return arr;
+              });
+
+              // Save to payment histories
+              const paymentRecord = {
+                id: verifyData.valId || paymentValId || `SSLC-${Date.now()}`,
+                booking_id: finalBookingId,
+                amount: verifiedAmount,
+                status: 'paid',
+                method: `SSLCOMMERZ (${verifyData.cardType || paymentCardType || 'Multi-Channel'})`,
+                trxId: finalTrxId,
+                valId: verifyData.valId || paymentValId,
+                cardType: verifyData.cardType || paymentCardType,
+                bankTranId: verifyData.bankTranId || paymentBankTranId,
+                created_at: new Date().toISOString(),
+              };
+
+              setCustomerPaymentHistory(curr => {
+                const updated = [paymentRecord, ...curr.filter(p => String(p.booking_id) !== String(finalBookingId))];
+                AsyncStorage.setItem(PAYMENTS_STORAGE, JSON.stringify(updated)).catch(() => {});
+                return updated;
+              });
+              setManagerPayments(curr => {
+                const updated = [paymentRecord, ...curr.filter(p => String(p.booking_id) !== String(finalBookingId))];
+                AsyncStorage.setItem(PAYMENTS_STORAGE, JSON.stringify(updated)).catch(() => {});
+                return updated;
+              });
+
+              // Sync with Cloud Firestore
+              if (isFirebaseConfigured() && typeof saveBookingToFirestore === 'function') {
+                saveBookingToFirestore(confirmedBooking).catch(e => console.warn('Cloud sync error:', e));
+              }
+
+              // Transition Wizard to Step 3 (Payment Confirmation)
+              setWiz(curr => ({
+                ...(pendingBooking || curr),
+                ...confirmedBooking,
+                step: 3,
+                confirmedId: finalBookingId,
+                trxId: finalTrxId,
+                paidMethod: 'sslcommerz',
+                paymentStatus: 'paid',
+              }));
+              setTab('home');
+
+              if (window.history && window.history.replaceState) {
+                window.history.replaceState({ tab: 'home', wizStep: 3 }, '', '/Payment3');
+              }
+
+              try {
+                window.localStorage.removeItem('@flightcare/pending_ssl_booking');
+              } catch {}
+
+              notify(
+                lang ? 'পেমেন্ট সফল হয়েছে!' : 'Payment Confirmed!',
+                lang
+                  ? `বুকিং #${finalBookingId} এর জন্য ৳${verifiedAmount.toLocaleString('en-US')} এসএসএল কমার্স এর মাধ্যমে সফলভাবে পরিশোধিত হয়েছে।`
+                  : `Payment of ৳${verifiedAmount.toLocaleString('en-US')} received via SSLCOMMERZ for Booking #${finalBookingId}.`,
+                'booking',
+                { bookingId: finalBookingId }
+              );
+
+              Alert.alert(
+                lang ? 'পেমেন্ট সফল হয়েছে!' : 'Payment Confirmed!',
+                lang
+                  ? `আপনার এসএসএল কমার্স পেমেন্ট সার্ভার কর্তৃক সফলভাবে যাচাই হয়েছে এবং বুকিং (#${finalBookingId}) নিশ্চিত করা হয়েছে।`
+                  : `Your payment of ৳${verifiedAmount.toLocaleString('en-US')} was validated by SSLCOMMERZ server. Booking #${finalBookingId} is confirmed.`
+              );
+            } else {
+              // SECURITY DEFENSE: Rejected unverified / spoofed payment URL!
+              console.error('[Security Defense] Payment validation rejected by SSLCommerz server:', verifyData);
+              Alert.alert(
+                lang ? 'নিরাপত্তা সতর্কতা: পেমেন্ট যাচাই ব্যর্থ' : 'Security Warning: Payment Unverified',
+                lang
+                  ? 'সার্ভার-টু-সার্ভার যাচাইকরণে এসএসএল কমার্স পেমেন্টের কোনো বৈধ প্রমাণ পাওয়া যায়নি। বুকিংটি নিশ্চিত করা হয়নি।'
+                  : 'Payment could not be verified by the SSLCOMMERZ gateway server. Booking has NOT been confirmed.'
+              );
+              if (pendingBooking) {
+                setWiz(curr => ({ ...curr, ...pendingBooking, step: 2, paymentStatus: 'pending' }));
+              }
+              setTab('home');
+            }
+          })
+          .catch(err => {
+            console.error('[Payment Verification Network Error]', err);
+            Alert.alert(
+              lang ? 'পেমেন্ট স্ট্যাটাস যাচাই প্রয়োজন' : 'Verification Pending',
+              lang
+                ? 'পেমেন্ট গেটওয়ের সাথে সার্ভার সংযোগে বিলম্ব হচ্ছে। My Bookings থেকে "Verify Status" চাপুন।'
+                : 'Server could not reach payment gateway immediately. Please tap "Verify Status" in Bookings.'
+            );
+          });
       } 
       // 2. Failed Flow
       else if (paymentStatus === 'failed' || paymentStatus === 'fail') {
@@ -3779,9 +3821,9 @@ export default function App() {
       return;
     }
 
-    // Strict PIN / Password Enforcement (Cryptographically Salted Hash Verification)
-    const isPinValid = verifyStaffPin(matchedStaff, passwordToUse);
-    if (!isPinValid) {
+    // Strict Server-Side PIN Enforcement (Zero Client Bundle Hash Exposure)
+    const authResult = await verifyStaffPinServer(matchedStaff, passwordToUse);
+    if (!authResult.ok) {
       await recordFailedLogin(cleanEmail);
       await logSecurityEvent({
         action: SECURITY_ACTIONS.AUTH_LOGIN_FAILED,
@@ -3791,9 +3833,9 @@ export default function App() {
         status: 'FAILED',
       });
       setStaffLoginError(
-        lang
+        authResult.error || (lang
           ? 'ভুল পাসওয়ার্ড বা সিকিউরিটি পিন। সঠিক পিন দিন।'
-          : 'Invalid PIN or password. Authentication rejected.'
+          : 'Invalid PIN or password. Authentication rejected.')
       );
       setStaffBusy(false);
       return;
