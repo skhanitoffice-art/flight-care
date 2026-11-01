@@ -91,6 +91,7 @@ export default function WizardScreen({
   const isDep = wiz.dir === 'dep';
   const pricingData = calculateBookingPricing(wiz, addonCatalog, pricingConfig);
   const totalAmount = pricingData.total != null ? pricingData.total : pricingData.finalTotal;
+  const isZeroOrQuote = totalAmount === 0 || totalAmount == null || Boolean(pricingData.quoteRequired) || Boolean(wiz.onlyAddons && totalAmount === 0);
 
   const handleContinueToPayment = () => {
     const newErrors = {};
@@ -210,30 +211,36 @@ export default function WizardScreen({
         : 'Please agree to Terms & Conditions and Cancellation Policy.';
     }
 
-    // Flight Number format validation (Strictly mandatory)
-    if (!wiz.fno || !wiz.fno.trim()) {
-      newErrors.flightNumber = lang
-        ? 'অনুগ্রহ করে ফ্লাইট নম্বর দিন (যেমন: BG-084, EK-582)'
-        : 'Please enter flight number (e.g. BG-084, EK-582)';
-    } else if (!isValidFlightNumber(wiz.fno.trim())) {
-      newErrors.flightNumber = lang
-        ? 'সঠিক ফ্লাইট নম্বর ফরম্যাট দিন (যেমন: BG-084, EK-582, BS-101)'
-        : 'Invalid flight number format (e.g. BG-084, EK-582, BS-101)';
+    // Flight Number format validation
+    const fnoClean = (wiz.fno || '').trim().toUpperCase();
+    if (!fnoClean) {
+      if (!wiz.onlyAddons) {
+        newErrors.flightNumber = lang
+          ? 'অনুগ্রহ করে ফ্লাইট নম্বর দিন (যেমন: BG-084, EK-582)'
+          : 'Please enter flight number (e.g. BG-084, EK-582)';
+      }
+    } else if (!isValidFlightNumber(fnoClean)) {
+      if (!wiz.onlyAddons && fnoClean !== 'DAC-ASSIST' && fnoClean !== 'GROUND' && fnoClean !== 'TRANSIT' && fnoClean !== 'N/A') {
+        newErrors.flightNumber = lang
+          ? 'সঠিক ফ্লাইট নম্বর ফরম্যাট দিন (যেমন: BG-084, EK-582, BS-101)'
+          : 'Invalid flight number format (e.g. BG-084, EK-582, BS-101)';
+      }
     }
 
-    // Service Date format validation (Strictly mandatory & cannot be past)
-    if (!wiz.date || !wiz.date.trim()) {
-      newErrors.serviceDate = lang
-        ? 'অনুগ্রহ করে সেবার তারিখ নির্বাচন করুন'
-        : 'Please select service date';
-    } else if (!isValidFlightDate(wiz.date.trim())) {
-      newErrors.serviceDate = lang
-        ? 'সঠিক তারিখ দিন (DD-MM-YYYY)'
-        : 'Enter a valid date (DD-MM-YYYY)';
-    } else if (isPastFlightDate(wiz.date.trim())) {
-      newErrors.serviceDate = lang
-        ? 'অতীতের কোনো তারিখ নির্বাচন করা যাবে না'
-        : 'Cannot select a past date';
+    // Service Date format validation
+    const dateClean = (wiz.date || '').trim();
+    if (!dateClean) {
+      if (!wiz.onlyAddons) {
+        newErrors.serviceDate = lang
+          ? 'অনুগ্রহ করে সেবার তারিখ নির্বাচন করুন'
+          : 'Please select service date';
+      }
+    } else if (!isValidFlightDate(dateClean) || isPastFlightDate(dateClean)) {
+      if (!wiz.onlyAddons) {
+        newErrors.serviceDate = lang
+          ? 'অতীতের কোনো তারিখ নির্বাচন করা যাবে না'
+          : 'Cannot select a past date';
+      }
     }
 
 
@@ -248,7 +255,15 @@ export default function WizardScreen({
     }
 
     setErrors({});
-    setWiz(current => ({ ...current, step: 2 }));
+    const effectiveFlightVal = fnoClean || (wiz.onlyAddons ? 'DAC-ASSIST' : '');
+    const effectiveDateVal = dateClean || new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+    setWiz(current => ({
+      ...current,
+      step: 2,
+      fno: effectiveFlightVal,
+      flightNumber: effectiveFlightVal,
+      date: effectiveDateVal,
+    }));
   };
 
   const handlePayNow = async () => {
@@ -279,7 +294,8 @@ export default function WizardScreen({
       airport: wiz.airport || 'DAC',
     };
 
-    if (paymentMethod === 'pay_after_service') {
+    const effectivePaymentMethod = (isZeroOrQuote || totalAmount <= 0) ? 'pay_after_service' : paymentMethod;
+    if (effectivePaymentMethod === 'pay_after_service') {
       setIsPaying(false);
       const postServiceResult = {
         ...bookingData,

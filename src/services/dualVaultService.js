@@ -357,7 +357,7 @@ export function isBookingWithinLast2Days(b) {
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const oneDayMs = 24 * 60 * 60 * 1000;
 
-  // 1. Check createdAt timestamp (if recorded in Firestore)
+  // 1. Check createdAt timestamp (recorded in Firestore or local creation)
   const createdRaw = b.createdAt || b.created_at || b.timestamp;
   if (createdRaw) {
     let createdDate = null;
@@ -371,8 +371,8 @@ export function isBookingWithinLast2Days(b) {
     if (createdDate && !isNaN(createdDate.getTime())) {
       const createdMidnight = new Date(createdDate.getFullYear(), createdDate.getMonth(), createdDate.getDate()).getTime();
       const dayDiff = (todayMidnight - createdMidnight) / oneDayMs;
-      // Last 2 days: dayDiff between -1 (tomorrow) and 2 (2 days ago)
-      if (dayDiff >= -1 && dayDiff <= 2) {
+      // Bookings created within the rolling last 2 days (dayDiff <= 2)
+      if (dayDiff <= 2) {
         return true;
       }
     }
@@ -385,10 +385,16 @@ export function isBookingWithinLast2Days(b) {
     if (parsed && !isNaN(parsed.getTime())) {
       const parsedMidnight = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()).getTime();
       const dayDiff = (todayMidnight - parsedMidnight) / oneDayMs;
-      if (dayDiff >= -1 && dayDiff <= 2) {
+      // Flight is upcoming or within the last 2 days
+      if (dayDiff <= 2) {
         return true;
       }
     }
+  }
+
+  // 3. Fallback: if booking is active / upcoming or in progress, keep visible in manager console
+  if (b.status === 'upcoming' || b.status === 'confirmed' || b.status === 'in_progress') {
+    return true;
   }
 
   return false;

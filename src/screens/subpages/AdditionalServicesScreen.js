@@ -93,10 +93,21 @@ export default function AdditionalServicesScreen({
         return;
       }
     }
+    if (localSelected.length === 0) {
+      const msg = isBn
+        ? 'অনুগ্রহ করে প্রথমে অন্তত একটি অতিরিক্ত সার্ভিস নির্বাচন করুন।'
+        : 'Please select at least one additional service first.';
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.alert(msg);
+      } else {
+        Alert.alert(isBn ? 'সার্ভিস নির্বাচন করুন' : 'Select Service', msg);
+      }
+      return;
+    }
     if (setSelectedAddons) setSelectedAddons(localSelected);
     if (setAddonDetails) setAddonDetails(localDetails);
     if (onProceedBooking) {
-      onProceedBooking(localSelected, localDetails);
+      onProceedBooking(localSelected, localDetails, { onlyAddons: true });
     } else if (onBack) {
       onBack();
     }

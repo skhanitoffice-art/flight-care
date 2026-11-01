@@ -1541,9 +1541,21 @@ export default function ManagerPanel({
     const airline = b.flight?.airline || b.airline || 'Biman Bangladesh Airlines';
     const date = b.flight?.date || b.date || b.serviceDate || '09-10-2026';
     const time = b.flight?.time || b.time || b.serviceTime || '14:00';
-    const pkgName = b.pkg?.t || (Array.isArray(b.pkg?.n) ? b.pkg.n[0] : b.package) || (dir === 'arr' ? 'VIP Arrival Protocol' : 'VIP Departure Protocol');
-    const serviceName = b.svc?.titleEn || b.service || (dir === 'arr' ? 'Arrival Protocol' : 'Departure Protocol');
-    const paymentMethod = b.method === 'pay_after_service' || b.paidMethod === 'pay_after_service'
+    const isOnlyAddons = Boolean(b.onlyAddons || b.package === 'Only Additional Services' || b.pkg?.id === 'addons_only');
+    const addonNames = (b.addons || []).map(id => {
+      const item = ADDONS.find(a => a.id === id);
+      return item ? (item.n ? item.n[0] : item.titleEn || id) : id;
+    }).join(', ');
+
+    const pkgName = isOnlyAddons
+      ? (lang ? 'শুধুমাত্র অতিরিক্ত সার্ভিস' : 'Only Additional Services')
+      : (b.pkg?.t || (Array.isArray(b.pkg?.n) ? b.pkg.n[0] : b.package) || (dir === 'arr' ? 'VIP Arrival Protocol' : 'VIP Departure Protocol'));
+
+    const serviceName = isOnlyAddons
+      ? (addonNames ? (lang ? `অতিরিক্ত সেবা: ${addonNames}` : `Additional Service: ${addonNames}`) : (lang ? 'অতিরিক্ত সেবা' : 'Additional Service'))
+      : (b.svc?.titleEn || b.service || (dir === 'arr' ? 'Arrival Protocol' : 'Departure Protocol'));
+
+    const paymentMethod = b.method === 'pay_after_service' || b.paidMethod === 'pay_after_service' || b.paymentStatus === 'pay_after_service' || b.paymentStatus === 'quote_required'
       ? 'Pay After Service'
       : b.method === 'banglaqr' || b.paidMethod === 'banglaqr'
       ? 'Bangla QR'
@@ -1554,6 +1566,10 @@ export default function ManagerPanel({
       : b.method === 'nagad' || b.paidMethod === 'nagad'
       ? 'Nagad'
       : 'Card';
+
+    const safeAmount = b.amount != null ? Number(b.amount) : (isOnlyAddons ? 0 : 2500);
+    const createdAt = b.createdAt || b.created_at || new Date().toISOString();
+    const created_at = b.created_at || b.createdAt || createdAt;
 
     return {
       id,
@@ -1577,12 +1593,13 @@ export default function ManagerPanel({
       passengers: paxTotal,
       passengerBreakdown: { adults: paxAdults, children: paxChildren, elderly: paxElderly },
       passengerDetails: b.passenger_details || b.passengerDetails || [{ name: customer, type: 'adult' }],
-      amount: Number(b.amount) || 2500,
+      amount: safeAmount,
+      pricingStatus: b.pricingStatus || (b.amount == null || safeAmount === 0 ? 'quote_required' : 'priced'),
       paymentStatus: b.paymentStatus || (paymentMethod === 'Pay After Service' ? 'pay_after_service' : 'paid'),
       paymentMethod,
       paymentRef: b.trxId || b.paymentId || ('PAY-' + id),
       paymentDate: b.paymentDate || 'Today',
-      pricingBreakdown: b.pricingBreakdown || { baseFare: Number(b.amount) || 2500, total: Number(b.amount) || 2500 },
+      pricingBreakdown: b.pricingBreakdown || { baseFare: safeAmount, total: safeAmount },
       status: b.status || 'upcoming',
       staff: b.staff || 'Unassigned',
       staffId: b.staffId || null,
@@ -1590,6 +1607,7 @@ export default function ManagerPanel({
       supportStaffId: b.supportStaffId || null,
       staffNotes: b.staffNotes || '',
       addons: b.addons || [],
+      onlyAddons: isOnlyAddons,
       vehicle: b.vehicle || 'None',
       remarks: b.remarks || '',
       serviceProgress: b.serviceProgress || createMilestonesProgress(dir, 0, 0),
@@ -1600,7 +1618,9 @@ export default function ManagerPanel({
       lastModifiedBy: b.lastModifiedBy || null,
       isOfflineManual: b.isOfflineManual !== undefined ? b.isOfflineManual : (b.enteredBy ? true : false),
       sourceLabel: b.sourceLabel || (b.enteredBy ? 'ম্যানেজার অফলাইন এন্ট্রি' : 'ওয়েবসাইট অনলাইন বুকিং'),
-      createdAt: b.createdAt || b.created_at || new Date().toISOString(),
+      createdAt,
+      created_at,
+      timestamp: b.timestamp || Date.now(),
     };
   };
 
@@ -6393,6 +6413,15 @@ export default function ManagerPanel({
                         </Text>
                       </View>
 
+                      {/* Addons Only Badge */}
+                      {b.onlyAddons && (
+                        <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, backgroundColor: '#FDF4FF', borderWidth: 1, borderColor: '#F0ABFC' }}>
+                          <Text style={{ fontSize: 11, fontWeight: '800', color: '#A21CAF' }}>
+                            ✨ {lang ? 'শুধুমাত্র অতিরিক্ত সেবা' : 'Addons Only'}
+                          </Text>
+                        </View>
+                      )}
+
                       {/* Offline Walk-in / Manual Badge */}
                       {b.isOfflineManual && (
                         <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FDE68A' }}>
@@ -6465,7 +6494,7 @@ export default function ManagerPanel({
                     {/* Price and Payment Status */}
                     <View style={{ alignItems: 'flex-end' }}>
                       <Text style={{ fontSize: 17, fontWeight: '900', color: '#0F172A' }}>
-                        {isAdmin ? `৳ ${(b.amount || 0).toLocaleString()}` : (lang ? '🔒 সংরক্ষিত' : '🔒 Protected')}
+                        {isAdmin ? (b.pricingStatus === 'quote_required' || (b.onlyAddons && (b.amount === 0 || b.amount == null)) ? (lang ? 'অন-রিকুয়েস্ট (কোটেশন)' : 'On Request (Quote)') : `৳ ${(b.amount || 0).toLocaleString()}`) : (lang ? '🔒 সংরক্ষিত' : '🔒 Protected')}
                       </Text>
                       {isAdmin ? (
                         <View style={{ paddingHorizontal: 7, paddingVertical: 1.5, borderRadius: 6, backgroundColor: b.paymentStatus === 'paid' ? '#ECFDF5' : b.paymentStatus === 'pay_after_service' ? '#EFF6FF' : b.paymentStatus === 'refunded' ? '#FEF2F2' : '#FFFBEB', borderWidth: 1, borderColor: b.paymentStatus === 'paid' ? '#A7F3D0' : b.paymentStatus === 'pay_after_service' ? '#BAE6FD' : b.paymentStatus === 'refunded' ? '#FECACA' : '#FDE68A', marginTop: 2 }}>

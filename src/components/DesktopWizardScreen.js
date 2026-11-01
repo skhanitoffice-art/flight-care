@@ -171,6 +171,7 @@ export default function DesktopWizardScreen({
   const isDep = wiz.dir === 'dep';
   const pricingData = calculateBookingPricing(wiz, addonCatalog, pricingConfig);
   const totalAmount = pricingData.total != null ? pricingData.total : pricingData.finalTotal;
+  const isZeroOrQuote = totalAmount === 0 || totalAmount == null || Boolean(pricingData.quoteRequired) || Boolean(wiz.onlyAddons && totalAmount === 0);
   const pkgPrice = pricingData.basePrice != null ? pricingData.basePrice : (wiz.pkg?.p != null ? wiz.pkg.p : 500);
   const passengers = pricingData.passengerCount || 1;
   const pointsEarned = wiz.onlyAddons
@@ -470,15 +471,20 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
         : 'Please agree to Terms & Conditions and Cancellation Policy.';
     }
 
-    // 6. Flight number validation (Strictly mandatory)
-    if (!wiz.fno || !wiz.fno.trim()) {
-      newErrors.flightNumber = lang
-        ? 'অনুগ্রহ করে ফ্লাইট নম্বর দিন (যেমন: BG-084, EK-582)'
-        : 'Please enter flight number (e.g. BG-084, EK-582)';
-    } else if (!isValidFlightNumber(wiz.fno.trim())) {
-      newErrors.flightNumber = lang
-        ? 'সঠিক ফ্লাইট নম্বর ফরম্যাট দিন (যেমন: BG-084, EK-582, BS-101)'
-        : 'Invalid flight number format (e.g. BG-084, EK-582, BS-101)';
+    // 6. Flight number validation
+    const fnoClean = (wiz.fno || '').trim().toUpperCase();
+    if (!fnoClean) {
+      if (!wiz.onlyAddons) {
+        newErrors.flightNumber = lang
+          ? 'অনুগ্রহ করে ফ্লাইট নম্বর দিন (যেমন: BG-084, EK-582)'
+          : 'Please enter flight number (e.g. BG-084, EK-582)';
+      }
+    } else if (!isValidFlightNumber(fnoClean)) {
+      if (!wiz.onlyAddons && fnoClean !== 'DAC-ASSIST' && fnoClean !== 'GROUND' && fnoClean !== 'TRANSIT' && fnoClean !== 'N/A') {
+        newErrors.flightNumber = lang
+          ? 'সঠিক ফ্লাইট নম্বর ফরম্যাট দিন (যেমন: BG-084, EK-582, BS-101)'
+          : 'Invalid flight number format (e.g. BG-084, EK-582, BS-101)';
+      }
     }
 
     // 8. Visa On Arrival Mandatory Documents Validation
@@ -491,15 +497,20 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
       }
     }
 
-    // 7. Service date validation (Strictly mandatory & cannot be past)
-    if (!wiz.date || !wiz.date.trim()) {
-      newErrors.serviceDate = lang
-        ? 'অনুগ্রহ করে সেবার তারিখ নির্বাচন করুন'
-        : 'Please select service date';
-    } else if (!isValidFlightDate(wiz.date.trim()) || isPastFlightDate(wiz.date.trim())) {
-      newErrors.serviceDate = lang
-        ? 'অতীতের কোনো তারিখ নির্বাচন করা যাবে না। বর্তমান বা ভবিষ্যতের তারিখ দিন।'
-        : 'Past flight dates are not allowed. Please select today or a future date.';
+    // 7. Service date validation
+    const dateClean = (wiz.date || '').trim();
+    if (!dateClean) {
+      if (!wiz.onlyAddons) {
+        newErrors.serviceDate = lang
+          ? 'অনুগ্রহ করে সেবার তারিখ নির্বাচন করুন'
+          : 'Please select service date';
+      }
+    } else if (!isValidFlightDate(dateClean) || isPastFlightDate(dateClean)) {
+      if (!wiz.onlyAddons) {
+        newErrors.serviceDate = lang
+          ? 'অতীতের কোনো তারিখ নির্বাচন করা যাবে না। বর্তমান বা ভবিষ্যতের তারিখ দিন।'
+          : 'Past flight dates are not allowed. Please select today or a future date.';
+      }
     }
 
 
@@ -514,9 +525,15 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
     }
 
     setErrors({});
+    const effectiveFlightVal = fnoClean || (wiz.onlyAddons ? 'DAC-ASSIST' : '');
+    const effectiveDateVal = dateClean || new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+
     setWiz(curr => ({
       ...curr,
       step: 2,
+      fno: effectiveFlightVal,
+      flightNumber: effectiveFlightVal,
+      date: effectiveDateVal,
       passengerName,
       passengerPhone,
       passengerCountryCode,
@@ -568,7 +585,8 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
       airport: wiz.airport || 'DAC',
     };
 
-    if (paymentMethod === 'pay_after_service') {
+    const effectiveMethod = (isZeroOrQuote || totalAmount <= 0) ? 'pay_after_service' : paymentMethod;
+    if (effectiveMethod === 'pay_after_service') {
       setIsPaying(false);
       const postServiceResult = {
         ...bookingData,
@@ -2667,7 +2685,9 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF' }}>
-                      {paymentMethod === 'pay_after_service'
+                      {isZeroOrQuote
+                        ? (lang ? 'বুকিং নিশ্চিত করুন (কোটেশন / সার্ভিসের পরে পরিশোধ) →' : 'Confirm Booking (Quote Req. / Pay After Service) →')
+                        : paymentMethod === 'pay_after_service'
                         ? (lang ? `বুকিং নিশ্চিত করুন (সার্ভিসের পরে ${totalAmount} Tk পরিশোধ) →` : `Confirm Booking (Pay ${totalAmount} Tk Later) →`)
                         : paymentMethod === 'sslcommerz'
                         ? (lang ? `SSLCOMMERZ এ পরিশোধ করুন ${totalAmount} Tk →` : `Pay ${totalAmount} Tk via SSLCOMMERZ →`)

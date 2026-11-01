@@ -127,16 +127,24 @@ $canonical_addon_prices = [
 
 // Determine package
 $pkg_input = strtolower(trim(isset($data['packageId']) ? $data['packageId'] : (isset($data['servicePackage']) ? $data['servicePackage'] : $service_pkg)));
-if (strpos($pkg_input, 'vip') !== false) {
+if (strpos($pkg_input, 'addons_only') !== false || strpos($pkg_input, 'only_addons') !== false) {
+    $selected_pkg = 'addons_only';
+    $server_pkg_total = 0.0;
+} elseif (strpos($pkg_input, 'vip') !== false) {
     $selected_pkg = 'vip';
+    $server_pkg_total = $canonical_package_prices['vip'] * $passengers;
 } elseif (strpos($pkg_input, 'premium') !== false) {
     $selected_pkg = 'premium';
+    $server_pkg_total = $canonical_package_prices['premium'] * $passengers;
 } else {
     $selected_pkg = 'standard';
+    $server_pkg_total = $canonical_package_prices['standard'] * $passengers;
 }
 
 $passengers = max(1, min(9, intval(isset($data['passengers']) ? $data['passengers'] : (isset($data['passengerCount']) ? $data['passengerCount'] : 1))));
-$server_pkg_total = $canonical_package_prices[$selected_pkg] * $passengers;
+if ($selected_pkg !== 'addons_only') {
+    $server_pkg_total = $canonical_package_prices[$selected_pkg] * $passengers;
+}
 
 $addon_total = 0.0;
 if (isset($data['addons']) && is_array($data['addons'])) {
@@ -160,10 +168,14 @@ if ($coupon === 'FLIGHT100') {
     $discount = ($server_pkg_total + $addon_total) * 0.10;
 }
 
-$server_calculated_amount = max(100.0, ($server_pkg_total + $addon_total) - $discount);
+$is_addons_only = ($selected_pkg === 'addons_only');
+$raw_calc = ($server_pkg_total + $addon_total) - $discount;
+$server_calculated_amount = $is_addons_only ? max(0.0, $raw_calc) : max(100.0, $raw_calc);
 
 // SECURITY VERIFICATION: If client sent a tampered amount lower than expected price, override with server truth!
-if ($client_proposed_amount <= 0 || $client_proposed_amount < ($server_calculated_amount * 0.90)) {
+if ($is_addons_only) {
+    $final_amount = $client_proposed_amount > 0 ? $client_proposed_amount : $addon_total;
+} elseif ($client_proposed_amount <= 0 || $client_proposed_amount < ($server_calculated_amount * 0.90)) {
     // Malicious or mismatched amount detected: enforce server calculated price
     $final_amount = $server_calculated_amount;
 } else {

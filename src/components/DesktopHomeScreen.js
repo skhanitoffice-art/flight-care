@@ -417,6 +417,9 @@ export default function DesktopHomeScreen({
       : (trimmedFlight ? getLiveFlightStatus(trimmedFlight, direction) : null);
 
     const isOnlyAddons = Boolean(options?.onlyAddons);
+    const effectiveDate = trimmedDate || new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+    const effectiveFlight = liveInfo?.fno || (trimmedFlight ? trimmedFlight.toUpperCase() : (isOnlyAddons ? 'DAC-ASSIST' : ''));
+    const effectiveAirline = liveInfo?.airline || (isOnlyAddons ? 'Airport Special Assistance' : '');
 
     if (startBooking) {
       startBooking(
@@ -425,8 +428,8 @@ export default function DesktopHomeScreen({
         isOnlyAddons ? 'addons_only' : selectedPackage,
         direction,
         {
-          fno: liveInfo?.fno || (trimmedFlight ? trimmedFlight.toUpperCase() : ''),
-          airline: liveInfo?.airline || '',
+          fno: effectiveFlight,
+          airline: effectiveAirline,
           airlineBn: liveInfo?.airlineBn || '',
           route: liveInfo?.route || '',
           origin: liveInfo?.origin || '',
@@ -440,7 +443,7 @@ export default function DesktopHomeScreen({
           scheduled: liveInfo?.scheduled || '',
           status: liveInfo?.status || '',
           liveRadar: !!liveInfo?.liveRadar,
-          date: trimmedDate,
+          date: effectiveDate,
           passengers: passengerCount,
           name: '',
           phone: '',

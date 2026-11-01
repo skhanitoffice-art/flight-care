@@ -2174,9 +2174,9 @@ export default function App() {
       email: initialData.email !== undefined ? initialData.email : (profile.email || ''),
       dateOfBirth: '',
       passportNumber: '',
-      airline: initialData.airline || '',
-      airlineBn: initialData.airlineBn || '',
-      fno: initialData.fno || '',
+      airline: initialData.airline || (isOnlyAddons ? 'Airport Special Assistance' : ''),
+      airlineBn: initialData.airlineBn || (isOnlyAddons ? 'এয়ারপোর্ট বিশেষ সেবা' : ''),
+      fno: initialData.fno || (isOnlyAddons ? 'DAC-ASSIST' : ''),
       ticketNumber: '',
       origin: initialData.origin || '',
       originBn: initialData.originBn || '',
@@ -2185,7 +2185,7 @@ export default function App() {
       terminal: initialData.terminal || '',
       terminalBn: initialData.terminalBn || '',
       gate: initialData.gate || '',
-      date: initialData.date || '',
+      date: initialData.date || initialData.serviceDate || new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
       time: initialData.time || initialData.scheduled || '',
       scheduled: initialData.scheduled || initialData.time || '',
       liveRadar: initialData.liveRadar || false,
@@ -2197,7 +2197,7 @@ export default function App() {
       c: 0,
       e: 0,
       passengerDetails: [],
-      method: 'banglaqr',
+      method: isOnlyAddons ? 'pay_after_service' : 'banglaqr',
       bookingForSomeoneElse: initialData.bookingForSomeoneElse || false,
       hasPhone: initialData.hasPhone !== false,
       passengerName: initialData.passengerName || '',
@@ -4715,25 +4715,37 @@ export default function App() {
       email: candidateEmail,
       passengerEmail: candidateEmail,
       flight,
-      fno: flight.number,
-      flightNumber: flight.number,
-      airline: flight.airline,
-      date: flight.date,
-      time: flight.time,
+      fno: flight.number || (wiz.onlyAddons ? 'DAC-ASSIST' : 'BG-001'),
+      flightNumber: flight.number || (wiz.onlyAddons ? 'DAC-ASSIST' : 'BG-001'),
+      airline: flight.airline || (wiz.onlyAddons ? 'Airport Special Assistance' : 'Biman Bangladesh Airlines'),
+      date: flight.date || new Date().toLocaleDateString('en-GB').replace(/\//g, '-'),
+      time: flight.time || '12:00',
       airport: wiz.airport || 'DAC',
       airport_code: wiz.airport || 'DAC',
       passengers,
       passenger_information: passengerInformation,
       passenger_details: passengerDetails,
+      addons: wiz.addons || [],
       addon_details: addonDetails,
+      onlyAddons: Boolean(wiz.onlyAddons || wiz.pkg?.id === 'addons_only'),
+      package: (wiz.onlyAddons || wiz.pkg?.id === 'addons_only')
+        ? 'Only Additional Services'
+        : (wiz.pkg?.t || (Array.isArray(wiz.pkg?.n) ? wiz.pkg.n[0] : wiz.package) || 'Standard Protocol'),
+      service: (wiz.onlyAddons || wiz.pkg?.id === 'addons_only')
+        ? (() => {
+            const names = (wiz.addons || []).map(id => {
+              const a = (addonCatalog || ADDONS).find(x => x.id === id);
+              return a ? (a.n ? a.n[lang ? 1 : 0] : a.titleBn || a.titleEn || id) : id;
+            }).join(', ');
+            return names ? `${lang ? 'অতিরিক্ত সেবা' : 'Additional Service'}: ${names}` : (lang ? 'অতিরিক্ত সেবা' : 'Additional Service');
+          })()
+        : (wiz.svc?.titleEn || wiz.service || 'VIP Meet & Greet Protocol'),
       remarks: (wiz.remarks || '').trim() || null,
-      amount: payableAmount,
+      amount: payableAmount != null ? payableAmount : 0,
       pricingBreakdown: pricingDetails,
       pricingStatus: bookingQuoteRequired ? 'quote_required' : 'priced',
       status: serverBooking?.status || 'confirmed',
-      paymentStatus: bookingQuoteRequired
-        ? 'quote_required'
-        : isPayAfterService
+      paymentStatus: (bookingQuoteRequired || isPayAfterService)
         ? 'pay_after_service'
         : isPaid
         ? 'paid'
@@ -4749,7 +4761,9 @@ export default function App() {
       can_cancel: true,
       cancellation_eligible: true,
       cancellation_policy_summary: lang ? 'ফ্লাইটের ২৪ ঘণ্টা পূর্ব পর্যন্ত বাতিলযোগ্য।' : 'Cancellable up to 24 hours before flight.',
+      createdAt: new Date().toISOString(),
       created_at: new Date().toISOString(),
+      timestamp: Date.now(),
       workflow: DEFAULT_BOOKING_WORKFLOW,
       statusHistory: [
         { status: 'booked', label: 'Booked', created_at: new Date().toLocaleTimeString() },
