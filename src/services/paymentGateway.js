@@ -724,72 +724,63 @@ export const initiateSslCommerzPayment = async ({
   customerName = 'Passenger',
   customerEmail = '',
   customerPhone = '',
+  packageName = 'Standard Protocol',
 }) => {
   const safeId = String(bookingId || 'FC-PENDING').trim();
   const safeAmount = Number(amount) || 0;
-  const tranId = `SSLC-FC-${safeId}-${Date.now().toString(36).toUpperCase()}`;
-  const isSandbox = SSLCOMMERZ_CONFIG.IS_SANDBOX;
-  const initUrl = isSandbox ? SSLCOMMERZ_CONFIG.SANDBOX_INIT_URL : SSLCOMMERZ_CONFIG.LIVE_INIT_URL;
+  const isLocalhost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-  const sessionData = {
-    store_id: SSLCOMMERZ_CONFIG.STORE_ID,
-    total_amount: safeAmount,
-    currency: SSLCOMMERZ_CONFIG.CURRENCY,
-    tran_id: tranId,
-    success_url: `${getPublicWebsiteBaseUrl()}/?status=success&booking=${safeId}&tran_id=${tranId}`,
-    fail_url: `${getPublicWebsiteBaseUrl()}/?status=fail&booking=${safeId}&tran_id=${tranId}`,
-    cancel_url: `${getPublicWebsiteBaseUrl()}/?status=cancel&booking=${safeId}&tran_id=${tranId}`,
-    ipn_url: `${getPublicWebsiteBaseUrl()}/api/sslcommerz/ipn`,
-    cus_name: customerName,
-    cus_email: customerEmail || 'passenger@flightcare.com',
-    cus_phone: customerPhone || '01700000000',
-    shipping_method: 'NO',
-    product_name: 'Flight Care Airport VIP Protocol Service',
-    product_category: 'Airport Services',
-    product_profile: 'general',
-  };
+  // When running on localhost (Metro/Expo development), forward initiation directly to the live production Hostinger endpoint
+  const baseUrl = isLocalhost 
+    ? 'https://flightcaresbd.com' 
+    : (typeof window !== 'undefined' && window.location && window.location.origin 
+        ? window.location.origin 
+        : 'https://flightcaresbd.com');
 
-  // 1. Attempt Secure Server-Side Initiation via Hostinger Endpoint
+  const clientOrigin = typeof window !== 'undefined' && window.location && window.location.origin 
+    ? window.location.origin 
+    : 'https://flightcaresbd.com';
+
   try {
-    const baseUrl = typeof window !== 'undefined' && window.location && window.location.origin 
-      ? window.location.origin 
-      : 'https://flightcaresbd.com';
     const serverRes = await fetch(`${baseUrl}/api/payment/initiate.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         bookingId: safeId,
         amount: safeAmount,
-        customerName,
-        customerEmail,
-        customerPhone,
-      })
+        customerName: customerName || 'Passenger',
+        customerEmail: customerEmail || 'passenger@flightcaresbd.com',
+        customerPhone: customerPhone || '01700000000',
+        packageName: packageName || 'Standard Protocol',
+        clientOrigin,
+      }),
     });
-    if (serverRes.ok) {
-      const sData = await serverRes.json();
-      if (sData.ok && sData.gatewayUrl) {
-        return {
-          ok: true,
-          status: 'SUCCESS',
-          tranId: sData.bookingId || tranId,
-          sessionkey: sData.sessionKey || `SSLC-SES-${Date.now()}`,
-          GatewayPageURL: sData.gatewayUrl,
-          sessionData,
-        };
-      }
+
+    const sData = await serverRes.json();
+    if (sData && sData.ok && sData.gatewayUrl) {
+      return {
+        ok: true,
+        status: 'SUCCESS',
+        tranId: sData.bookingId || safeId,
+        sessionkey: sData.sessionKey || '',
+        GatewayPageURL: sData.gatewayUrl,
+        gatewayUrl: sData.gatewayUrl,
+      };
+    } else {
+      return {
+        ok: false,
+        status: 'FAILED',
+        error: sData?.error || 'Failed to initialize SSLCOMMERZ gateway session.',
+      };
     }
   } catch (err) {
-    // Fall back to direct or simulated initiation if offline
+    return {
+      ok: false,
+      status: 'FAILED',
+      error: err?.message || 'Network error connecting to SSLCOMMERZ payment gateway.',
+    };
   }
-
-  return {
-    ok: true,
-    status: 'SUCCESS',
-    tranId,
-    sessionkey: `SSLC-SES-${Date.now().toString(36).toUpperCase()}`,
-    GatewayPageURL: `${initUrl}?tran_id=${tranId}`,
-    sessionData,
-  };
 };
 
 /**

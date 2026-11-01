@@ -295,7 +295,10 @@ export default function WizardScreen({
       setShowBookingOtpModal(true);
       return;
     } else if (paymentMethod === 'sslcommerz' && typeof startSslCommerzPayment === 'function') {
-      startSslCommerzPayment(bookingData, async (paymentResult) => {
+      startSslCommerzPayment({
+        ...wiz,
+        ...bookingData,
+      }, async (paymentResult) => {
         setIsPaying(false);
         const sslBookingResult = {
           ...bookingData,

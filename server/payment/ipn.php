@@ -14,6 +14,29 @@ $amount = isset($_POST['amount']) ? trim($_POST['amount']) : (isset($_GET['amoun
 $card_type = isset($_POST['card_type']) ? trim($_POST['card_type']) : '';
 $bank_tran_id = isset($_POST['bank_tran_id']) ? trim($_POST['bank_tran_id']) : '';
 
+// Read client return origin from value_d
+$client_origin = isset($_POST['value_d']) ? trim($_POST['value_d']) : (isset($_GET['value_d']) ? trim($_GET['value_d']) : '');
+if (empty($client_origin) && isset($_SERVER['HTTP_ORIGIN'])) {
+    $client_origin = $_SERVER['HTTP_ORIGIN'];
+}
+$valid_origins = [
+    'https://flightcaresbd.com',
+    'https://www.flightcaresbd.com',
+    'https://flightcare.app',
+    'http://localhost:8081',
+    'http://127.0.0.1:8081',
+    'http://localhost:19006'
+];
+if (!in_array($client_origin, $valid_origins)) {
+    if (preg_match('/^http:\/\/localhost(:\d+)?$/', $client_origin) || 
+        preg_match('/^http:\/\/127\.0\.0\.1(:\d+)?$/', $client_origin) ||
+        preg_match('/^https:\/\/([a-z0-9-]+\.)?flightcaresbd\.com$/', $client_origin)) {
+        // Allowed
+    } else {
+        $client_origin = FC_APP_BASE_URL;
+    }
+}
+
 // 1. Direct IPN / Webhook from SSLCommerz Server
 if (!empty($val_id)) {
     // Perform Server-to-Server Validation with SSLCommerz
@@ -59,15 +82,15 @@ if (!empty($val_id)) {
 
 // 2. Redirect User to App with verified parameters
 if ($action === 'success') {
-    $redirect_url = FC_APP_BASE_URL . '/?payment_status=success&bookingId=' . urlencode($tran_id) . '&valId=' . urlencode($val_id);
+    $redirect_url = $client_origin . '/?payment_status=success&bookingId=' . urlencode($tran_id) . '&valId=' . urlencode($val_id) . '&amount=' . urlencode($amount) . '&cardType=' . urlencode($card_type) . '&bankTranId=' . urlencode($bank_tran_id);
     header("Location: $redirect_url");
     exit;
 } elseif ($action === 'fail') {
-    $redirect_url = FC_APP_BASE_URL . '/?payment_status=failed&bookingId=' . urlencode($tran_id);
+    $redirect_url = $client_origin . '/?payment_status=failed&bookingId=' . urlencode($tran_id);
     header("Location: $redirect_url");
     exit;
 } elseif ($action === 'cancel') {
-    $redirect_url = FC_APP_BASE_URL . '/?payment_status=cancelled&bookingId=' . urlencode($tran_id);
+    $redirect_url = $client_origin . '/?payment_status=cancelled&bookingId=' . urlencode($tran_id);
     header("Location: $redirect_url");
     exit;
 }

@@ -24,6 +24,7 @@ $cus_name = trim(isset($data['customerName']) ? $data['customerName'] : 'Flight 
 $cus_email = trim(isset($data['customerEmail']) ? $data['customerEmail'] : 'book@flightcaresbd.com');
 $cus_phone = trim(isset($data['customerPhone']) ? $data['customerPhone'] : '');
 $service_pkg = trim(isset($data['packageName']) ? $data['packageName'] : 'Standard Protocol');
+$client_origin = trim(isset($data['clientOrigin']) ? $data['clientOrigin'] : '');
 
 // Input validation
 if (empty($booking_id) || $amount <= 0 || empty($cus_phone)) {
@@ -33,6 +34,28 @@ if (empty($booking_id) || $amount <= 0 || empty($cus_phone)) {
         'error' => 'Invalid payment payload. Required: bookingId, amount > 0, customerPhone.'
     ]);
     exit;
+}
+
+// Determine client return origin
+if (empty($client_origin) && isset($_SERVER['HTTP_ORIGIN'])) {
+    $client_origin = $_SERVER['HTTP_ORIGIN'];
+}
+$valid_origins = [
+    'https://flightcaresbd.com',
+    'https://www.flightcaresbd.com',
+    'https://flightcare.app',
+    'http://localhost:8081',
+    'http://127.0.0.1:8081',
+    'http://localhost:19006'
+];
+if (!in_array($client_origin, $valid_origins)) {
+    if (preg_match('/^http:\/\/localhost(:\d+)?$/', $client_origin) || 
+        preg_match('/^http:\/\/127\.0\.0\.1(:\d+)?$/', $client_origin) ||
+        preg_match('/^https:\/\/([a-z0-9-]+\.)?flightcaresbd\.com$/', $client_origin)) {
+        // Allowed
+    } else {
+        $client_origin = FC_APP_BASE_URL;
+    }
 }
 
 // Format phone for BD
@@ -70,7 +93,8 @@ $post_data = [
     
     'value_a' => $booking_id,
     'value_b' => $service_pkg,
-    'value_c' => time()
+    'value_c' => time(),
+    'value_d' => $client_origin
 ];
 
 // Perform cURL POST to SSLCommerz
