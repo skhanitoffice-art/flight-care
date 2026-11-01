@@ -123,11 +123,10 @@ export function verifyAuthSecret(input, expectedHash, salt = AUTH_SALT) {
   return inputHash.toLowerCase() === String(expectedHash).toLowerCase();
 }
 
-// Encrypted Credential Stores (XOR Masked + Reverse Base64)
-// SENSITIVE SECRETS HAVE BEEN MIGRATED TO SERVER/CONFIG/SECRETS.PHP
+// Credential Store - All sensitive credentials isolated to environment & server-side
 const VAULT = {
-  // Google Firebase Cloud Production Web Key
-  FIREBASE_API_KEY: 'idxbt9GA1QBHSg2bY4zHDkQBigTOjtRBvMwIjwjY+0DGjkwOgMxG',
+  // Client secrets are strictly injected via build-time EXPO_PUBLIC_* environment variables
+  // or served by protected server endpoints (/api/payment, /api/sms, /api/flights).
 };
 
 /**

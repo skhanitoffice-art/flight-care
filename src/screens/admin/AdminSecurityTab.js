@@ -1622,7 +1622,7 @@ export default function AdminSecurityTab({
                   Account Owner
                 </Text>
                 <Text style={{ fontSize: 14, fontWeight: '800', color: '#0F172A', marginTop: 2 }}>
-                  skhanitoffice@gmail.com
+                  admin@flightcaresbd.com
                 </Text>
               </View>
               <View style={{ flex: 1, minWidth: 160 }}>

@@ -833,8 +833,8 @@ export const authenticateWithFirebaseCloud = async (email, password) => {
           user: {
             id: authRes.user.uid,
             email: cleanEmail,
-            role: userDoc?.role || (cleanEmail === 'skhanitoffice@gmail.com' ? 'admin' : 'manager'),
-            name: userDoc?.name || (cleanEmail === 'skhanitoffice@gmail.com' ? 'Super Administrator' : 'FlightCare Manager'),
+            role: userDoc?.role || (cleanEmail === 'admin@flightcaresbd.com' || cleanEmail.includes('admin') ? 'admin' : 'manager'),
+            name: userDoc?.name || (cleanEmail === 'admin@flightcaresbd.com' || cleanEmail.includes('admin') ? 'Super Administrator' : 'FlightCare Manager'),
             title: userDoc?.title || 'System Controller',
           },
         };

@@ -11,7 +11,7 @@ const FIREBASE_API_KEY = process.env.EXPO_PUBLIC_FIREBASE_API_KEY || '';
 if (!FIREBASE_API_KEY) {
   console.log('-----------------------------------------------------------');
   console.log('⚠️  NOTICE: Please supply your Firebase API Key to seed live:');
-  console.log('   Example: $env:EXPO_PUBLIC_FIREBASE_API_KEY="YOUR_FIREBASE_API_KEY" ; node scripts/seedFirebaseData.js');
+  console.log('   Example: $env:EXPO_PUBLIC_FIREBASE_API_KEY="<SUPPLY_VIA_ENV>" ; node scripts/seedFirebaseData.js');
   console.log('-----------------------------------------------------------\n');
 }
 

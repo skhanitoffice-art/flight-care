@@ -32,10 +32,10 @@ import {
  * Project: FlightCare (flightcare-db2eb)
  */
 export const FIREBASE_CONFIG = {
-  apiKey: getVaultSecret('FIREBASE_API_KEY', 'EXPO_PUBLIC_FIREBASE_API_KEY'),
-  authDomain: "flightcare-db2eb.firebaseapp.com",
-  projectId: "flightcare-db2eb",
-  storageBucket: "flightcare-db2eb.appspot.com",
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || getVaultSecret('FIREBASE_API_KEY', 'EXPO_PUBLIC_FIREBASE_API_KEY'),
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "flightcare-db2eb.firebaseapp.com",
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "flightcare-db2eb",
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "flightcare-db2eb.appspot.com",
   messagingSenderId: "703627497643",
   appId: "1:703627497643:web:700e6121a70a37ae1327ee"
 };

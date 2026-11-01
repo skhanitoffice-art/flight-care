@@ -53,6 +53,9 @@ android/app/src/main/assets/capacitor.config.json
 *.sql
 *.sqlite
 *.dump
+backups/
+admin_docs/
+PROTOCOL_OFFICERS_CREDENTIALS_LIST.md
 
 # 6. Internal Scratch & Debug Logs
 scratch/

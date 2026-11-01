@@ -45,7 +45,7 @@ const INITIAL_SAMPLE_PLACARDS = [
     createdBy: {
       id: 'admin_user',
       name: 'Super Admin',
-      email: 'skhanitoffice@gmail.com',
+      email: 'admin@flightcaresbd.com',
       role: 'admin',
       roleTitle: 'Super Admin',
     },
@@ -224,7 +224,7 @@ export async function savePlacardRecord({
 
     const isManagerRole = managerSession?.user?.role === 'manager';
     const creatorName = managerSession?.user?.name || (isManagerRole ? 'Sonia Akter' : 'Super Admin');
-    const creatorEmail = managerSession?.user?.email || (isManagerRole ? 'sonia.manager@flightcaresbd.com' : 'skhanitoffice@gmail.com');
+    const creatorEmail = managerSession?.user?.email || (isManagerRole ? 'sonia.manager@flightcaresbd.com' : 'admin@flightcaresbd.com');
     const creatorRole = managerSession?.user?.role || (isManagerRole ? 'manager' : 'admin');
     const roleTitle = isManagerRole ? 'Operations Manager' : 'Super Admin';
 

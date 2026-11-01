@@ -2041,7 +2041,7 @@ export default function ManagerPanel({
     const operator = {
       id: managerSession?.user?.id || (isManager ? 'mgr_sohel' : 'admin_user'),
       name: managerSession?.user?.name || (isManager ? 'সোয়েল তানভীর' : 'সুপার এডমিন'),
-      email: managerSession?.user?.email || (isManager ? 'soheltanvir.th@gmail.com' : 'admin@flightcare.com'),
+      email: managerSession?.user?.email || (isManager ? 'manager@flightcaresbd.com' : 'admin@flightcare.com'),
       role: isManager ? 'manager' : (managerSession?.user?.role || 'admin'),
     };
 
@@ -2191,7 +2191,7 @@ export default function ManagerPanel({
     const operator = {
       id: managerSession?.user?.id || (isManager ? 'mgr_sohel' : 'admin_user'),
       name: managerSession?.user?.name || (isManager ? 'সোয়েল তানভীর' : 'সুপার এডমিন'),
-      email: managerSession?.user?.email || (isManager ? 'soheltanvir.th@gmail.com' : 'admin@flightcare.com'),
+      email: managerSession?.user?.email || (isManager ? 'manager@flightcaresbd.com' : 'admin@flightcare.com'),
       role: isManager ? 'manager' : (managerSession?.user?.role || 'admin'),
     };
 
@@ -2494,7 +2494,7 @@ export default function ManagerPanel({
     const operator = {
       id: managerSession?.user?.id || (isManager ? 'mgr_sohel' : 'admin_user'),
       name: managerSession?.user?.name || (isManager ? 'সোয়েল তানভীর' : 'সুপার এডমিন'),
-      email: managerSession?.user?.email || (isManager ? 'soheltanvir.th@gmail.com' : 'admin@flightcare.com'),
+      email: managerSession?.user?.email || (isManager ? 'manager@flightcaresbd.com' : 'admin@flightcare.com'),
       role: isManager ? 'manager' : (managerSession?.user?.role || 'admin'),
     };
 
@@ -2645,7 +2645,7 @@ export default function ManagerPanel({
     const operator = {
       id: managerSession?.user?.id || (isManager ? 'mgr_sohel' : 'admin_user'),
       name: managerSession?.user?.name || (isManager ? 'সোয়েল তানভীর' : 'সুপার এডমিন'),
-      email: managerSession?.user?.email || (isManager ? 'soheltanvir.th@gmail.com' : 'admin@flightcare.com'),
+      email: managerSession?.user?.email || (isManager ? 'manager@flightcaresbd.com' : 'admin@flightcare.com'),
       role: isManager ? 'manager' : (managerSession?.user?.role || 'admin'),
     };
     const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -13044,7 +13044,7 @@ export default function ManagerPanel({
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
                 <Text style={{ fontSize: 11.5, color: '#64748B' }} numberOfLines={1}>
-                  {isAdmin ? '👑 ' : '🛡️ '}{managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'soheltanvir.th@gmail.com')}
+                  {isAdmin ? '👑 ' : '🛡️ '}{managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'manager@flightcaresbd.com')}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#DCFCE7', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 10 }}>
                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#16A34A' }} />
@@ -13087,7 +13087,7 @@ export default function ManagerPanel({
                 </View>
               </View>
               <Text style={{ fontSize: 11, color: isAdmin ? '#B45309' : '#0284C7', fontWeight: '700', marginTop: 2 }}>
-                {isAdmin ? '👑 ' : '🛡️ '}{managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'soheltanvir.th@gmail.com')}
+                {isAdmin ? '👑 ' : '🛡️ '}{managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'manager@flightcaresbd.com')}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
                 <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981' }} />

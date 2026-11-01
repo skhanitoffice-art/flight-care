@@ -436,7 +436,7 @@ export default function AdminManualBookingModal({
       enteredBy: {
         id: managerSession?.user?.id || 'mgr-1',
         name: managerSession?.user?.name || (isAdmin ? 'Super Admin' : 'সোয়েল তানভীর (ম্যানেজার)'),
-        email: managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'soheltanvir.th@gmail.com'),
+        email: managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'manager@flightcaresbd.com'),
         role: managerSession?.user?.role || (isAdmin ? 'admin' : 'manager'),
         time: `${serviceDate}, ${serviceTime}`,
         timestamp: new Date().toISOString(),
@@ -446,10 +446,10 @@ export default function AdminManualBookingModal({
           status: 'confirmed',
           label: isBn ? 'ম্যানুয়াল অফলাইন এন্ট্রি' : 'Manual Offline Entry',
           time: `${serviceDate}, ${serviceTime}`,
-          by: `${managerSession?.user?.name || (isAdmin ? 'Admin' : 'সোয়েল তানভীর')} (${managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'soheltanvir.th@gmail.com')})`,
+          by: `${managerSession?.user?.name || (isAdmin ? 'Admin' : 'সোয়েল তানভীর')} (${managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'manager@flightcaresbd.com')})`,
           note: isBn
-            ? `বুকিং এন্ট্রি করেছেন: ${managerSession?.user?.name || (isAdmin ? 'এডমিন' : 'সোয়েল তানভীর')} (${managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'soheltanvir.th@gmail.com')}) [রসিদ: ${receiptNumber}]`
-            : `Offline manual entry created by: ${managerSession?.user?.name || (isAdmin ? 'Admin' : 'Manager')} (${managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'soheltanvir.th@gmail.com')}) [Receipt: ${receiptNumber}]`,
+            ? `বুকিং এন্ট্রি করেছেন: ${managerSession?.user?.name || (isAdmin ? 'এডমিন' : 'সোয়েল তানভীর')} (${managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'manager@flightcaresbd.com')}) [রসিদ: ${receiptNumber}]`
+            : `Offline manual entry created by: ${managerSession?.user?.name || (isAdmin ? 'Admin' : 'Manager')} (${managerSession?.user?.email || (isAdmin ? 'admin@flightcare.com' : 'manager@flightcaresbd.com')}) [Receipt: ${receiptNumber}]`,
         },
       ],
       created_at: new Date().toISOString(),
