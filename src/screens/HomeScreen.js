@@ -1288,7 +1288,7 @@ export default function HomeScreen({
           </TouchableOpacity>
 
           {/* Validation Alert Banner if inputs incomplete */}
-          {Object.keys(errors).length > 0 && (
+          {Boolean(Object.values(errors).some(msg => typeof msg === 'string' && msg.trim().length > 0)) && (
             <View
               style={{
                 backgroundColor: '#FEF2F2',

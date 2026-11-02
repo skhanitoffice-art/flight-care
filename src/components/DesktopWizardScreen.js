@@ -2108,7 +2108,7 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                 ) : null}
 
                 {/* Validation Summary Alert if errors exist */}
-                {Object.keys(errors).length > 0 && (
+                {Boolean(Object.values(errors).some(msg => typeof msg === 'string' && msg.trim().length > 0)) && (
                   <View
                     style={{
                       backgroundColor: '#FEF2F2',

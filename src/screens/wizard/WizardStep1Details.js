@@ -791,7 +791,7 @@ export default function WizardStep1Details({
           )}
 
           {/* Validation Summary Alert */}
-          {Object.keys(errors).length > 0 && (
+          {Boolean(Object.values(errors).some(msg => typeof msg === 'string' && msg.trim().length > 0)) && (
             <View
               style={{
                 backgroundColor: '#FEF2F2',
@@ -2025,7 +2025,7 @@ export default function WizardStep1Details({
             {lang ? 'পরবর্তী: পেমেন্ট অপশন নির্বাচন' : 'Next: review payment options'}
           </Text>
           {/* Validation Summary Alert */}
-          {Object.keys(errors).length > 0 && (
+          {Boolean(Object.values(errors).some(msg => typeof msg === 'string' && msg.trim().length > 0)) && (
             <View
               style={{
                 backgroundColor: '#FEF2F2',
