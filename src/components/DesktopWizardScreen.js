@@ -2079,23 +2079,23 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                       {lang ? 'আমি ওয়েবসাইটের ' : 'I have read and agree to the website\'s '}
                       <Text
                         style={{ color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}
+                        onPress={() => setComplianceModalTab('refund')}
+                      >
+                        {lang ? 'রিফান্ড নীতিমালা (Return & Refund Policy)' : 'Refund Policy (7-10 Days)'}
+                      </Text>
+                      {lang ? ', ' : ', '}
+                      <Text
+                        style={{ color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}
                         onPress={() => setComplianceModalTab('terms')}
                       >
                         {lang ? 'সেবার শর্তাবলী (Terms & Conditions)' : 'Terms & Conditions'}
                       </Text>
-                      {lang ? ', ' : ', '}
+                      {lang ? ' এবং ' : ', and '}
                       <Text
                         style={{ color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}
                         onPress={() => setComplianceModalTab('privacy')}
                       >
                         {lang ? 'গোপনীয়তা নীতি (Privacy Policy)' : 'Privacy Policy'}
-                      </Text>
-                      {lang ? ' এবং ' : ', and '}
-                      <Text
-                        style={{ color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}
-                        onPress={() => setComplianceModalTab('refund')}
-                      >
-                        {lang ? 'রিফান্ড নীতিমালা (Return & Refund Policy)' : 'Return & Refund Policy'}
                       </Text>
                       {lang ? ' পড়েছি এবং সম্মত আছি।*' : '.*'}
                     </Text>
@@ -2667,6 +2667,12 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                     <Text style={{ fontSize: 11.5, color: '#64748B' }}>
                       {lang ? 'পেমেন্ট সম্পন্ন করার মাধ্যমে আপনি আমাদের ' : 'By proceeding with payment, you agree to: '}
                     </Text>
+                    <TouchableOpacity onPress={() => setComplianceModalTab('refund')}>
+                      <Text style={{ fontSize: 11.5, color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}>
+                        {lang ? 'রিফান্ড পলিসি (৭-১০ দিন)' : 'Refund Policy (7-10 Days)'}
+                      </Text>
+                    </TouchableOpacity>
+                    <Text style={{ fontSize: 11, color: '#94A3B8' }}>•</Text>
                     <TouchableOpacity onPress={() => setComplianceModalTab('terms')}>
                       <Text style={{ fontSize: 11.5, color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}>
                         {lang ? 'শর্তাবলী' : 'Terms'}
@@ -2676,12 +2682,6 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                     <TouchableOpacity onPress={() => setComplianceModalTab('privacy')}>
                       <Text style={{ fontSize: 11.5, color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}>
                         {lang ? 'প্রাইভেসি' : 'Privacy'}
-                      </Text>
-                    </TouchableOpacity>
-                    <Text style={{ fontSize: 11, color: '#94A3B8' }}>•</Text>
-                    <TouchableOpacity onPress={() => setComplianceModalTab('refund')}>
-                      <Text style={{ fontSize: 11.5, color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}>
-                        {lang ? 'রিফান্ড পলিসি (৭-১০ দিন)' : 'Refund Policy (7-10 Days)'}
                       </Text>
                     </TouchableOpacity>
                   </View>

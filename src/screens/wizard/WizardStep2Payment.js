@@ -1011,6 +1011,12 @@ export default function WizardStep2Payment({
               <Text style={{ fontSize: 11.5, color: '#64748B' }}>
                 {isBn ? 'পেমেন্টের মাধ্যমে আপনি সম্মত হচ্ছেন:' : 'By proceeding, you agree to:'}
               </Text>
+              <TouchableOpacity onPress={() => setComplianceTab('refund')}>
+                <Text style={{ fontSize: 11.5, color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}>
+                  {isBn ? 'রিফান্ড পলিসি (৭-১০ দিন)' : 'Refund Policy (7-10 Days)'}
+                </Text>
+              </TouchableOpacity>
+              <Text style={{ fontSize: 11, color: '#94A3B8' }}>•</Text>
               <TouchableOpacity onPress={() => setComplianceTab('terms')}>
                 <Text style={{ fontSize: 11.5, color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}>
                   {isBn ? 'শর্তাবলী' : 'Terms'}
@@ -1020,12 +1026,6 @@ export default function WizardStep2Payment({
               <TouchableOpacity onPress={() => setComplianceTab('privacy')}>
                 <Text style={{ fontSize: 11.5, color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}>
                   {isBn ? 'প্রাইভেসি' : 'Privacy'}
-                </Text>
-              </TouchableOpacity>
-              <Text style={{ fontSize: 11, color: '#94A3B8' }}>•</Text>
-              <TouchableOpacity onPress={() => setComplianceTab('refund')}>
-                <Text style={{ fontSize: 11.5, color: '#0284C7', fontWeight: '800', textDecorationLine: 'underline' }}>
-                  {isBn ? 'রিফান্ড পলিসি (৭-১০ দিন)' : 'Refund Policy (7-10 Days)'}
                 </Text>
               </TouchableOpacity>
             </View>

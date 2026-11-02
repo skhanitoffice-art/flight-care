@@ -694,23 +694,23 @@ export default function WizardStep1Details({
               {lang ? 'আমি ' : 'I agree to the '}
               <Text
                 style={{ color: '#0284C7', textDecorationLine: 'underline', fontWeight: '700' }}
-                onPress={() => (setComplianceModalTab ? setComplianceModalTab('terms') : setShowCancellationPolicy(true))}
+                onPress={() => (setComplianceModalTab ? setComplianceModalTab('refund') : setShowCancellationPolicy(true))}
               >
-                {lang ? 'শর্তাবলী' : 'Terms & Conditions'}
+                {lang ? 'রিফান্ড নীতিমালায় (৭-১০ দিন)' : 'Refund Policy (7-10 Days)'}
               </Text>
               {lang ? ', ' : ', '}
               <Text
                 style={{ color: '#0284C7', textDecorationLine: 'underline', fontWeight: '700' }}
-                onPress={() => (setComplianceModalTab ? setComplianceModalTab('privacy') : null)}
+                onPress={() => (setComplianceModalTab ? setComplianceModalTab('terms') : setShowCancellationPolicy(true))}
               >
-                {lang ? 'প্রাইভেসি' : 'Privacy Policy'}
+                {lang ? 'শর্তাবলী' : 'Terms & Conditions'}
               </Text>
               {lang ? ' ও ' : ' & '}
               <Text
                 style={{ color: '#0284C7', textDecorationLine: 'underline', fontWeight: '700' }}
-                onPress={() => (setComplianceModalTab ? setComplianceModalTab('refund') : setShowCancellationPolicy(true))}
+                onPress={() => (setComplianceModalTab ? setComplianceModalTab('privacy') : null)}
               >
-                {lang ? 'রিফান্ড নীতিমালায় (৭-১০ দিন)' : 'Refund Policy (7-10 Days)'}
+                {lang ? 'প্রাইভেসি পলিসিতে' : 'Privacy Policy'}
               </Text>
               {lang ? ' সম্মত।' : '.'}
             </Text>
@@ -1986,23 +1986,23 @@ export default function WizardStep1Details({
               {lang ? 'আমি ' : 'I agree to the '}
               <Text
                 style={{ color: '#0284C7', textDecorationLine: 'underline', fontWeight: '700' }}
-                onPress={() => (setComplianceModalTab ? setComplianceModalTab('terms') : setShowCancellationPolicy(true))}
+                onPress={() => (setComplianceModalTab ? setComplianceModalTab('refund') : setShowCancellationPolicy(true))}
               >
-                {lang ? 'শর্তাবলী' : 'Terms & Conditions'}
+                {lang ? 'রিফান্ড নীতিমালায় (৭-১০ দিন)' : 'Refund Policy (7-10 Days)'}
               </Text>
               {lang ? ', ' : ', '}
               <Text
                 style={{ color: '#0284C7', textDecorationLine: 'underline', fontWeight: '700' }}
-                onPress={() => (setComplianceModalTab ? setComplianceModalTab('privacy') : null)}
+                onPress={() => (setComplianceModalTab ? setComplianceModalTab('terms') : setShowCancellationPolicy(true))}
               >
-                {lang ? 'প্রাইভেসি' : 'Privacy Policy'}
+                {lang ? 'শর্তাবলী' : 'Terms & Conditions'}
               </Text>
               {lang ? ' ও ' : ' & '}
               <Text
                 style={{ color: '#0284C7', textDecorationLine: 'underline', fontWeight: '700' }}
-                onPress={() => (setComplianceModalTab ? setComplianceModalTab('refund') : setShowCancellationPolicy(true))}
+                onPress={() => (setComplianceModalTab ? setComplianceModalTab('privacy') : null)}
               >
-                {lang ? 'রিফান্ড নীতিমালায় (৭-১০ দিন)' : 'Refund Policy (7-10 Days)'}
+                {lang ? 'প্রাইভেসি পলিসিতে' : 'Privacy Policy'}
               </Text>
               {lang ? ' সম্মত।' : '.'}
             </Text>
