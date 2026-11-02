@@ -29,6 +29,8 @@ import { saveBookingToFirestore } from '../services/firebaseSyncService';
 export default function BookingsScreen({
   bookings = [],
   customerSession,
+  userRole,
+  deviceCreatedBookingIds = [],
   customerPaymentHistory = [],
   customerPaymentsLoading,
   customerPaymentsError,
@@ -98,19 +100,52 @@ export default function BookingsScreen({
   const [ratingSubmittedId, setRatingSubmittedId] = useState({});
   const [cancellationModalBooking, setCancellationModalBooking] = useState(null);
 
-  // Auto-prompt review popup if passenger has a completed service that is unrated
+  // Auto-prompt review popup ONLY for verified passenger who actually booked this service
   useEffect(() => {
+    // Never auto-prompt administrative roles or staff officers
+    if (userRole === 'manager' || userRole === 'super_admin' || userRole === 'staff') {
+      return;
+    }
+
+    const deviceIds = new Set((deviceCreatedBookingIds || []).map(id => String(id).trim().toUpperCase()));
+    const uPhone = String(customerSession?.user?.phone || '').replace(/\D/g, '');
+    const uEmail = String(customerSession?.user?.email || '').trim().toLowerCase();
+    const uId = String(customerSession?.user?.id || customerSession?.user?.uid || '').trim();
+
+    // If visitor has no device-created bookings and no logged in customer identity, DO NOT PROMPT!
+    if (deviceIds.size === 0 && !uPhone && !uEmail && !uId) {
+      return;
+    }
+
     const unrated = (bookings || []).find(b => {
+      if (!b) return false;
+      const bId = String(b.id || b.bookingId || '').trim().toUpperCase();
+      if (!bId || ratingSubmittedId[b.id] || ratingSubmittedId[bId]) return false;
+
+      const isDeviceOwned = deviceIds.has(bId);
+      const bPhone = String(b.passengerPhone || b.phone || b.customer?.phone || '').replace(/\D/g, '');
+      const bEmail = String(b.passengerEmail || b.email || b.customer?.email || '').trim().toLowerCase();
+      const bUid = String(b.customerId || b.userId || '').trim();
+
+      const isUserOwned = Boolean(
+        isDeviceOwned ||
+        (uPhone && bPhone && (bPhone.endsWith(uPhone) || uPhone.endsWith(bPhone))) ||
+        (uEmail && bEmail && bEmail === uEmail) ||
+        (uId && bUid && bUid === uId)
+      );
+      if (!isUserOwned) return false;
+
       const isCompleted = b.status === 'completed' || isBookingCompleted(b, bookingWorkflow);
-      return isCompleted && !b.customerRating && !ratingSubmittedId[b.id];
+      return isCompleted && !b.customerRating;
     });
+
     if (unrated && !ratingModalBooking) {
       const t = setTimeout(() => {
         setRatingModalBooking(unrated);
       }, 700);
       return () => clearTimeout(t);
     }
-  }, [bookings, ratingSubmittedId, ratingModalBooking, bookingWorkflow]);
+  }, [bookings, ratingSubmittedId, ratingModalBooking, bookingWorkflow, userRole, deviceCreatedBookingIds, customerSession]);
 
   const localPayments = bookings
     .filter(
