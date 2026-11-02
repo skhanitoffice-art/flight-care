@@ -1317,40 +1317,43 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                   </View>
                 </View>
 
-                {/* Airport & Service Direction Row (EditText inputs) */}
+                {/* Airport & Service Direction Row (Fixed / Read-only) */}
                 <View style={{ flexDirection: 'row', gap: 14, marginBottom: 16 }}>
                   {/* Airport */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginBottom: 6 }}>
-                      {lang ? 'বিমানবন্দর *' : 'Airport *'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155' }}>
+                        {lang ? 'বিমানবন্দর *' : 'Airport *'}
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                        <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
+                      </View>
+                    </View>
                     <View
                       style={{
                         height: 46,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: '#F8FAFC',
                         borderWidth: 1.5,
-                        borderColor: '#CBD5E1',
+                        borderColor: '#E2E8F0',
                         borderRadius: 10,
                         paddingHorizontal: 12,
                         gap: 8,
                       }}
                     >
                       <LocationPinIcon size={18} color="#0284C7" />
-                      <TextInput
+                      <Text
                         style={{
                           flex: 1,
                           fontSize: 14,
-                          fontWeight: '600',
+                          fontWeight: '700',
                           color: '#0F172A',
-                          outlineStyle: 'none',
                         }}
-                        value={wiz.airportName !== undefined ? wiz.airportName : (lang ? 'হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দর, ঢাকা (DAC)' : 'Hazrat Shahjalal International Airport, Dhaka (DAC)')}
-                        onChangeText={v => setWiz(c => ({ ...c, airportName: v }))}
-                        placeholder={lang ? 'বিমানবন্দরের নাম লিখুন' : 'Enter airport name'}
-                        placeholderTextColor="#94A3B8"
-                      />
+                        numberOfLines={1}
+                      >
+                        {wiz.airportName || (lang ? 'হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দর, ঢাকা (DAC)' : 'Hazrat Shahjalal International Airport, Dhaka (DAC)')}
+                      </Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 5 }}>
                       <Text style={{ fontSize: 11, color: '#059669', fontWeight: '700' }}>
@@ -1361,61 +1364,63 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
 
                   {/* Service Direction */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginBottom: 6 }}>
-                      {lang ? 'সেবার ধরন (ডিরেকশন) *' : 'Service direction *'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155' }}>
+                        {lang ? 'সেবার ধরন (ডিরেকশন) *' : 'Service direction *'}
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                        <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
+                      </View>
+                    </View>
                     <View
                       style={{
                         height: 46,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: '#F8FAFC',
                         borderWidth: 1.5,
-                        borderColor: '#CBD5E1',
+                        borderColor: '#E2E8F0',
                         borderRadius: 10,
                         paddingHorizontal: 12,
                         gap: 8,
                       }}
                     >
                       {isDep ? <DepartureIcon size={18} /> : <ArrivalIcon size={18} />}
-                      <TextInput
+                      <Text
                         style={{
                           flex: 1,
                           fontSize: 14,
-                          fontWeight: '600',
+                          fontWeight: '700',
                           color: '#0F172A',
-                          outlineStyle: 'none',
                         }}
-                        value={wiz.serviceDirectionText !== undefined ? wiz.serviceDirectionText : (isDep ? (lang ? 'প্রস্থান প্রোটোকল (Departure)' : 'Departure Protocol') : (lang ? 'আগমন প্রোটোকল (Arrival)' : 'Arrival Protocol'))}
-                        onChangeText={v => {
-                          setWiz(c => ({
-                            ...c,
-                            serviceDirectionText: v,
-                            dir: v.toLowerCase().includes('dep') || v.includes('প্রস্থান') ? 'dep' : 'arr',
-                          }));
-                        }}
-                        placeholder={lang ? 'আগমন বা প্রস্থান প্রোটোকল লিখুন' : 'Arrival or Departure Protocol'}
-                        placeholderTextColor="#94A3B8"
-                      />
+                        numberOfLines={1}
+                      >
+                        {wiz.serviceDirectionText || (isDep ? (lang ? 'প্রস্থান প্রোটোকল (Departure)' : 'Departure Protocol') : (lang ? 'আগমন প্রোটোকল (Arrival)' : 'Arrival Protocol'))}
+                      </Text>
                     </View>
                   </View>
                 </View>
 
                 {/* Package & Passengers Row (EditText inputs) */}
                 <View style={{ flexDirection: 'row', gap: 14, marginBottom: 16 }}>
-                  {/* Package */}
+                  {/* Package (Fixed / Read-only) */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginBottom: 6 }}>
-                      {lang ? 'প্যাকেজ *' : 'Package *'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155' }}>
+                        {lang ? 'প্যাকেজ *' : 'Package *'}
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                        <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
+                      </View>
+                    </View>
                     <View
                       style={{
                         height: 46,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: '#F8FAFC',
                         borderWidth: 1.5,
-                        borderColor: '#CBD5E1',
+                        borderColor: '#E2E8F0',
                         borderRadius: 10,
                         paddingHorizontal: 12,
                         gap: 8,
@@ -1435,24 +1440,19 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                           <PremiumPkgIcon size={20} color="#2563EB" />
                         )}
                       </View>
-                      <TextInput
+                      <Text
                         style={{
                           flex: 1,
                           fontSize: 14,
-                          fontWeight: '600',
+                          fontWeight: '700',
                           color: '#0F172A',
-                          outlineStyle: 'none',
                         }}
-                        value={
-                          wiz.onlyAddons
-                            ? (lang ? 'শুধুমাত্র অতিরিক্ত সার্ভিস (ফি: ৳০)' : 'Only Additional Services (Fee: ৳0)')
-                            : (wiz.packageText !== undefined ? wiz.packageText : (wiz.pkg?.n ? wiz.pkg.n[lang ? 1 : 0] : (wiz.pkg?.t || (lang ? 'প্রিমিয়াম (১০০০৳)' : 'Premium (1000 Tk)'))))
-                        }
-                        editable={!wiz.onlyAddons}
-                        onChangeText={v => setWiz(c => ({ ...c, packageText: v }))}
-                        placeholder={lang ? 'প্যাকেজের নাম লিখুন' : 'Enter package name'}
-                        placeholderTextColor="#94A3B8"
-                      />
+                        numberOfLines={1}
+                      >
+                        {wiz.onlyAddons
+                          ? (lang ? 'শুধুমাত্র অতিরিক্ত সার্ভিস (ফি: ৳০)' : 'Only Additional Services (Fee: ৳0)')
+                          : (wiz.packageText || (wiz.pkg?.n ? wiz.pkg.n[lang ? 1 : 0] : (wiz.pkg?.t || (lang ? 'প্রিমিয়াম (১০০০৳)' : 'Premium (1000 Tk)'))))}
+                      </Text>
                     </View>
                   </View>
 
@@ -1510,83 +1510,45 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                   </View>
                 </View>
 
-                {/* Flight Number & Service Date Row (EditText inputs) */}
+                {/* Flight Number & Service Date Row (Fixed / Read-only) */}
                 <View style={{ flexDirection: 'row', gap: 14, marginBottom: 16 }}>
                   {/* Flight Number */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginBottom: 6 }}>
-                      {lang ? 'ফ্লাইট নম্বর *' : 'Flight number *'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155' }}>
+                        {lang ? 'ফ্লাইট নম্বর *' : 'Flight number *'}
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                        <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
+                      </View>
+                    </View>
                     <View
                       style={{
                         height: 46,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: errors.flightNumber ? '#FEF2F2' : '#FFFFFF',
+                        backgroundColor: '#F8FAFC',
                         borderWidth: 1.5,
-                        borderColor: errors.flightNumber
-                          ? '#EF4444'
-                          : ((wiz.fno || '').trim() && isValidFlightNumber(wiz.fno) ? '#10B981' : '#CBD5E1'),
+                        borderColor: ((wiz.fno || '').trim() && isValidFlightNumber(wiz.fno) ? '#10B981' : '#E2E8F0'),
                         borderRadius: 10,
                         paddingHorizontal: 12,
                         gap: 8,
                       }}
                     >
-                      <PlaneIcon size={18} color={errors.flightNumber ? '#EF4444' : '#64748B'} />
-                      <TextInput
+                      <PlaneIcon size={18} color="#0284C7" />
+                      <Text
                         style={{
                           flex: 1,
-                          fontSize: 14,
-                          fontWeight: '700',
+                          fontSize: 15,
+                          fontWeight: '800',
                           color: '#0F172A',
-                          outlineStyle: 'none',
                         }}
-                        value={wiz.fno || ''}
-                        onChangeText={v => {
-                          const upper = (v || '').toUpperCase();
-                          setWiz(c => ({ ...c, fno: upper }));
-                          if (upper.trim()) {
-                            if (isValidFlightNumber(upper)) {
-                              setErrors(e => ({ ...e, flightNumber: null }));
-                            } else if (errors.flightNumber || upper.trim().length >= 3) {
-                              setErrors(e => ({
-                                ...e,
-                                flightNumber: lang
-                                  ? 'সঠিক ফ্লাইট নম্বর ফরম্যাট দিন (যেমন: BG-084, EK-582, BS-101)'
-                                  : 'Invalid flight number format (e.g. BG-084, EK-582, BS-101)',
-                              }));
-                            }
-                          } else {
-                            setErrors(e => ({ ...e, flightNumber: null }));
-                          }
-                        }}
-                        onBlur={() => {
-                          const formatted = formatFlightNumber(wiz.fno);
-                          if (formatted && formatted !== wiz.fno) {
-                            setWiz(c => ({ ...c, fno: formatted }));
-                          }
-                          const checkFno = (formatted || wiz.fno || '').trim();
-                          if (checkFno && !isValidFlightNumber(checkFno)) {
-                            setErrors(e => ({
-                              ...e,
-                              flightNumber: lang
-                                ? 'সঠিক আন্তর্জাতিক ফ্লাইট নম্বর দিন (যেমন: BG-084, EK-582, QR-638, SV-804)'
-                                : 'Invalid flight number. Use standard airline code + number (e.g. BG-084, EK-582, QR-638, SV-804)',
-                            }));
-                          } else {
-                            setErrors(e => ({ ...e, flightNumber: null }));
-                          }
-                        }}
-                        placeholder={lang ? 'যেমন: BG-084, EK-582, QR-638' : 'e.g. BG-084, EK-582, QR-638'}
-                        placeholderTextColor="#94A3B8"
-                        autoCapitalize="characters"
-                      />
-                    </View>
-                    {errors.flightNumber ? (
-                      <Text style={{ color: '#EF4444', fontSize: 11, marginTop: 4, fontWeight: '700' }}>
-                        ⚠️ {errors.flightNumber}
+                        numberOfLines={1}
+                      >
+                        {wiz.fno || '—'}
                       </Text>
-                    ) : (wiz.fno || '').trim() && isValidFlightNumber(wiz.fno) ? (
+                    </View>
+                    {(wiz.fno || '').trim() && isValidFlightNumber(wiz.fno) ? (
                       (() => {
                         const flightInfo = getLiveFlightStatus(wiz.fno, isDep ? 'dep' : 'arr');
                         return (
@@ -1619,86 +1581,47 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                         );
                       })()
                     ) : null}
-
-                    {/* Popular Flight Suggestion Chips */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                      <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '600' }}>
-                        {lang ? 'জনপ্রিয়:' : 'Popular:'}
-                      </Text>
-                      {(isDep
-                        ? ['BG-085', 'EK-583', 'QR-639', 'SQ-447', 'BS-315', 'SV-805']
-                        : ['BG-084', 'EK-582', 'QR-638', 'SQ-446', 'BS-314', 'SV-804']
-                      ).map(fn => (
-                        <TouchableOpacity
-                          key={fn}
-                          activeOpacity={0.7}
-                          onPress={() => {
-                            const fi = getLiveFlightStatus(fn, isDep ? 'dep' : 'arr');
-                            setWiz(c => ({
-                              ...c,
-                              fno: fn,
-                              terminal: fi?.terminal || 'Terminal 1',
-                              airline: fi?.airline,
-                            }));
-                            setErrors(e => ({ ...e, flightNumber: null }));
-                          }}
-                          style={{
-                            backgroundColor: wiz.fno === fn ? '#E0F2FE' : '#F1F5F9',
-                            borderWidth: 1,
-                            borderColor: wiz.fno === fn ? '#0284C7' : '#E2E8F0',
-                            borderRadius: 6,
-                            paddingHorizontal: 7,
-                            paddingVertical: 2,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <Text style={{ fontSize: 11, fontWeight: '700', color: wiz.fno === fn ? '#0284C7' : '#475569' }}>
-                            {fn}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
                   </View>
 
-                  {/* Service Date (Date Picker) */}
+                  {/* Service Date */}
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                       <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155' }}>
                         {lang ? 'সেবার তারিখ *' : 'Service date *'}
                       </Text>
-                      <View style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, borderWidth: 1, borderColor: '#BAE6FD' }}>
-                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#0369A1' }}>🇧🇩 BST (GMT+6)</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, borderWidth: 1, borderColor: '#BAE6FD' }}>
+                          <Text style={{ fontSize: 10, fontWeight: '800', color: '#0369A1' }}>🇧🇩 BST (GMT+6)</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                          <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
+                        </View>
                       </View>
                     </View>
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      onPress={() => setShowDateModal(true)}
+                    <View
                       style={{
                         height: 46,
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        backgroundColor: errors.serviceDate ? '#FEF2F2' : '#FFFFFF',
+                        backgroundColor: '#F8FAFC',
                         borderWidth: 1.5,
-                        borderColor: errors.serviceDate
-                          ? '#EF4444'
-                          : ((wiz.date || '').trim() && isValidFlightDate(wiz.date) ? '#10B981' : '#CBD5E1'),
+                        borderColor: ((wiz.date || '').trim() && isValidFlightDate(wiz.date) ? '#10B981' : '#E2E8F0'),
                         borderRadius: 10,
                         paddingHorizontal: 12,
-                        cursor: 'pointer',
                       }}
                     >
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
                         <CalendarIcon size={18} color="#0284C7" />
                         <Text
                           style={{
-                            fontSize: 14,
-                            fontWeight: wiz.date ? '700' : '500',
-                            color: wiz.date ? '#0F172A' : '#94A3B8',
+                            fontSize: 15,
+                            fontWeight: '800',
+                            color: '#0F172A',
                           }}
                           numberOfLines={1}
                         >
-                          {wiz.date || (lang ? 'তারিখ নির্বাচন করুন' : 'Select service date')}
+                          {wiz.date || (lang ? 'তারিখ নির্ধারিত নেই' : 'No date specified')}
                         </Text>
                       </View>
                       <View
@@ -1713,53 +1636,8 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                       >
                         <Text style={{ fontSize: 13 }}>📅</Text>
                       </View>
-                    </TouchableOpacity>
-
-                    {/* Quick Date Chips (Bangladesh Standard Time BST / GMT+6) */}
-                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 7 }}>
-                      {[
-                        { labelEn: 'Today', labelBn: 'আজ', offset: 0 },
-                        { labelEn: 'Tomorrow', labelBn: 'আগামীকাল', offset: 1 },
-                        { labelEn: '+2 Days', labelBn: '+২ দিন', offset: 2 },
-                      ].map(chip => {
-                        const targetDate = getBangladeshDateString(chip.offset);
-                        const isSelected = wiz.date === targetDate;
-                        return (
-                          <TouchableOpacity
-                            key={chip.offset}
-                            activeOpacity={0.7}
-                            onPress={() => {
-                              setWiz(c => ({ ...c, date: targetDate }));
-                              if (errors.serviceDate) setErrors(e => ({ ...e, serviceDate: null }));
-                            }}
-                            style={{
-                              paddingHorizontal: 10,
-                              paddingVertical: 4,
-                              borderRadius: 6,
-                              backgroundColor: isSelected ? '#0284C7' : '#F1F5F9',
-                              borderWidth: 1,
-                              borderColor: isSelected ? '#0284C7' : '#CBD5E1',
-                            }}
-                          >
-                            <Text
-                              style={{
-                                fontSize: 11,
-                                fontWeight: '700',
-                                color: isSelected ? '#FFFFFF' : '#475569',
-                              }}
-                            >
-                              {lang ? chip.labelBn : chip.labelEn}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
                     </View>
-
-                    {errors.serviceDate ? (
-                      <Text style={{ color: '#EF4444', fontSize: 11, marginTop: 4, fontWeight: '700' }}>
-                        ⚠️ {errors.serviceDate}
-                      </Text>
-                    ) : (wiz.date || '').trim() && isValidFlightDate(wiz.date) ? (
+                    {(wiz.date || '').trim() && isValidFlightDate(wiz.date) ? (
                       <Text style={{ color: '#059669', fontSize: 11, marginTop: 4, fontWeight: '700' }}>
                         ✓ {lang ? 'বৈধ তারিখ (বাংলাদেশ সময় BST)' : 'Valid date (BST GMT+6)'}
                       </Text>
