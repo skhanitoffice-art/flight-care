@@ -994,7 +994,7 @@ export default function WizardStep2Payment({
             >
               {isBn
                 ? '“আমি নিশ্চিত ও সম্মতি প্রদান করছি যে আমার/যাত্রীর লাগেজে কোনো নিষিদ্ধ পণ্য যেমন: দেশী-বিদেশী মুদ্রা, অলংকার, জীবিত প্রাণী, মাদকদ্রব্য, গোলাবারুদ বা কোনো প্রকার বেআইনি/বিপজ্জনক দ্রব্য নেই।”'
-                : '“I confirm and consent that the passenger luggage contains no prohibited items such as currency, live animals, jewelry, weapons, narcotics, hazardous materials, or illegal goods.”'}
+                : '“I confirm and consent that my luggage contains no prohibited items such as currency, live animals, jewelry, weapons, narcotics, hazardous materials, or illegal goods.”'}
             </Text>
 
             <TouchableOpacity

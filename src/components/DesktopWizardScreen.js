@@ -572,7 +572,7 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
         lang ? 'লাগেজ ঘোষণা বাধ্যতামূলক' : 'Baggage Declaration Required',
         lang
           ? 'বুকিং বা পেমেন্ট সম্পন্ন করতে অবশ্যই লাগেজ ও নিষিদ্ধ সামগ্রী সংক্রান্ত ঘোষণায় টিক চিহ্ন দিয়ে সম্মতি প্রদান করুন।'
-          : 'Please confirm and consent that the passenger luggage contains no prohibited items before proceeding.'
+          : 'Please confirm and consent that your luggage contains no prohibited items before proceeding.'
       );
       return;
     }
@@ -2638,7 +2638,7 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                       >
                         {lang
                           ? '“আমি নিশ্চিত ও সম্মতি প্রদান করছি যে আমার/যাত্রীর লাগেজে কোনো নিষিদ্ধ পণ্য যেমন: দেশী-বিদেশী মুদ্রা, অলংকার, জীবিত প্রাণী, মাদকদ্রব্য, গোলাবারুদ বা কোনো প্রকার বেআইনি/বিপজ্জনক দ্রব্য নেই।”'
-                          : '“I confirm and consent that the passenger luggage contains no prohibited items such as currency, live animals, jewelry, weapons, narcotics, hazardous materials, or illegal goods.”'}
+                          : '“I confirm and consent that my luggage contains no prohibited items such as currency, live animals, jewelry, weapons, narcotics, hazardous materials, or illegal goods.”'}
                       </Text>
 
                       <TouchableOpacity
