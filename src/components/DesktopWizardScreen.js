@@ -330,6 +330,17 @@ export default function DesktopWizardScreen({
     handoverOtp,
   };
 
+  // Auto-dispatch Support Office WhatsApp Alert (+8801347570001) on Step 3 confirmation
+  useEffect(() => {
+    if (step === 3 && currentBooking && (currentBooking.id || bookingCode)) {
+      dispatchSupportOfficeWhatsAppAlert({
+        ...currentBooking,
+        id: bookingCode,
+        amount: totalAmount,
+      }).catch(err => console.warn('[Desktop Support Alert] Error:', err));
+    }
+  }, [step, bookingCode]);
+
   const handleShareWhatsApp = () => {
     const sDir = isDep
       ? (lang ? 'প্রস্থান (Departure)' : 'Departure')

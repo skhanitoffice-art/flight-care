@@ -1519,6 +1519,11 @@ export default function App() {
                 lang,
               }).catch(smsErr => console.warn('[Payment SMS] SSLCOMMERZ return error:', smsErr));
 
+              dispatchSupportOfficeWhatsAppAlert({
+                ...confirmedBooking,
+                amount: verifiedAmount,
+              }).catch(() => {});
+
               dispatchMultiChannelNotification({
                 eventType: COMMUNICATION_EVENTS.PAYMENT_SUCCESS,
                 booking: confirmedBooking,
@@ -4279,6 +4284,12 @@ export default function App() {
         method: wallet || 'banglaqr',
         lang,
       }).catch(err => console.warn('[Payment SMS] Bangla QR error:', err));
+
+      dispatchSupportOfficeWhatsAppAlert({
+        ...activeBkashBooking,
+        ...paidBookingUpdates,
+        amount: expectedAmount,
+      }).catch(() => {});
     }
 
     await dispatchMultiChannelNotification({
@@ -4380,6 +4391,12 @@ export default function App() {
         method: isDirectBank ? 'bank_transfer' : 'card',
         lang,
       }).catch(err => console.warn('[Payment SMS] Card error:', err));
+
+      dispatchSupportOfficeWhatsAppAlert({
+        ...activeCardBooking,
+        ...paidBookingUpdates,
+        amount: expectedAmount,
+      }).catch(() => {});
     }
 
     await dispatchMultiChannelNotification({

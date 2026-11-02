@@ -53,22 +53,34 @@ export default function WizardStep3Confirmation({
 
   // Auto-dispatch booking alert to Support Office (+8801347570001) and Passenger Payment SMS
   useEffect(() => {
-    if (currentBooking && (currentBooking.id || bookingCode)) {
-      dispatchSupportOfficeWhatsAppAlert({
-        ...currentBooking,
-        id: bookingCode,
-        amount: totalAmount,
-      }).catch(() => {});
+    const bookingPayload = {
+      ...wiz,
+      id: bookingCode,
+      name: passengerName,
+      passengerName,
+      phone: wiz.passengerPhone || wiz.phone || '',
+      passengerPhone: wiz.passengerPhone || wiz.phone || '',
+      amount: totalAmount,
+      date: serviceDate,
+      time: wiz.time || wiz.flightTime || '12:00 PM',
+      fno: flightNumber,
+      service: packageName,
+      airport,
+      paymentStatus: isPayAfter ? 'pay_after_service' : 'paid',
+    };
 
-      if (!isPayAfter) {
-        sendPaymentConfirmationSms({
-          booking: currentBooking,
-          amount: totalAmount,
-          trxId: wiz.trxId,
-          method: wiz.paidMethod,
-          lang,
-        }).catch(() => {});
-      }
+    dispatchSupportOfficeWhatsAppAlert(bookingPayload).catch(err => {
+      console.warn('[WhatsApp Alert] Error dispatching to 01347-570001:', err);
+    });
+
+    if (!isPayAfter) {
+      sendPaymentConfirmationSms({
+        booking: bookingPayload,
+        amount: totalAmount,
+        trxId: wiz.trxId,
+        method: wiz.paidMethod,
+        lang,
+      }).catch(() => {});
     }
   }, [bookingCode]);
 
