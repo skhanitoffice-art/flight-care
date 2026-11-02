@@ -21,7 +21,8 @@ import {
 import LiveTrackingModal from '../../components/LiveTrackingModal';
 import BookingInvoiceModal from '../../components/BookingInvoiceModal';
 import VipPlacardModal from '../../components/VipPlacardModal';
-import { getCalendarEventData } from '../../utils/helpers';
+import { getCalendarEventData, calculateBookingPricing } from '../../utils/helpers';
+import { ADDONS } from '../../constants/data';
 import {
   openSupportOfficeWhatsApp,
   dispatchSupportOfficeWhatsAppAlert,
@@ -195,6 +196,156 @@ https://flightcare.app/track/${bookingCode}
   };
 
   // Calendar Integration Helpers
+  // Exact Order & Payment Confirmation Timestamp (BST)
+  const confirmationTimestamp = wiz.paidAt || wiz.confirmedAt || wiz.createdAt || currentBooking.paidAt || currentBooking.timestamp || new Date().toISOString();
+  const confirmDateObj = new Date(confirmationTimestamp);
+  const isValidDate = !isNaN(confirmDateObj.getTime());
+  const finalDateObj = isValidDate ? confirmDateObj : new Date();
+
+  const formattedConfirmDate = finalDateObj.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
+    day: 'numeric',
+    month: isBn ? 'long' : 'short',
+    year: 'numeric',
+  });
+  const formattedConfirmTime = finalDateObj.toLocaleTimeString(isBn ? 'bn-BD' : 'en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+  const confirmationDateTimeString = `${formattedConfirmDate}, ${formattedConfirmTime} BST`;
+
+  // Itemized Pricing Calculation for Confirmation Screen
+  const pricing = currentBooking.pricingBreakdown || calculateBookingPricing(currentBooking, ADDONS);
+  const adultsCount = Number(currentBooking.a >= 0 ? currentBooking.a : (currentBooking.passengers?.adults ?? (typeof currentBooking.passengers === 'number' ? currentBooking.passengers : 1)));
+  const childrenCount = Number(currentBooking.c >= 0 ? currentBooking.c : (currentBooking.passengers?.children ?? 0));
+  const elderlyCount = Number(currentBooking.e >= 0 ? currentBooking.e : (currentBooking.passengers?.elderly ?? 0));
+  const paxTotalCount = Math.max(1, adultsCount + childrenCount + elderlyCount);
+
+  const step3BillItems = [];
+  if (!wiz.onlyAddons) {
+    const pkgBasePrice = pricing?.basePrice != null ? pricing.basePrice : (
+      wiz.packageChoice === 'first' ? 1500 : (wiz.packageChoice === 'business' ? 1000 : 500)
+    );
+    if (adultsCount > 0) {
+      step3BillItems.push({
+        id: 'adults',
+        name: `${packageName} - ${isBn ? 'প্রাপ্তবয়স্ক' : 'Adult'}`,
+        qty: adultsCount,
+        rate: pkgBasePrice,
+        amount: adultsCount * pkgBasePrice,
+      });
+    }
+    if (childrenCount > 0) {
+      const childRate = Math.round(pkgBasePrice * 0.8);
+      step3BillItems.push({
+        id: 'children',
+        name: `${packageName} - ${isBn ? 'শিশু' : 'Child'}`,
+        qty: childrenCount,
+        rate: childRate,
+        amount: childrenCount * childRate,
+      });
+    }
+    if (elderlyCount > 0) {
+      const elderlyRate = Math.round(pkgBasePrice * 0.9);
+      step3BillItems.push({
+        id: 'elderly',
+        name: `${packageName} - ${isBn ? 'প্রবীণ' : 'Senior'}`,
+        qty: elderlyCount,
+        rate: elderlyRate,
+        amount: elderlyCount * elderlyRate,
+      });
+    }
+    if (step3BillItems.length === 0) {
+      step3BillItems.push({
+        id: 'pkg',
+        name: packageName,
+        qty: paxTotalCount,
+        rate: pkgBasePrice,
+        amount: paxTotalCount * pkgBasePrice,
+      });
+    }
+    const groupDiscountAmount = pricing?.groupDiscountAmount || 0;
+    if (groupDiscountAmount > 0) {
+      step3BillItems.push({
+        id: 'group_disc',
+        name: isBn ? `গ্রুপ ভলিউম ছাড় (${pricing?.groupDiscountPercent || 10}%)` : `Group Discount (${pricing?.groupDiscountPercent || 10}%)`,
+        qty: 1,
+        rate: -groupDiscountAmount,
+        amount: -groupDiscountAmount,
+        isDiscount: true,
+      });
+    }
+  }
+
+  // Addons
+  if (pricing?.addonLines && pricing.addonLines.length > 0) {
+    pricing.addonLines.forEach(line => {
+      const isQuote = line.amount == null;
+      const lineName = Array.isArray(line.name) ? line.name[isBn ? 1 : 0] : (line.name || line.id);
+      step3BillItems.push({
+        id: line.id,
+        name: lineName,
+        qty: line.quantity || 1,
+        rate: isQuote ? null : line.unitPrice,
+        amount: isQuote ? null : line.amount,
+        isQuote,
+      });
+    });
+  } else if (Array.isArray(wiz.addons) && wiz.addons.length > 0) {
+    wiz.addons.forEach(id => {
+      const catItem = ADDONS.find(a => a.id === id);
+      const title = catItem ? (catItem.n ? catItem.n[isBn ? 1 : 0] : catItem.titleBn || id) : id;
+      const isQuote = catItem?.priceUnit === 'quote' || catItem?.p == null;
+      step3BillItems.push({
+        id,
+        name: title,
+        qty: 1,
+        rate: isQuote ? null : catItem?.p,
+        amount: isQuote ? null : catItem?.p,
+        isQuote,
+      });
+    });
+  }
+
+  if (pricing?.isDedicatedStaff && pricing?.dedicatedStaffCharge > 0) {
+    step3BillItems.push({
+      id: 'staff',
+      name: isBn ? 'ডেডিকেটেড ভিআইপি প্রোটোকল কর্মকর্তা' : 'Dedicated VIP Officer',
+      qty: 1,
+      rate: pricing.dedicatedStaffRate || 800,
+      amount: pricing.dedicatedStaffCharge,
+    });
+  }
+
+  const step3Discount = pricing?.discountAmount || (wiz.discount?.amount ? Number(wiz.discount.amount) : 0);
+  if (step3Discount > 0) {
+    step3BillItems.push({
+      id: 'discount',
+      name: isBn ? `প্রোমো কোড ছাড় (${wiz.discount?.code || 'PROMO'})` : `Promo Discount`,
+      qty: 1,
+      rate: -step3Discount,
+      amount: -step3Discount,
+      isDiscount: true,
+    });
+  }
+
+  const step3RewardPts = Number(wiz.rewardPointsUsed) || 0;
+  const step3RewardDisc = step3RewardPts > 0 ? Math.round(step3RewardPts / 10) : 0;
+  if (step3RewardDisc > 0) {
+    step3BillItems.push({
+      id: 'reward',
+      name: isBn ? `রিওয়ার্ড পয়েন্ট (${step3RewardPts} পয়েন্ট)` : `Reward Points`,
+      qty: 1,
+      rate: -step3RewardDisc,
+      amount: -step3RewardDisc,
+      isDiscount: true,
+    });
+  }
+
+  const step3Subtotal = step3BillItems.reduce((acc, item) => (!item.isDiscount && item.amount > 0 ? acc + item.amount : acc), 0);
+  const step3TotalDiscounts = step3BillItems.reduce((acc, item) => (item.isDiscount && item.amount < 0 ? acc + Math.abs(item.amount) : acc), 0);
+
   const calendarData = getCalendarEventData(currentBooking, isBn);
 
   const handleOpenGoogleCalendar = () => {
@@ -310,6 +461,9 @@ https://flightcare.app/track/${bookingCode}
             <Text style={{ fontSize: 18, fontWeight: '900', color: '#0284C7', marginTop: 2 }}>
               #{bookingCode}
             </Text>
+            <Text style={{ fontSize: 11, fontWeight: '800', color: '#059669', marginTop: 2 }}>
+              🕒 {confirmationDateTimeString}
+            </Text>
           </View>
 
           {/* 1-Tap Copy ID Button */}
@@ -419,6 +573,96 @@ https://flightcare.app/track/${bookingCode}
               </Text>
             </View>
           ) : null}
+
+          {/* Detailed Itemized Charges Breakdown Card */}
+          <View
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 12,
+              padding: 12,
+              borderWidth: 1,
+              borderColor: '#E2E8F0',
+              marginTop: 4,
+            }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#334155' }}>
+                📑 {isBn ? 'টাকার বিস্তারিত হিসাব (কর্তন বিবরণী):' : 'Itemized Charges Breakdown:'}
+              </Text>
+              <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '600' }}>
+                {step3BillItems.length} {isBn ? 'টি আইটেম' : 'Items'}
+              </Text>
+            </View>
+
+            {step3BillItems.map((item, idx) => (
+              <View
+                key={item.id || idx}
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  paddingVertical: 5,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#F8FAFC',
+                }}
+              >
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#1E293B' }}>
+                    {item.name}
+                  </Text>
+                  <Text style={{ fontSize: 10.5, color: '#64748B' }}>
+                    {isBn ? 'পরিমাণ:' : 'Qty:'} {item.qty} {item.rate != null ? `× ৳${Math.abs(item.rate)}` : ''}
+                  </Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  {item.isQuote ? (
+                    <Text style={{ fontSize: 10.5, color: '#B45309', fontWeight: '700' }}>
+                      {isBn ? 'কোটেশন প্রযোজ্য' : 'Quote Req.'}
+                    </Text>
+                  ) : (
+                    <Text
+                      style={{
+                        fontSize: 12.5,
+                        fontWeight: '800',
+                        color: item.isDiscount ? '#DC2626' : '#0F172A',
+                      }}
+                    >
+                      {item.isDiscount ? `-৳${Math.abs(item.amount)}` : `৳${item.amount}`}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            ))}
+
+            <View style={{ marginTop: 8, paddingTop: 6, borderTopWidth: 1.5, borderTopColor: '#CBD5E1', gap: 3 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 11.5, color: '#64748B', fontWeight: '600' }}>
+                  {isBn ? 'উপ-মোট ফি:' : 'Subtotal:'}
+                </Text>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: '#1E293B' }}>
+                  ৳{step3Subtotal}
+                </Text>
+              </View>
+              {step3TotalDiscounts > 0 && (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 11.5, color: '#DC2626', fontWeight: '700' }}>
+                    {isBn ? 'মোট ছাড়:' : 'Discounts:'}
+                  </Text>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#DC2626' }}>
+                    -৳{step3TotalDiscounts}
+                  </Text>
+                </View>
+              )}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#E2E8F0', paddingTop: 4, marginTop: 2 }}>
+                <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#0369A1' }}>
+                  {isPayAfter ? (isBn ? 'মোট প্রদেয়:' : 'Net Payable:') : (isBn ? 'সর্বমোট কর্তনকৃত অর্থ:' : 'Net Deducted Amount:')}
+                </Text>
+                <Text style={{ fontSize: 14, fontWeight: '900', color: '#0284C7' }}>
+                  ৳{totalAmount}
+                </Text>
+              </View>
+            </View>
+          </View>
 
           {/* Multi-channel dispatch notice */}
           <View

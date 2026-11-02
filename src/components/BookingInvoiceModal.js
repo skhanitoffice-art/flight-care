@@ -78,37 +78,137 @@ export default function BookingInvoiceModal({
   // -------------------------------------------------------------
   // Full Itemized Billing Calculation
   // -------------------------------------------------------------
-  const pricing = booking.pricingBreakdown || calculateBookingPricing(booking, ADDONS);
-  const adults = Number(booking.a >= 0 ? booking.a : (booking.passengers?.adults ?? 1));
+  // Airline, Route & Terminal Information
+  const airlineName = booking.flight?.airline || booking.airline || (booking.fno?.startsWith('BG') ? 'Biman Bangladesh Airlines' : 'Airlines Protocol');
+  const flightOrigin = booking.flight?.origin || booking.from || (booking.dir === 'dep' ? 'Dhaka (DAC)' : 'International Origin');
+  const flightDestination = booking.flight?.destination || booking.to || (booking.dir === 'dep' ? 'International Destination' : 'Dhaka (DAC)');
+  const terminal = booking.flight?.terminal || booking.terminal || 'Terminal 1';
+  const meetingPoint = booking.meetingPoint || (
+    booking.dir === 'dep'
+      ? (isBn ? 'ডিপার্চার ক্যানোপি / ড্রপ-অফ গেট ১' : 'Departure Canopy / Drop-off Gate 1')
+      : (isBn ? 'অ্যারাইভাল কনসিয়ার্জ ডেস্ক / বোর্ডিং গেট এক্সিট' : 'Arrival Concierge Desk / Boarding Gate Exit')
+  );
+
+  // Exact Order Confirmation Date & Time (BST)
+  const confirmationTimestamp = booking.paidAt || booking.confirmedAt || booking.createdAt || booking.timestamp || new Date().toISOString();
+  const confirmDateObj = new Date(confirmationTimestamp);
+  const isValidDate = !isNaN(confirmDateObj.getTime());
+  const finalDateObj = isValidDate ? confirmDateObj : new Date();
+
+  const formattedConfirmDate = finalDateObj.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
+    day: 'numeric',
+    month: isBn ? 'long' : 'short',
+    year: 'numeric',
+  });
+  const formattedConfirmTime = finalDateObj.toLocaleTimeString(isBn ? 'bn-BD' : 'en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+  const confirmationDateTimeString = `${formattedConfirmDate}, ${formattedConfirmTime} BST`;
+
+  // Passengers details
+  const adults = Number(booking.a >= 0 ? booking.a : (booking.passengers?.adults ?? (typeof booking.passengers === 'number' ? booking.passengers : 1)));
   const children = Number(booking.c >= 0 ? booking.c : (booking.passengers?.children ?? 0));
   const elderly = Number(booking.e >= 0 ? booking.e : (booking.passengers?.elderly ?? 0));
   const passengerCount = Math.max(1, adults + children + elderly);
 
+  const paxBreakdownParts = [];
+  if (adults > 0) paxBreakdownParts.push(`${adults} ${isBn ? 'প্রাপ্তবয়স্ক' : 'Adult'}${adults > 1 && !isBn ? 's' : ''}`);
+  if (children > 0) paxBreakdownParts.push(`${children} ${isBn ? 'শিশু' : 'Child'}${children > 1 && !isBn ? 'ren' : ''}`);
+  if (elderly > 0) paxBreakdownParts.push(`${elderly} ${isBn ? 'প্রবীণ' : 'Senior'}${elderly > 1 && !isBn ? 's' : ''}`);
+  const passengerCountBreakdown = paxBreakdownParts.join(', ');
+
+  const passengerDetailsList = Array.isArray(booking.passenger_details) && booking.passenger_details.length > 0
+    ? booking.passenger_details
+    : Array.isArray(booking.passengerInformation?.passengers) && booking.passengerInformation.passengers.length > 0
+    ? booking.passengerInformation.passengers
+    : [];
+
+  const pricing = booking.pricingBreakdown || calculateBookingPricing(booking, ADDONS);
+  const pkgBasePrice = pricing?.basePrice != null ? pricing.basePrice : (
+    booking.packageChoice === 'first' ? 1500 : (booking.packageChoice === 'business' ? 1000 : 500)
+  );
+
   const billItems = [];
 
-  // A. Core Protocol Package (Only when not purely standalone addons)
+  // A. Core Protocol Package Breakdown
   if (!isOnlyAddons) {
-    const pkgBasePrice = pricing?.basePrice != null ? pricing.basePrice : 500;
-    const pkgNetCharge = pricing?.netPassengerCharge != null ? pricing.netPassengerCharge : (pkgBasePrice * passengerCount);
-    let paxLabel = `${passengerCount} ${isBn ? 'জন যাত্রী' : 'Pax'}`;
-    if (adults > 0 || children > 0 || elderly > 0) {
-      const parts = [];
-      if (adults > 0) parts.push(`${adults} ${isBn ? 'প্রাপ্তবয়স্ক' : 'Adult'}`);
-      if (children > 0) parts.push(`${children} ${isBn ? 'শিশু' : 'Child'}`);
-      if (elderly > 0) parts.push(`${elderly} ${isBn ? 'প্রবীণ' : 'Senior'}`);
-      paxLabel = parts.join(', ');
+    if (adults > 0) {
+      billItems.push({
+        id: 'base_pkg_adults',
+        name: `${packageName} - ${isBn ? 'প্রাপ্তবয়স্ক যাত্রী' : 'Adult Passenger'}`,
+        category: isBn ? 'মূল প্রোটোকল সার্ভিস' : 'Core Protocol Service',
+        quantity: adults,
+        rate: pkgBasePrice,
+        amount: adults * pkgBasePrice,
+        isQuote: false,
+        icon: '🛡️',
+      });
     }
 
-    billItems.push({
-      id: 'base_pkg',
-      name: `${packageName} (${paxLabel})`,
-      category: isBn ? 'মূল প্রোটোকল সার্ভিস' : 'Core Protocol Service',
-      quantity: passengerCount,
-      rate: pkgBasePrice,
-      amount: pkgNetCharge,
-      isQuote: false,
-      icon: '🛡️',
-    });
+    if (children > 0) {
+      const childRate = Math.round(pkgBasePrice * 0.8);
+      billItems.push({
+        id: 'base_pkg_children',
+        name: `${packageName} - ${isBn ? 'শিশু যাত্রী (১২ বছর বা নিচে)' : 'Child Passenger (Under 12)'}`,
+        category: isBn ? 'মূল প্রোটোকল সার্ভিস' : 'Core Protocol Service',
+        quantity: children,
+        rate: childRate,
+        amount: children * childRate,
+        isQuote: false,
+        icon: '🧒',
+      });
+    }
+
+    if (elderly > 0) {
+      const elderlyRate = Math.round(pkgBasePrice * 0.9);
+      billItems.push({
+        id: 'base_pkg_elderly',
+        name: `${packageName} - ${isBn ? 'প্রবীণ যাত্রী (৬৫+ বছর)' : 'Senior Passenger (65+)'}`,
+        category: isBn ? 'মূল প্রোটোকল সার্ভিস' : 'Core Protocol Service',
+        quantity: elderly,
+        rate: elderlyRate,
+        amount: elderly * elderlyRate,
+        isQuote: false,
+        icon: '🧓',
+      });
+    }
+
+    if (billItems.length === 0) {
+      billItems.push({
+        id: 'base_pkg',
+        name: `${packageName} (${passengerCount} ${isBn ? 'জন যাত্রী' : 'Pax'})`,
+        category: isBn ? 'মূল প্রোটোকল সার্ভিস' : 'Core Protocol Service',
+        quantity: passengerCount,
+        rate: pkgBasePrice,
+        amount: passengerCount * pkgBasePrice,
+        isQuote: false,
+        icon: '🛡️',
+      });
+    }
+
+    // Group Volume Discount
+    const groupDiscountAmount = pricing?.groupDiscountAmount || (
+      pricing?.passengerSubtotal && pricing?.netPassengerCharge
+        ? pricing.passengerSubtotal - pricing.netPassengerCharge
+        : 0
+    );
+    if (groupDiscountAmount > 0) {
+      const discountPercent = pricing?.groupDiscountPercent || Math.round((groupDiscountAmount / (pricing?.passengerSubtotal || 1)) * 100);
+      billItems.push({
+        id: 'group_discount',
+        name: isBn ? `গ্রুপ ভলিউম ডিসকাউন্ট (${discountPercent}% ছাড় - ${passengerCount} জন যাত্রী)` : `Group Volume Discount (${discountPercent}% off - ${passengerCount} pax)`,
+        category: isBn ? 'গ্রুপ ছাড়' : 'Volume Discount',
+        quantity: 1,
+        rate: -groupDiscountAmount,
+        amount: -groupDiscountAmount,
+        isQuote: false,
+        isDiscount: true,
+        icon: '🏷️',
+      });
+    }
   } else {
     billItems.push({
       id: 'addons_only_pkg',
@@ -205,6 +305,11 @@ export default function BookingInvoiceModal({
       icon: '🎁',
     });
   }
+
+  // Summary Totals for Detailed Itemized Breakdown
+  const grossSubtotal = billItems.reduce((acc, item) => (!item.isDiscount && item.amount > 0 ? acc + item.amount : acc), 0);
+  const totalDiscounts = billItems.reduce((acc, item) => (item.isDiscount && item.amount < 0 ? acc + Math.abs(item.amount) : acc), 0);
+  const finalBillAmount = Number(booking.paidAmount || booking.amount || booking.total || (grossSubtotal - totalDiscounts));
 
   // Dedicated High-Resolution Printable Voucher HTML (300 DPI A4 & Exact Color Preservation)
   const getVoucherHtml = () => `<!DOCTYPE html>
@@ -511,12 +616,13 @@ export default function BookingInvoiceModal({
         <div class="ref-val">#${bookingId}</div>
       </div>
       <div>
-        <div class="ref-label" style="text-align: right;">${isBn ? 'ইস্যুর তারিখ:' : 'ISSUED DATE:'}</div>
-        <div class="date-val">${issuedDate}, ${issuedTime} BST</div>
+        <div class="ref-label" style="text-align: right;">${isBn ? 'অর্ডার ও পেমেন্ট নিশ্চিতকরণ সময়:' : 'CONFIRMED ON:'}</div>
+        <div class="date-val" style="color: #059669; font-weight: 800;">${confirmationDateTimeString}</div>
+        <div style="font-size: 10px; color: #64748b; text-align: right; margin-top: 2px;">${isBn ? 'ইস্যুর তারিখ:' : 'Issued:'} ${issuedDate}, ${issuedTime} BST</div>
       </div>
     </div>
 
-    <div class="section-title">${isBn ? '👤 যাত্রী ও ভ্রমণের বিবরণ' : '👤 Passenger & Travel Details'}</div>
+    <div class="section-title">${isBn ? '👤 যাত্রী ও ভ্রমণের পূর্ণ বিবরণ' : '👤 Passenger & Travel Details'}</div>
     <div class="row">
       <span class="label">${isBn ? 'মূল যাত্রী:' : 'Lead Passenger:'}</span>
       <span class="value">${passengerName}</span>
@@ -530,21 +636,42 @@ export default function BookingInvoiceModal({
       <span class="value">${email}</span>
     </div>
     <div class="row">
-      <span class="label">${isBn ? 'ফ্লাইট নম্বর:' : 'Flight Number:'}</span>
-      <span class="value" style="color: #0284c7; font-size: 15px;">${flightNumber}</span>
+      <span class="label">${isBn ? 'এয়ারলাইন্স ও ফ্লাইট:' : 'Airline & Flight:'}</span>
+      <span class="value" style="color: #0284c7; font-size: 14.5px; font-weight: 800;">${airlineName} • ${flightNumber}</span>
+    </div>
+    <div class="row">
+      <span class="label">${isBn ? 'ফ্লাইট রুট ও দিক:' : 'Route & Direction:'}</span>
+      <span class="value">${flightOrigin} ➔ ${flightDestination} (${direction})</span>
+    </div>
+    <div class="row">
+      <span class="label">${isBn ? 'বিমানবন্দর ও টার্মিনাল:' : 'Airport & Terminal:'}</span>
+      <span class="value">${airport} • ${terminal}</span>
     </div>
     <div class="row">
       <span class="label">${isBn ? 'সেবার তারিখ ও সময়:' : 'Service Date & Time:'}</span>
       <span class="value">${serviceDate} • ${serviceTime} BST</span>
     </div>
     <div class="row">
-      <span class="label">${isBn ? 'বিমানবন্দর:' : 'Airport:'}</span>
-      <span class="value">${airport}</span>
+      <span class="label">${isBn ? 'মোট যাত্রী সংখ্যা:' : 'Total Passengers:'}</span>
+      <span class="value">${passengerCount} ${isBn ? 'জন যাত্রী' : 'Pax'} ${passengerCountBreakdown ? `(${passengerCountBreakdown})` : ''}</span>
     </div>
     <div class="row">
       <span class="label">${isBn ? 'প্রোটোকল প্যাকেজ:' : 'Protocol Package:'}</span>
-      <span class="value" style="color: #047857; font-weight: 800;">${direction} • ${packageName}</span>
+      <span class="value" style="color: #047857; font-weight: 800;">${packageName}</span>
     </div>
+    ${passengerDetailsList.length > 0 ? `
+    <div class="row" style="flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 0;">
+      <span class="label" style="max-width: 100%;">${isBn ? 'সহ-যাত্রীদের তালিকা:' : 'Co-Passengers List:'}</span>
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 3px; margin-top: 4px;">
+        ${passengerDetailsList.map((p, pIdx) => `
+          <div style="font-size: 12px; color: #1e293b; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+            <span>${pIdx + 1}. <strong>${p.name || p.fullName || `${passengerName} (${pIdx + 1})`}</strong> ${p.type ? `(${p.type})` : ''}</span>
+            <span style="color: #64748b;">${p.passport || p.nid || p.phone || ''}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    ` : ''}
     ${hasVisaOnArrival ? `
     <div class="row" style="background: #f0fdf4; padding: 6px 10px; border-radius: 6px; border: 1px solid #bbf7d0; margin-top: 4px;">
       <span class="label" style="color: #166534; font-weight: 800;">${isBn ? '🛂 অন-অ্যারাইভাল ভিসা:' : '🛂 Visa On Arrival:'}</span>
@@ -555,7 +682,7 @@ export default function BookingInvoiceModal({
     </div>
     ` : ''}
 
-    <div class="section-title">${isBn ? '📑 বিলের পূর্ণ বিবরণী (আইটেমাইজড ব্রেকডাউন)' : '📑 Itemized Billing Breakdown'}</div>
+    <div class="section-title">${isBn ? '📑 টাকার বিস্তারিত বিবরণ (কোনটাতে কত টাকা কাটা হয়েছে)' : '📑 Itemized Charges Breakdown (Exact Deductions)'}</div>
     <table class="itemized-table">
       <thead>
         <tr>
@@ -563,7 +690,7 @@ export default function BookingInvoiceModal({
           <th>${isBn ? 'সেবা ও সুবিধার বিবরণ' : 'Service / Add-on Description'}</th>
           <th style="width: 65px; text-align: center;">${isBn ? 'পরিমাণ' : 'Qty'}</th>
           <th style="width: 95px; text-align: right;">${isBn ? 'একক রেট' : 'Unit Rate'}</th>
-          <th style="width: 105px; text-align: right;">${isBn ? 'মোট (টাকা)' : 'Total (BDT)'}</th>
+          <th style="width: 115px; text-align: right;">${isBn ? 'মোট কাটা হয়েছে' : 'Charged (BDT)'}</th>
         </tr>
       </thead>
       <tbody>
@@ -586,16 +713,42 @@ export default function BookingInvoiceModal({
           </tr>
         `).join('')}
       </tbody>
+      <tfoot>
+        <tr style="background: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1;">
+          <td colspan="4" style="text-align: right; padding: 7px 10px; color: #475569;">${isBn ? 'উপ-মোট (মোট সার্ভিস ফি):' : 'Gross Subtotal:'}</td>
+          <td style="text-align: right; padding: 7px 10px; color: #0f172a; font-weight: 800;">৳${grossSubtotal}</td>
+        </tr>
+        ${totalDiscounts > 0 ? `
+        <tr style="background: #fef2f2; font-weight: 700;">
+          <td colspan="4" style="text-align: right; padding: 7px 10px; color: #dc2626;">${isBn ? 'সর্বমোট ছাড় ও ডিসকাউন্ট:' : 'Total Discounts Applied:'}</td>
+          <td style="text-align: right; padding: 7px 10px; color: #dc2626; font-weight: 800;">-৳${totalDiscounts}</td>
+        </tr>
+        ` : ''}
+        <tr style="background: #f0f9ff; font-weight: 900; border-top: 2px solid #bae6fd;">
+          <td colspan="4" style="text-align: right; padding: 8px 10px; color: #0369a1; font-size: 13px;">${isPayAfter ? (isBn ? 'মোট প্রদেয় অর্থ (সার্ভিস শেষে):' : 'Net Payable:') : (isBn ? 'সর্বমোট কর্তনকৃত/পরিশোধিত অর্থ:' : 'Net Total Charged & Paid:')}</td>
+          <td style="text-align: right; padding: 8px 10px; color: #0284c7; font-size: 14.5px; font-weight: 900;">৳${amount}</td>
+        </tr>
+      </tfoot>
     </table>
 
-    <div class="section-title">${isBn ? '💳 পেমেন্ট বিবরণ' : '💳 Payment Details'}</div>
+    <div class="section-title">${isBn ? '💳 পেমেন্ট ও ভেরিফিকেশন বিবরণ' : '💳 Payment & Verification Details'}</div>
     <div class="row">
-      <span class="label">${isBn ? 'পেমেন্ট মেথড:' : 'Payment Channel:'}</span>
+      <span class="label">${isBn ? 'পেমেন্ট গেটওয়ে / মাধ্যম:' : 'Payment Channel:'}</span>
       <span class="value">${paymentChannel}</span>
     </div>
     <div class="row">
       <span class="label">${isBn ? 'ট্রানজেকশন আইডি (TrxID):' : 'Transaction ID:'}</span>
-      <span class="value" style="color: #0284c7;">${trxId}</span>
+      <span class="value" style="color: #0284c7; font-family: monospace; font-size: 13.5px;">${trxId}</span>
+    </div>
+    <div class="row">
+      <span class="label">${isBn ? 'অর্ডার ও পেমেন্ট নিশ্চিতকরণ সময়:' : 'Payment Confirmation Time:'}</span>
+      <span class="value" style="color: #059669; font-weight: 800;">${confirmationDateTimeString}</span>
+    </div>
+    <div class="row">
+      <span class="label">${isBn ? 'ভেরিফিকেশন স্ট্যাটাস:' : 'Verification Status:'}</span>
+      <span class="value" style="color: ${isPayAfter ? '#b45309' : '#15803d'}; font-weight: 800;">
+        ${isPayAfter ? (isBn ? '⏳ সার্ভিস শেষে প্রদেয় (Pay After Service)' : '⏳ Pay After Service') : (isBn ? '✓ সম্পূর্ণ পরিশোধিত ও অনুমোদিত (100% Paid & Verified)' : '✓ 100% Paid & Verified')}
+      </span>
     </div>
 
     <div class="total-box">
@@ -834,11 +987,11 @@ export default function BookingInvoiceModal({
     ctx.fillStyle = '#64748B';
     ctx.font = '800 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(isBn ? 'ইস্যুর তারিখ:' : 'ISSUED DATE:', cardX + cardW - 100, refBarY + 55);
+    ctx.fillText(isBn ? 'অর্ডার ও পেমেন্ট সময়:' : 'CONFIRMED ON:', cardX + cardW - 100, refBarY + 55);
 
-    ctx.fillStyle = '#0F172A';
-    ctx.font = '800 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif';
-    ctx.fillText(`${issuedDate}, ${issuedTime} BST`, cardX + cardW - 100, refBarY + 110);
+    ctx.fillStyle = '#059669';
+    ctx.font = '800 30px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif';
+    ctx.fillText(confirmationDateTimeString, cardX + cardW - 100, refBarY + 110);
     ctx.textAlign = 'left';
 
     // 8. Section 1: Passenger & Travel Details
@@ -870,20 +1023,22 @@ export default function BookingInvoiceModal({
       ctx.stroke();
     };
 
-    curY += 75;
+    curY += 70;
     drawRowHighRes(isBn ? 'মূল যাত্রী:' : 'Lead Passenger:', passengerName, curY);
-    curY += 75;
+    curY += 70;
     drawRowHighRes(isBn ? 'যোগাযোগ নম্বর:' : 'Mobile Phone:', phone, curY);
-    curY += 75;
-    drawRowHighRes(isBn ? 'ইমেইল:' : 'Email Address:', email, curY);
-    curY += 75;
-    drawRowHighRes(isBn ? 'ফ্লাইট নম্বর:' : 'Flight Number:', flightNumber, curY, '#0284C7', true);
-    curY += 75;
+    curY += 70;
+    drawRowHighRes(isBn ? 'এয়ারলাইন্স ও ফ্লাইট:' : 'Airline & Flight:', `${airlineName} • ${flightNumber}`, curY, '#0284C7', true);
+    curY += 70;
+    drawRowHighRes(isBn ? 'ফ্লাইট রুট ও দিক:' : 'Route & Direction:', `${flightOrigin} ➔ ${flightDestination} (${direction})`, curY);
+    curY += 70;
+    drawRowHighRes(isBn ? 'বিমানবন্দর ও টার্মিনাল:' : 'Airport & Terminal:', `${airport} • ${terminal}`, curY);
+    curY += 70;
     drawRowHighRes(isBn ? 'সেবার তারিখ ও সময়:' : 'Service Date & Time:', `${serviceDate} • ${serviceTime} BST`, curY);
-    curY += 75;
-    drawRowHighRes(isBn ? 'বিমানবন্দর:' : 'Airport:', airport, curY);
-    curY += 75;
-    drawRowHighRes(isBn ? 'প্রোটোকল প্যাকেজ:' : 'Protocol Package:', `${direction} • ${packageName}`, curY, '#047857', true);
+    curY += 70;
+    drawRowHighRes(isBn ? 'মোট যাত্রী সংখ্যা:' : 'Total Passengers:', `${passengerCount} ${isBn ? 'জন যাত্রী' : 'Pax'} ${passengerCountBreakdown ? `(${passengerCountBreakdown})` : ''}`, curY);
+    curY += 70;
+    drawRowHighRes(isBn ? 'প্রোটোকল প্যাকেজ:' : 'Protocol Package:', packageName, curY, '#047857', true);
 
     // 8B. Section: Itemized Billing Breakdown
     curY += 90;
@@ -951,12 +1106,14 @@ export default function BookingInvoiceModal({
     curY += 85;
     ctx.fillStyle = '#0F172A';
     ctx.font = '900 38px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif';
-    ctx.fillText(isBn ? '💳 পেমেন্ট বিবরণ' : '💳 Payment Details', cardX + 60, curY);
+    ctx.fillText(isBn ? '💳 পেমেন্ট ও ভেরিফিকেশন বিবরণ' : '💳 Payment & Verification Details', cardX + 60, curY);
 
-    curY += 75;
+    curY += 70;
     drawRowHighRes(isBn ? 'পেমেন্ট মেথড:' : 'Payment Channel:', paymentChannel, curY);
-    curY += 75;
+    curY += 70;
     drawRowHighRes(isBn ? 'ট্রানজেকশন আইডি (TrxID):' : 'Transaction ID:', trxId, curY, '#0284C7', true);
+    curY += 70;
+    drawRowHighRes(isBn ? 'পেমেন্ট নিশ্চিতকরণ সময়:' : 'Payment Confirmation Time:', confirmationDateTimeString, curY, '#059669', true);
 
     // 10. Total Amount Paid Box
     curY += 95;
@@ -1460,10 +1617,13 @@ export default function BookingInvoiceModal({
 
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '700' }}>
-                  {isBn ? 'ইস্যুর তারিখ:' : 'ISSUED ON:'}
+                  {isBn ? 'অর্ডার ও পেমেন্ট সময়:' : 'CONFIRMED ON:'}
                 </Text>
-                <Text style={{ fontSize: 12.5, fontWeight: '700', color: '#1E293B', marginTop: 1 }}>
-                  {issuedDate}, {issuedTime} BST
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#059669', marginTop: 1 }}>
+                  {confirmationDateTimeString}
+                </Text>
+                <Text style={{ fontSize: 10, color: '#94A3B8', marginTop: 1 }}>
+                  {isBn ? 'ইস্যুর তারিখ:' : 'Issued:'} {issuedDate}, {issuedTime} BST
                 </Text>
               </View>
             </View>
@@ -1471,7 +1631,7 @@ export default function BookingInvoiceModal({
             {/* Passenger & Flight Grid */}
             <View style={{ gap: 10, marginBottom: 16 }}>
               <Text style={{ fontSize: 13, fontWeight: '800', color: '#475569', textTransform: 'uppercase' }}>
-                {isBn ? '👤 যাত্রী ও ভ্রমণের বিবরণ' : '👤 Passenger & Flight Details'}
+                {isBn ? '👤 যাত্রী ও ভ্রমণের পূর্ণ বিবরণ' : '👤 Passenger & Flight Details'}
               </Text>
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
@@ -1485,8 +1645,18 @@ export default function BookingInvoiceModal({
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
-                <Text style={{ fontSize: 13, color: '#64748B' }}>{isBn ? 'ফ্লাইট নম্বর:' : 'Flight Number:'}</Text>
-                <Text style={{ fontSize: 14, fontWeight: '800', color: '#0284C7' }}>{flightNumber}</Text>
+                <Text style={{ fontSize: 13, color: '#64748B' }}>{isBn ? 'এয়ারলাইন্স ও ফ্লাইট:' : 'Airline & Flight:'}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: '#0284C7' }}>{airlineName} • ${flightNumber}</Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
+                <Text style={{ fontSize: 13, color: '#64748B' }}>{isBn ? 'ফ্লাইট রুট ও দিক:' : 'Route & Direction:'}</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#1E293B' }}>{flightOrigin} ➔ {flightDestination} ({direction})</Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
+                <Text style={{ fontSize: 13, color: '#64748B' }}>{isBn ? 'বিমানবন্দর ও টার্মিনাল:' : 'Airport & Terminal:'}</Text>
+                <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#0F172A' }}>{airport} • {terminal}</Text>
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
@@ -1495,14 +1665,32 @@ export default function BookingInvoiceModal({
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
-                <Text style={{ fontSize: 13, color: '#64748B' }}>{isBn ? 'বিমানবন্দর:' : 'Airport:'}</Text>
-                <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#0F172A' }}>{airport}</Text>
+                <Text style={{ fontSize: 13, color: '#64748B' }}>{isBn ? 'মোট যাত্রী সংখ্যা:' : 'Total Passengers:'}</Text>
+                <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#0F172A' }}>{passengerCount} {isBn ? 'জন যাত্রী' : 'Pax'} {passengerCountBreakdown ? `(${passengerCountBreakdown})` : ''}</Text>
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}>
                 <Text style={{ fontSize: 13, color: '#64748B' }}>{isBn ? 'প্রোটোকল প্যাকেজ:' : 'Service Tier:'}</Text>
-                <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#047857' }}>{direction} • ${packageName}</Text>
+                <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#047857' }}>{packageName}</Text>
               </View>
+
+              {passengerDetailsList.length > 0 && (
+                <View style={{ backgroundColor: '#F8FAFC', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#E2E8F0', marginTop: 4 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#475569', marginBottom: 6 }}>
+                    👥 {isBn ? 'সহ-যাত্রীদের তালিকা:' : 'Co-Passengers List:'}
+                  </Text>
+                  {passengerDetailsList.map((p, pIdx) => (
+                    <View key={pIdx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3, borderBottomWidth: pIdx < passengerDetailsList.length - 1 ? 1 : 0, borderBottomColor: '#EEF2F6' }}>
+                      <Text style={{ fontSize: 12, color: '#1E293B', fontWeight: '600' }}>
+                        {pIdx + 1}. {p.name || p.fullName || `${passengerName} (${pIdx + 1})`} {p.type ? `(${p.type})` : ''}
+                      </Text>
+                      <Text style={{ fontSize: 11.5, color: '#64748B' }}>
+                        {p.passport || p.nid || p.phone || ''}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
 
               {hasVisaOnArrival && (
                 <View style={{ backgroundColor: '#F0FDF4', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#BBF7D0', marginTop: 6 }}>
@@ -1530,7 +1718,7 @@ export default function BookingInvoiceModal({
             >
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <Text style={{ fontSize: 13, fontWeight: '800', color: '#334155', textTransform: 'uppercase' }}>
-                  {isBn ? '📑 বিলের পূর্ণ বিবরণী' : '📑 Itemized Bill Breakdown'}
+                  {isBn ? '📑 টাকার পূর্ণ বিবরণী (কোনটাতে কত টাকা কাটা হয়েছে)' : '📑 Itemized Charges Breakdown'}
                 </Text>
                 <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '600' }}>
                   {billItems.length} {isBn ? 'টি আইটেম' : 'Items'}
@@ -1545,7 +1733,7 @@ export default function BookingInvoiceModal({
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     paddingVertical: 7,
-                    borderBottomWidth: idx < billItems.length - 1 ? 1 : 0,
+                    borderBottomWidth: 1,
                     borderBottomColor: '#F1F5F9',
                   }}
                 >
@@ -1554,7 +1742,7 @@ export default function BookingInvoiceModal({
                       {item.icon || '✨'} {item.name}
                     </Text>
                     <Text style={{ fontSize: 10.5, color: '#64748B', marginTop: 1 }}>
-                      {item.category} • {isBn ? 'পরিমাণ:' : 'Qty:'} {item.quantity}
+                      {item.category} • {isBn ? 'পরিমাণ:' : 'Qty:'} {item.quantity} {item.rate != null ? `× ${isBn ? 'একক রেট:' : 'Rate:'} ৳${Math.abs(item.rate)}` : ''}
                     </Text>
                   </View>
 
@@ -1568,7 +1756,7 @@ export default function BookingInvoiceModal({
                     ) : (
                       <Text
                         style={{
-                          fontSize: 13,
+                          fontSize: 13.5,
                           fontWeight: '800',
                           color: item.isDiscount ? '#DC2626' : '#0F172A',
                         }}
@@ -1579,6 +1767,36 @@ export default function BookingInvoiceModal({
                   </View>
                 </View>
               ))}
+
+              {/* Subtotal & Discounts Summary inside Card */}
+              <View style={{ marginTop: 10, paddingTop: 8, borderTopWidth: 1.5, borderTopColor: '#CBD5E1', gap: 4 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600' }}>
+                    {isBn ? 'উপ-মোট (মোট সার্ভিস ফি):' : 'Gross Subtotal:'}
+                  </Text>
+                  <Text style={{ fontSize: 12.5, fontWeight: '700', color: '#1E293B' }}>
+                    ৳{grossSubtotal}
+                  </Text>
+                </View>
+                {totalDiscounts > 0 && (
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 12, color: '#DC2626', fontWeight: '700' }}>
+                      {isBn ? 'সর্বমোট ছাড় ও ডিসকাউন্ট:' : 'Total Discounts Applied:'}
+                    </Text>
+                    <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#DC2626' }}>
+                      -৳{totalDiscounts}
+                    </Text>
+                  </View>
+                )}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#E2E8F0', paddingTop: 6, marginTop: 2 }}>
+                  <Text style={{ fontSize: 13, fontWeight: '800', color: '#0369A1' }}>
+                    {isPayAfter ? (isBn ? 'মোট প্রদেয় অর্থ:' : 'Net Payable:') : (isBn ? 'সর্বমোট কর্তনকৃত অর্থ:' : 'Net Amount Deducted:')}
+                  </Text>
+                  <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#0284C7' }}>
+                    ৳{amount}
+                  </Text>
+                </View>
+              </View>
             </View>
 
             {/* Payment Summary Box */}
@@ -1607,6 +1825,15 @@ export default function BookingInvoiceModal({
                 </Text>
                 <Text style={{ fontSize: 12.5, fontWeight: '900', color: '#0284C7' }}>
                   {trxId}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: '#1E40AF' }}>
+                  {isBn ? 'অর্ডার ও পেমেন্ট সময়:' : 'CONFIRMED ON:'}
+                </Text>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#059669' }}>
+                  {confirmationDateTimeString}
                 </Text>
               </View>
 

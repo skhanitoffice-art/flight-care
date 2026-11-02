@@ -69,7 +69,7 @@ import {
   getCalendarEventData,
 } from '../utils/helpers';
 import { getLiveFlightStatus } from '../services/flightService';
-import { getAddonAsset } from '../constants/data';
+import { getAddonAsset, ADDONS } from '../constants/data';
 import {
   openSupportOfficeWhatsApp,
   dispatchSupportOfficeWhatsAppAlert,
@@ -2684,6 +2684,9 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                           </Text>
                         </TouchableOpacity>
                       </View>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: '#059669', marginTop: 4 }}>
+                        🕒 {new Date().toLocaleDateString(lang ? 'bn-BD' : 'en-US', { day: 'numeric', month: lang ? 'long' : 'short', year: 'numeric' })}, {new Date().toLocaleTimeString(lang ? 'bn-BD' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })} BST
+                      </Text>
                     </View>
                   </View>
 
@@ -2767,6 +2770,93 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                     <Text style={{ fontSize: 14, fontWeight: '700', color: '#0F172A' }}>
                       {passengers} {lang ? 'জন যাত্রী' : passengers === 1 ? 'adult' : 'adults'}
                     </Text>
+                  </View>
+                </View>
+
+                {/* Desktop Step 3 Itemized Charges Breakdown */}
+                <View
+                  style={{
+                    backgroundColor: '#F8FAFC',
+                    borderRadius: 14,
+                    padding: 16,
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                    marginBottom: 16,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <Text style={{ fontSize: 13, fontWeight: '800', color: '#1E293B' }}>
+                      📑 {lang ? 'টাকার বিস্তারিত হিসাব (কোনটাতে কত টাকা কাটা হয়েছে)' : 'Itemized Charges Breakdown'}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: '#059669', fontWeight: '800' }}>
+                      ✓ {lang ? 'যাচাইকৃত হিসাব' : 'Verified Billing'}
+                    </Text>
+                  </View>
+
+                  <View style={{ gap: 6 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#EEF2F6' }}>
+                      <Text style={{ fontSize: 12.5, color: '#334155', fontWeight: '600' }}>
+                        🛡️ {serviceLabel} ({passengers} {lang ? 'জন যাত্রী' : 'Pax'})
+                      </Text>
+                      <Text style={{ fontSize: 13, fontWeight: '800', color: '#0F172A' }}>
+                        ৳{pricingBreakdown?.passengerSubtotal || (passengers * (selectedPackage === 'first' ? 1500 : (selectedPackage === 'business' ? 1000 : 500)))}
+                      </Text>
+                    </View>
+
+                    {pricingBreakdown?.groupDiscountAmount > 0 && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#EEF2F6' }}>
+                        <Text style={{ fontSize: 12.5, color: '#DC2626', fontWeight: '600' }}>
+                          🏷️ {lang ? `গ্রুপ ভলিউম ছাড় (${pricingBreakdown.groupDiscountPercent || 10}% - ${passengers} জন)` : `Group Discount (${pricingBreakdown.groupDiscountPercent || 10}%)`}
+                        </Text>
+                        <Text style={{ fontSize: 13, fontWeight: '800', color: '#DC2626' }}>
+                          -৳{pricingBreakdown.groupDiscountAmount}
+                        </Text>
+                      </View>
+                    )}
+
+                    {pricingBreakdown?.addonLines?.map((addon, aIdx) => (
+                      <View key={addon.id || aIdx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#EEF2F6' }}>
+                        <Text style={{ fontSize: 12.5, color: '#334155', fontWeight: '600' }}>
+                          ✨ {Array.isArray(addon.name) ? addon.name[lang ? 1 : 0] : addon.name} (×{addon.quantity})
+                        </Text>
+                        <Text style={{ fontSize: 13, fontWeight: '800', color: addon.amount == null ? '#B45309' : '#0F172A' }}>
+                          {addon.amount == null ? (lang ? 'কোটেশন প্রযোজ্য' : 'Quote Req.') : `৳${addon.amount}`}
+                        </Text>
+                      </View>
+                    ))}
+
+                    {discountAmount > 0 && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#EEF2F6' }}>
+                        <Text style={{ fontSize: 12.5, color: '#DC2626', fontWeight: '600' }}>
+                          🏷️ {lang ? 'প্রোমো কোড ছাড়' : 'Promo Discount'}
+                        </Text>
+                        <Text style={{ fontSize: 13, fontWeight: '800', color: '#DC2626' }}>
+                          -৳{discountAmount}
+                        </Text>
+                      </View>
+                    )}
+
+                    {rewardPointsDiscount > 0 && (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#EEF2F6' }}>
+                        <Text style={{ fontSize: 12.5, color: '#DC2626', fontWeight: '600' }}>
+                          🎁 {lang ? 'রিওয়ার্ড পয়েন্ট রিডিম' : 'Reward Points'}
+                        </Text>
+                        <Text style={{ fontSize: 13, fontWeight: '800', color: '#DC2626' }}>
+                          -৳{rewardPointsDiscount}
+                        </Text>
+                      </View>
+                    )}
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1.5, borderTopColor: '#CBD5E1', paddingTop: 8, marginTop: 4 }}>
+                      <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#0369A1' }}>
+                        {paymentMethod === 'pay_after_service'
+                          ? (lang ? 'মোট প্রদেয় অর্থ (সার্ভিস শেষে):' : 'Total Amount Payable:')
+                          : (lang ? 'সর্বমোট কর্তনকৃত অর্থ:' : 'Total Deducted Amount:')}
+                      </Text>
+                      <Text style={{ fontSize: 16, fontWeight: '900', color: '#0284C7' }}>
+                        ৳{totalAmount}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
