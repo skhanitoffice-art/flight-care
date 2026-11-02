@@ -27,6 +27,7 @@ import {
   dispatchSupportOfficeWhatsAppAlert,
   SUPPORT_OFFICE_PHONE_DISPLAY,
 } from '../../services/whatsappService';
+import { sendPaymentConfirmationSms } from '../../services/smsGateway.js';
 
 
 export default function WizardStep3Confirmation({
@@ -49,7 +50,7 @@ export default function WizardStep3Confirmation({
   const [copiedId, setCopiedId] = useState(false);
   const [calendarSaved, setCalendarSaved] = useState(false);
 
-  // Auto-dispatch booking alert to Support Office (+8801347570001) via GreenWeb BD / BulkSMSBD
+  // Auto-dispatch booking alert to Support Office (+8801347570001) and Passenger Payment SMS
   useEffect(() => {
     if (currentBooking && (currentBooking.id || bookingCode)) {
       dispatchSupportOfficeWhatsAppAlert({
@@ -57,6 +58,16 @@ export default function WizardStep3Confirmation({
         id: bookingCode,
         amount: totalAmount,
       }).catch(() => {});
+
+      if (!isPayAfter) {
+        sendPaymentConfirmationSms({
+          booking: currentBooking,
+          amount: totalAmount,
+          trxId: wiz.trxId,
+          method: wiz.paidMethod,
+          lang,
+        }).catch(() => {});
+      }
     }
   }, [bookingCode]);
 

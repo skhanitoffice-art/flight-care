@@ -37,7 +37,7 @@ export function normalizeBdPhoneNumber(phone) {
 
 // Retrieve SMS Gateway config
 export async function getSmsGatewayConfig() {
-  const defaultApiKey = getVaultSecret('SMS_API_KEY', 'EXPO_PUBLIC_SMS_API_KEY');
+  const defaultApiKey = getVaultSecret('SMS_API_KEY', 'EXPO_PUBLIC_SMS_API_KEY') || '140382043261792939406bc2932aa5e0375dcef66e98d5df11f8b';
   const defaultProvider = process.env.EXPO_PUBLIC_SMS_PROVIDER || SMS_PROVIDERS.GREENWEB_BD;
   const defaultSenderId = process.env.EXPO_PUBLIC_SMS_SENDER_ID || 'FlightCare';
 
@@ -264,4 +264,141 @@ export async function sendLiveSms({ to, message, otp = null, title = 'SMS Alert'
 
   return deliveryResult;
 }
+
+// In-memory deduplication cache for recently sent payment confirmation SMS
+const sentPaymentSmsCache = new Map();
+
+/**
+ * Dispatches an instant payment confirmation SMS to the passenger
+ * explicitly stating the exact amount deducted/charged.
+ * Incorporates deduplication to avoid double SMS on re-renders or multiple payment callbacks.
+ * 
+ * @param {Object} params
+ * @param {Object} params.booking - Full or partial booking object
+ * @param {number|string} [params.amount] - Total amount charged/deducted
+ * @param {string} [params.trxId] - Payment transaction ID / reference
+ * @param {string} [params.method] - Payment method used
+ * @param {number|boolean} [params.lang] - 1 for Bengali, 0 for English
+ */
+export async function sendPaymentConfirmationSms({
+  booking = {},
+  amount = null,
+  trxId = null,
+  method = '',
+  lang = 1,
+}) {
+  try {
+    const isBn = Boolean(lang);
+    const bookingId = booking.id || booking.bookingId || booking.confirmedId || 'FC-PENDING';
+    const finalTrxId = trxId || booking.trxId || booking.paymentId || booking.valId || `PAY-${bookingId}`;
+    
+    // Deduplication check: Avoid sending identical SMS within 2 minutes (120 seconds)
+    const dedupeKey = `${bookingId}_${finalTrxId}`;
+    const now = Date.now();
+    const lastSent = sentPaymentSmsCache.get(dedupeKey);
+    if (lastSent && (now - lastSent) < 120000) {
+      console.log(`[Payment SMS] Duplicate SMS blocked for booking #${bookingId} (TrxID: ${finalTrxId})`);
+      return { ok: true, duplicate: true };
+    }
+    sentPaymentSmsCache.set(dedupeKey, now);
+    // Cleanup old cache entries
+    if (sentPaymentSmsCache.size > 100) {
+      for (const [k, v] of sentPaymentSmsCache.entries()) {
+        if (now - v > 300000) sentPaymentSmsCache.delete(k);
+      }
+    }
+
+    const passengerPhone =
+      booking.passengerPhone ||
+      booking.phone ||
+      booking.customer?.phone ||
+      booking.passengerInformation?.phone ||
+      (booking.passengers && booking.passengers[0]?.phone) ||
+      '';
+
+    if (!passengerPhone) {
+      console.warn(`[Payment SMS] No phone number found for booking #${bookingId}`);
+      return { ok: false, error: 'no_recipient_phone' };
+    }
+
+    const passengerName =
+      booking.passengerName ||
+      booking.name ||
+      booking.customer?.name ||
+      booking.passengerInformation?.name ||
+      (booking.passengers && booking.passengers[0]?.name) ||
+      (isBn ? 'সম্মানিত যাত্রী' : 'Valued Passenger');
+
+    const flightNo = (
+      booking.flight?.number ||
+      booking.flightNumber ||
+      booking.fno ||
+      'BG-001'
+    ).toUpperCase();
+
+    const flightDate =
+      booking.flight?.date ||
+      booking.flightDate ||
+      booking.date ||
+      '';
+
+    const rawAmount = amount != null ? Number(amount) : Number(booking.amount || 0);
+    const formattedAmount = isNaN(rawAmount) ? '0' : rawAmount.toLocaleString('en-US');
+
+    // Identify human-friendly payment channel
+    const rawMethod = String(method || booking.paidMethod || booking.method || '').toLowerCase();
+    let methodLabelBn = 'অনলাইন পেমেন্ট';
+    let methodLabelEn = 'Online Payment';
+
+    if (rawMethod.includes('ssl')) {
+      methodLabelBn = 'এসএসএল কমার্স';
+      methodLabelEn = 'SSLCOMMERZ';
+    } else if (rawMethod.includes('banglaqr') || rawMethod.includes('qr')) {
+      methodLabelBn = 'বাংলা কিউআর';
+      methodLabelEn = 'Bangla QR';
+    } else if (rawMethod.includes('bkash')) {
+      methodLabelBn = 'বিকাশ';
+      methodLabelEn = 'bKash';
+    } else if (rawMethod.includes('nagad')) {
+      methodLabelBn = 'নগদ';
+      methodLabelEn = 'Nagad';
+    } else if (rawMethod.includes('card') || rawMethod.includes('bank')) {
+      methodLabelBn = 'ব্যাংক কার্ড';
+      methodLabelEn = 'Bank Card';
+    }
+
+    const helpline = '01347-570001';
+
+    // Structured SMS text stating the exact deducted amount
+    const messageBn = `Flight Care: প্রিয় ${passengerName}, আপনার পেমেন্ট নিশ্চিত হয়েছে! বুকিং #${bookingId}-এর জন্য আপনার অ্যাকাউন্ট থেকে মোট ৳${formattedAmount} কেটে নেওয়া হয়েছে (${methodLabelBn})। TrxID: ${finalTrxId}। ফ্লাইট: ${flightNo}${flightDate ? `, তারিখ: ${flightDate}` : ''}। হেল্পলাইন: ${helpline}`;
+
+    const messageEn = `Flight Care: Dear ${passengerName}, your payment for Booking #${bookingId} is confirmed! BDT ${formattedAmount} has been deducted via ${methodLabelEn}. TrxID: ${finalTrxId}. Flight: ${flightNo}${flightDate ? `, Date: ${flightDate}` : ''}. Helpline: ${helpline}`;
+
+    const message = isBn ? messageBn : messageEn;
+
+    console.log(`[Payment SMS] Sending confirmation to ${passengerPhone} (Deducted: ৳${formattedAmount})`);
+
+    const result = await sendLiveSms({
+      to: passengerPhone,
+      message,
+      title: 'Payment Confirmation SMS',
+    });
+
+    // Also notify booker if booking was made for someone else and booker phone differs
+    const bookerPhone = booking.phone || booking.customerPhone;
+    if (booking.bookingForSomeoneElse && bookerPhone && bookerPhone !== passengerPhone) {
+      sendLiveSms({
+        to: bookerPhone,
+        message,
+        title: 'Payment Confirmation SMS (Booker)',
+      }).catch(err => console.warn('[Payment SMS] Booker SMS notice:', err));
+    }
+
+    return result;
+  } catch (err) {
+    console.error('[Payment SMS] Error sending payment confirmation SMS:', err);
+    return { ok: false, error: err?.message };
+  }
+}
+
 

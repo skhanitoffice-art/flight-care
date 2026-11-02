@@ -120,13 +120,16 @@ if (empty($token)) {
     exit;
 }
 
-// 5. Dispatch via Greenweb BD API Server-to-Server
-$gw_url = 'https://api.greenweb.com.bd/api.php?token=' . urlencode($token) 
-        . '&to=' . urlencode($clean_phone) 
-        . '&message=' . urlencode($message);
+// 5. Dispatch via Greenweb BD API Server-to-Server (POST for reliable Unicode / Bengali SMS)
+$post_fields = [
+    'token' => $token,
+    'to' => $clean_phone,
+    'message' => $message,
+];
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $gw_url);
+$ch = curl_init('https://api.greenweb.com.bd/api.php');
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post_fields));
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 15);

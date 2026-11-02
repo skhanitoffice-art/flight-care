@@ -160,6 +160,7 @@ import {
   STAFF_NOTIFICATION_TYPES,
 } from './src/services/communication';
 import { dispatchSupportOfficeWhatsAppAlert } from './src/services/whatsappService';
+import { sendPaymentConfirmationSms } from './src/services/smsGateway.js';
 import {
   checkAccountLockout,
   recordFailedLogin,
@@ -1508,6 +1509,28 @@ export default function App() {
               try {
                 window.localStorage.removeItem('@flightcare/pending_ssl_booking');
               } catch {}
+
+              // Instant SMS to Passenger stating exact deducted amount
+              sendPaymentConfirmationSms({
+                booking: confirmedBooking,
+                amount: verifiedAmount,
+                trxId: finalTrxId,
+                method: 'sslcommerz',
+                lang,
+              }).catch(smsErr => console.warn('[Payment SMS] SSLCOMMERZ return error:', smsErr));
+
+              dispatchMultiChannelNotification({
+                eventType: COMMUNICATION_EVENTS.PAYMENT_SUCCESS,
+                booking: confirmedBooking,
+                payload: {
+                  amount: verifiedAmount,
+                  trxId: finalTrxId,
+                  wallet: verifyData.cardType || paymentCardType || 'SSLCOMMERZ',
+                },
+                preferences: notificationPreferences,
+                lang,
+                notifyFn: notify,
+              });
 
               notify(
                 lang ? 'পেমেন্ট সফল হয়েছে!' : 'Payment Confirmed!',
@@ -4248,6 +4271,16 @@ export default function App() {
     });
 
     // Multi-channel Communication Dispatch (Email, SMS, Push Notification)
+    if (isTrulyVerified) {
+      sendPaymentConfirmationSms({
+        booking: { ...activeBkashBooking, ...paidBookingUpdates },
+        amount: expectedAmount,
+        trxId,
+        method: wallet || 'banglaqr',
+        lang,
+      }).catch(err => console.warn('[Payment SMS] Bangla QR error:', err));
+    }
+
     await dispatchMultiChannelNotification({
       eventType: COMMUNICATION_EVENTS.PAYMENT_SUCCESS,
       booking: { ...activeBkashBooking, ...paidBookingUpdates },
@@ -4339,6 +4372,16 @@ export default function App() {
     });
 
     // Multi-channel Communication Dispatch (Email, SMS, Push Notification)
+    if (isCardVerified) {
+      sendPaymentConfirmationSms({
+        booking: { ...activeCardBooking, ...paidBookingUpdates },
+        amount: expectedAmount,
+        trxId,
+        method: isDirectBank ? 'bank_transfer' : 'card',
+        lang,
+      }).catch(err => console.warn('[Payment SMS] Card error:', err));
+    }
+
     await dispatchMultiChannelNotification({
       eventType: COMMUNICATION_EVENTS.PAYMENT_SUCCESS,
       booking: { ...activeCardBooking, ...paidBookingUpdates },
@@ -4442,6 +4485,16 @@ export default function App() {
     });
 
     // Multi-channel Communication Dispatch (Email, SMS, Push Notification)
+    if (isSslVerified) {
+      sendPaymentConfirmationSms({
+        booking: { ...activeSslBooking, ...paidBookingUpdates },
+        amount: expectedAmount,
+        trxId: valId || trxId,
+        method: 'sslcommerz',
+        lang,
+      }).catch(err => console.warn('[Payment SMS] SSL Modal error:', err));
+    }
+
     await dispatchMultiChannelNotification({
       eventType: COMMUNICATION_EVENTS.PAYMENT_SUCCESS,
       booking: { ...activeSslBooking, ...paidBookingUpdates },
@@ -4814,10 +4867,18 @@ export default function App() {
 
 
     if (booking.paymentStatus === 'paid') {
+      sendPaymentConfirmationSms({
+        booking,
+        amount: payableAmount,
+        trxId: booking.trxId || `PAY-${bookingCode}`,
+        method: chosenPaymentMethod,
+        lang,
+      }).catch(err => console.warn('[Payment SMS] Confirm SMS error:', err));
+
       dispatchMultiChannelNotification({
         eventType: COMMUNICATION_EVENTS.PAYMENT_SUCCESS,
         booking,
-        payload: { amount: payableAmount, trxId: booking.trxId || `BK9X${bookingCode}` },
+        payload: { amount: payableAmount, trxId: booking.trxId || `PAY-${bookingCode}` },
         preferences: notificationPreferences,
         lang,
         notifyFn: notify,

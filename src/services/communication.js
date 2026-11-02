@@ -108,27 +108,48 @@ export function buildTemplates({ eventType, booking = {}, payload = {}, lang = 0
     }
 
     case COMMUNICATION_EVENTS.PAYMENT_SUCCESS: {
+      const rawMethod = String(payload.wallet || payload.method || booking.paidMethod || booking.method || '').toLowerCase();
+      let methodLabelBn = 'অনলাইন পেমেন্ট';
+      let methodLabelEn = 'Online Payment';
+      if (rawMethod.includes('ssl')) {
+        methodLabelBn = 'এসএসএল কমার্স';
+        methodLabelEn = 'SSLCOMMERZ';
+      } else if (rawMethod.includes('banglaqr') || rawMethod.includes('qr')) {
+        methodLabelBn = 'বাংলা কিউআর';
+        methodLabelEn = 'Bangla QR';
+      } else if (rawMethod.includes('bkash')) {
+        methodLabelBn = 'বিকাশ';
+        methodLabelEn = 'bKash';
+      } else if (rawMethod.includes('nagad')) {
+        methodLabelBn = 'নগদ';
+        methodLabelEn = 'Nagad';
+      } else if (rawMethod.includes('card') || rawMethod.includes('bank')) {
+        methodLabelBn = 'ব্যাংক কার্ড';
+        methodLabelEn = 'Bank Card';
+      }
+      const formattedAmount = Number(amount || 0).toLocaleString('en-US');
+
       return {
         email: {
           recipient: passengerEmail,
           subject: isBn
-            ? `[Flight Care] বিকাশ পেমেন্ট রসিদ - TrxID: ${trxId}`
-            : `[Flight Care] bKash Payment Receipt - TrxID: ${trxId}`,
+            ? `[Flight Care] পেমেন্ট নিশ্চিতকরণ রসিদ - TrxID: ${trxId}`
+            : `[Flight Care] Payment Confirmation Receipt - TrxID: ${trxId}`,
           text: isBn
-            ? `সম্মানিত ${passengerName},\n\nআপনার বিকাশ পেমেন্ট সফলভাবে গৃহীত হয়েছে।\n\nবুকিং আইডি: ${bookingId}\nপেমেন্ট মেথড: bKash PGW\nট্রানজেকশন আইডি (TrxID): ${trxId}\nপরিশোধিত অর্থ: ৳${amount}\nস্ট্যাটাস: পেইড (Paid)\nতারিখ: ${new Date().toLocaleString('bn-BD')}\n\nধন্যবাদ,\nফ্লাইট কেয়ার পেমেন্ট সিস্টেম`
-            : `Dear ${passengerName},\n\nYour bKash payment has been successfully processed.\n\nBooking Reference: ${bookingId}\nPayment Method: bKash PGW\nTransaction ID (TrxID): ${trxId}\nAmount Paid: ৳${amount}\nPayment Status: Paid\nTimestamp: ${new Date().toLocaleString('en-GB')}\n\nThank you for choosing Flight Care!`,
+            ? `সম্মানিত ${passengerName},\n\nআপনার পেমেন্ট সফলভাবে সম্পন্ন হয়েছে। বুকিং #${bookingId}-এর জন্য আপনার অ্যাকাউন্ট থেকে মোট ৳${formattedAmount} টাকা কেটে নেওয়া হয়েছে।\n\nবুকিং আইডি: ${bookingId}\nপেমেন্ট মাধ্যম: ${methodLabelBn}\nট্রানজেকশন আইডি (TrxID): ${trxId}\nপরিশোধিত অর্থ: ৳${formattedAmount}\nস্ট্যাটাস: পেইড (Paid)\nফ্লাইট: ${flightNo}\nতারিখ: ${flightDate}\n\nধন্যবাদ,\nফ্লাইট কেয়ার পেমেন্ট সিস্টেম\n২৪/৭ হেল্পলাইন: ${SUPPORT_PHONE}`
+            : `Dear ${passengerName},\n\nYour payment has been successfully processed. Total BDT ${formattedAmount} has been deducted for Booking #${bookingId}.\n\nBooking Reference: ${bookingId}\nPayment Method: ${methodLabelEn}\nTransaction ID (TrxID): ${trxId}\nAmount Paid: BDT ${formattedAmount}\nPayment Status: Paid\nFlight: ${flightNo}\nDate: ${flightDate}\n\nThank you for choosing Flight Care!\n24/7 Helpline: ${SUPPORT_PHONE}`,
         },
         sms: {
           recipient: passengerPhone,
           message: isBn
-            ? `Flight Care: বিকাশ পেমেন্ট ৳${amount} সফলভাবে সম্পন্ন হয়েছে। TrxID: ${trxId}। বুকিং #${bookingId} সম্পূর্ণ পরিশোধিত। হেল্পলাইন: ${SUPPORT_PHONE}`
-            : `Flight Care: Payment of BDT ${amount} received via bKash. TrxID: ${trxId}. Booking #${bookingId} is fully paid. Helpline: ${SUPPORT_PHONE}`,
+            ? `Flight Care: প্রিয় ${passengerName}, আপনার পেমেন্ট নিশ্চিত হয়েছে! বুকিং #${bookingId}-এর জন্য আপনার অ্যাকাউন্ট থেকে মোট ৳${formattedAmount} কেটে নেওয়া হয়েছে (${methodLabelBn})। TrxID: ${trxId}। ফ্লাইট: ${flightNo}। হেল্পলাইন: ${SUPPORT_PHONE}`
+            : `Flight Care: Dear ${passengerName}, your payment for Booking #${bookingId} is confirmed! BDT ${formattedAmount} has been deducted via ${methodLabelEn}. TrxID: ${trxId}. Flight: ${flightNo}. Helpline: ${SUPPORT_PHONE}`,
         },
         inApp: {
-          title: isBn ? 'বিকাশ পেমেন্ট সফল!' : 'bKash Payment Verified!',
+          title: isBn ? 'পেমেন্ট সফল হয়েছে!' : 'Payment Verified!',
           body: isBn
-            ? `৳${amount} পরিশোধ সফল হয়েছে (TrxID: ${trxId})`
-            : `Payment of ৳${amount} received (TrxID: ${trxId})`,
+            ? `৳${formattedAmount} পরিশোধ সফল হয়েছে (TrxID: ${trxId})`
+            : `Payment of ৳${formattedAmount} received (TrxID: ${trxId})`,
           category: 'payment',
         },
       };

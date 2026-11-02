@@ -38,6 +38,7 @@ import {
   COMMUNICATION_EVENTS,
   dispatchBookingLifecycleNotifications,
 } from '../services/communication';
+import { sendPaymentConfirmationSms } from '../services/smsGateway.js';
 import {
   generateDailyReconciliation,
   cleanExpiredPaymentSessions,
@@ -2728,6 +2729,16 @@ export default function ManagerPanel({
       onUpdateBooking(bookingId, updated);
     }
     setSelectedBooking(updated);
+
+    // Auto-dispatch payment deduction confirmation SMS to passenger
+    sendPaymentConfirmationSms({
+      booking: updated,
+      amount: updated.amount,
+      trxId: updated.trxId || updated.paymentRef,
+      method: updated.method,
+      lang,
+    }).catch(smsErr => console.warn('[Manager SMS] Verification notice:', smsErr));
+
     setAdminNotice(lang ? 'পেমেন্ট সফলভাবে যাচাই ও নিশ্চিত করা হয়েছে!' : 'Payment verified and marked as Paid.');
     setTimeout(() => setAdminNotice(''), 3000);
   };
