@@ -293,7 +293,22 @@ export default function HomeScreen({
   };
 
   return (
-    <View style={{ flex: 1, width: '100%', maxWidth: '100%', backgroundColor: '#F8FAFC', position: 'relative', overflow: 'hidden' }}>
+    <View
+      style={{
+        flex: 1,
+        width: '100%',
+        maxWidth: '100%',
+        backgroundColor: '#F8FAFC',
+        position: 'relative',
+        overflow: 'hidden',
+        ...(Platform.OS === 'web' ? {
+          overflowX: 'hidden',
+          touchAction: 'pan-y',
+          clipPath: 'inset(0 0 0 0)',
+          WebkitClipPath: 'inset(0 0 0 0)',
+        } : {}),
+      }}
+    >
       <Parallax3DAtmosphere scrollY={scrollY} isMobile={true} />
       <ScrollView
         onScroll={Animated.event(
@@ -317,8 +332,23 @@ export default function HomeScreen({
           alignItems: 'center',
           width: '100%',
           maxWidth: '100%',
+          overflow: 'hidden',
+          ...(Platform.OS === 'web' ? {
+            overflowX: 'hidden',
+            touchAction: 'pan-y',
+          } : {}),
         }}
-        style={{ flex: 1, width: '100%', maxWidth: '100%', backgroundColor: 'transparent', zIndex: 1 }}
+        style={{
+          flex: 1,
+          width: '100%',
+          maxWidth: '100%',
+          backgroundColor: 'transparent',
+          zIndex: 1,
+          ...(Platform.OS === 'web' ? {
+            overflowX: 'hidden',
+            touchAction: 'pan-y',
+          } : {}),
+        }}
       >
       <View style={{ width: '100%', maxWidth: 460 }}>
           {/* Mobile FlightCare Brand Header Bar */}

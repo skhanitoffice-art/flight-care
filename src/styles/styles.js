@@ -16,6 +16,7 @@ export const s = StyleSheet.create({
     maxWidth: '100%',
     flex: 1,
     overflow: 'hidden',
+    ...(Platform.OS === 'web' ? { overflowX: 'hidden', touchAction: 'pan-y' } : {}),
   },
   desktopNavBar: {
     width: '100%',

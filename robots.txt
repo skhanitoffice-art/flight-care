@@ -1,0 +1,40 @@
+# ===============================================================
+# Flight Care - Robots Exclusion Standard
+# Website: https://flightcaresbd.com
+# Approved VIP Meet & Greet & Protocol Service at Dhaka Airport (HSIA)
+# 24/7 Hotline: +8801347570000 | +8801347570001
+# ===============================================================
+
+User-agent: *
+Allow: /
+Allow: /?lang=bn
+Allow: /?lang=en
+Allow: /assets/
+Allow: /_expo/
+Allow: /favicon.ico
+Allow: /flightcare-og-banner-1200x630.png
+
+# Disallow private API endpoints, server backends, and sensitive booking tokens
+Disallow: /api/
+Disallow: /server/
+Disallow: /admin_docs/
+Disallow: /*?bookingId=*
+Disallow: /*?token=*
+Disallow: /*?secret=*
+
+# High-Priority Search Engines explicit directives
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /assets/
+Allow: /*.png$
+Allow: /*.webp$
+Allow: /*.jpg$
+Allow: /*.svg$
+
+User-agent: Bingbot
+Allow: /
+
+# Canonical XML Sitemap
+Sitemap: https://flightcaresbd.com/sitemap.xml

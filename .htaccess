@@ -9,6 +9,8 @@ Options -Indexes +FollowSymLinks
 <IfModule mod_mime.c>
   AddType application/javascript .js .mjs
   AddType text/css .css
+  AddType text/plain .txt
+  AddType application/xml .xml
   AddType image/webp .webp
   AddType image/png .png
   AddType image/jpeg .jpg .jpeg

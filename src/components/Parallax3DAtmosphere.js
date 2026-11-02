@@ -54,7 +54,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
   });
   const distantCloud1X = safeScrollY.interpolate({
     inputRange: [0, 3000],
-    outputRange: [0, -110],
+    outputRange: [0, phone ? 0 : -110],
   });
 
   const distantCloud2Y = safeScrollY.interpolate({
@@ -63,7 +63,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
   });
   const distantCloud2X = safeScrollY.interpolate({
     inputRange: [0, 3000],
-    outputRange: [0, 100],
+    outputRange: [0, phone ? 0 : 100],
   });
 
   // ---------------------------------------------------------
@@ -75,7 +75,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
   });
   const midCloud1X = safeScrollY.interpolate({
     inputRange: [0, 3000],
-    outputRange: [0, -150],
+    outputRange: [0, phone ? 0 : -150],
   });
 
   const midCloud2Y = safeScrollY.interpolate({
@@ -84,7 +84,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
   });
   const midCloud2X = safeScrollY.interpolate({
     inputRange: [0, 3000],
-    outputRange: [0, 130],
+    outputRange: [0, phone ? 0 : 130],
   });
 
   // ---------------------------------------------------------
@@ -96,7 +96,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
   });
   const heroPlaneX = safeScrollY.interpolate({
     inputRange: [0, 2000],
-    outputRange: [0, phone ? 90 : 240],
+    outputRange: [0, phone ? 0 : 240],
   });
   const heroPlaneRotate = safeScrollY.interpolate({
     inputRange: [0, 500, 1200, 2000],
@@ -120,7 +120,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
   });
   const secPlaneX = safeScrollY.interpolate({
     inputRange: [400, 1200, 2600],
-    outputRange: [phone ? 70 : 150, 0, phone ? -80 : -190],
+    outputRange: [phone ? 0 : 150, 0, phone ? 0 : -190],
   });
   const secPlaneRotate = safeScrollY.interpolate({
     inputRange: [400, 1200, 2600],
@@ -140,11 +140,11 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
   });
   const fgCloudX = safeScrollY.interpolate({
     inputRange: [0, 2000],
-    outputRange: [0, 170],
+    outputRange: [0, phone ? 0 : 170],
   });
 
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View style={styles.container} pointerEvents="none" className="fc-parallax-atmosphere">
       {/* ========================================================= */}
       {/* 1. LAYER 0: SKY HORIZON WASH & SUN GLOW (~0.15x)          */}
       {/* ========================================================= */}
@@ -336,14 +336,21 @@ const styles = StyleSheet.create({
     pointerEvents: 'none',
     width: '100%',
     maxWidth: '100%',
+    ...(Platform.OS === 'web' ? {
+      clipPath: 'inset(0 0 0 0)',
+      WebkitClipPath: 'inset(0 0 0 0)',
+      contain: 'paint layout',
+      overflowX: 'hidden',
+    } : {}),
   },
 
   // 1. Sky Backdrop
   skyBackdrop: {
     position: 'absolute',
     top: -120,
-    left: -100,
-    right: -100,
+    left: 0,
+    right: 0,
+    width: '100%',
     height: 1400,
     backgroundColor: 'transparent',
   },
@@ -370,14 +377,16 @@ const styles = StyleSheet.create({
   distantCloud1: {
     position: 'absolute',
     top: 30,
-    right: -50,
+    right: 0,
+    maxWidth: '100%',
     opacity: 0.52,
     filter: 'blur(1.2px) drop-shadow(0px 8px 16px rgba(186, 230, 253, 0.3))',
   },
   distantCloud2: {
     position: 'absolute',
     top: 220,
-    left: -70,
+    left: 0,
+    maxWidth: '100%',
     opacity: 0.46,
     filter: 'blur(1.8px) drop-shadow(0px 10px 20px rgba(186, 230, 253, 0.25))',
   },
@@ -386,14 +395,16 @@ const styles = StyleSheet.create({
   midCloud1: {
     position: 'absolute',
     top: 140,
-    right: -90,
+    right: 0,
+    maxWidth: '100%',
     opacity: 0.65,
     filter: 'drop-shadow(0px 12px 24px rgba(148, 163, 184, 0.22))',
   },
   midCloud2: {
     position: 'absolute',
     top: 580,
-    left: -80,
+    left: 0,
+    maxWidth: '100%',
     opacity: 0.6,
     filter: 'drop-shadow(0px 14px 28px rgba(148, 163, 184, 0.2))',
   },
@@ -434,7 +445,8 @@ const styles = StyleSheet.create({
   foregroundCloudPuff: {
     position: 'absolute',
     top: 360,
-    left: -80,
+    left: 0,
+    maxWidth: '100%',
     opacity: 0.35,
     filter: 'blur(2px) drop-shadow(0px 16px 30px rgba(148, 163, 184, 0.25))',
   },

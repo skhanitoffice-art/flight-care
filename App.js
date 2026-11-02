@@ -5468,9 +5468,9 @@ export default function App() {
 
   if (wiz) {
     return (
-      <SafeAreaView style={[s.safeArea, { overflow: 'visible' }]}>
+      <SafeAreaView style={[s.safeArea, { overflow: 'hidden', maxWidth: '100%' }]}>
         <StatusBar barStyle="dark-content" />
-        <View style={[s.frame, s.frame3D, { maxWidth: '100%', width: '100%', marginVertical: 0, overflow: 'visible' }]}>
+        <View style={[s.frame, s.frame3D, { maxWidth: '100%', width: '100%', marginVertical: 0, overflow: 'hidden' }]}>
           <WizardScreen
             wiz={wiz}
             setWiz={setWiz}

@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import DesktopWizardScreen from '../components/DesktopWizardScreen';
 import CountryCodeModal from '../components/CountryCodeModal';
@@ -678,8 +679,19 @@ export default function WizardScreen({
           paddingVertical: 16,
           alignItems: 'center',
           paddingBottom: 40,
+          width: '100%',
+          maxWidth: '100%',
+          overflow: 'hidden',
+          ...(Platform.OS === 'web' ? { overflowX: 'hidden', touchAction: 'pan-y' } : {}),
+        }}
+        style={{
+          flex: 1,
+          width: '100%',
+          maxWidth: '100%',
+          ...(Platform.OS === 'web' ? { overflowX: 'hidden', touchAction: 'pan-y' } : {}),
         }}
         showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
         bounces={false}
         alwaysBounceVertical={false}
         alwaysBounceHorizontal={false}
