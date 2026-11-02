@@ -5,13 +5,17 @@ export const s = StyleSheet.create({
   safeArea: {
     flex: 1,
     width: '100%',
+    maxWidth: '100%',
     backgroundColor: '#F0F2F5',
-    ...(Platform.OS === 'web' ? { minHeight: '100vh', width: '100vw' } : {}),
+    overflow: 'hidden',
+    ...(Platform.OS === 'web' ? { minHeight: '100%', width: '100%', maxWidth: '100vw', overflowX: 'hidden' } : {}),
   },
-  frame: { flex: 1, width: '100%', alignSelf: 'stretch', backgroundColor: '#F0F2F5', paddingBottom: 0 },
+  frame: { flex: 1, width: '100%', maxWidth: '100%', alignSelf: 'stretch', backgroundColor: '#F0F2F5', paddingBottom: 0, overflow: 'hidden' },
   frame3D: {
     width: '100%',
+    maxWidth: '100%',
     flex: 1,
+    overflow: 'hidden',
   },
   desktopNavBar: {
     width: '100%',

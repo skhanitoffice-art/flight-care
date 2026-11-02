@@ -181,6 +181,7 @@ import { initAntiTheftProtection } from './src/services/antiTheftProtection';
 // Inject 3D Web Styles & Anti-Theft Shield when running in web browser
 injectWeb3DStyles();
 initAntiTheftProtection();
+const DISMISSED_REVIEWS_STORAGE = '@flightcare_dismissed_reviews_v3';
 
 const getInitialWebRoute = () => {
   if (Platform.OS !== 'web' || typeof window === 'undefined') {
@@ -549,116 +550,6 @@ export default function App() {
       });
     }
   }, [bookings, initialTrackBookingId, trackedBookingHandled]);
-
-  // Automatic Service Completion Review Popup State for Verified Passengers
-  const [completionReviewBooking, setCompletionReviewBooking] = useState(null);
-  const [dismissedReviewBookingIds, setDismissedReviewBookingIds] = useState({});
-
-  // Proactively load dismissed review IDs from persistent storage
-  useEffect(() => {
-    AsyncStorage.getItem(DISMISSED_REVIEWS_STORAGE).then(val => {
-      if (val) {
-        try {
-          const parsed = JSON.parse(val);
-          if (parsed && typeof parsed === 'object') {
-            setDismissedReviewBookingIds(parsed);
-          }
-        } catch {}
-      }
-    }).catch(() => {});
-  }, []);
-
-  const markReviewDismissed = (bookingId) => {
-    if (!bookingId) return;
-    setDismissedReviewBookingIds(prev => {
-      const next = { ...prev, [bookingId]: true };
-      AsyncStorage.setItem(DISMISSED_REVIEWS_STORAGE, JSON.stringify(next)).catch(() => {});
-      return next;
-    });
-  };
-
-  // STRICT RULE: Review popup ONLY appears to the specific passenger who actually booked that service!
-  // It NEVER appears to random visitors, guests, admins, managers, or other unrelated users.
-  useEffect(() => {
-    // 1. Never prompt reviews to administrative roles or staff officers
-    if (currentRole === 'manager' || currentRole === 'super_admin' || currentRole === 'staff') {
-      return;
-    }
-
-    if (!bookings || bookings.length === 0) return;
-
-    // 2. Identify the set of booking IDs genuinely created on or owned by THIS device
-    const deviceIds = new Set((deviceCreatedBookingIds || []).map(id => String(id).trim().toUpperCase()));
-    const uPhone = String(customerSession?.user?.phone || profile?.phone || '').replace(/\D/g, '');
-    const uEmail = String(customerSession?.user?.email || profile?.email || '').trim().toLowerCase();
-    const uId = String(customerSession?.user?.id || customerSession?.user?.uid || '').trim();
-
-    // If this visitor has no bookings on this device and no customer profile, DO NOT PROMPT!
-    if (deviceIds.size === 0 && !uPhone && !uEmail && !uId) {
-      return;
-    }
-
-    // 3. Find if there is an unrated completed booking that belongs to THIS user
-    const target = (bookings || []).find(b => {
-      if (!b) return false;
-      const bId = String(b.id || b.bookingId || '').trim().toUpperCase();
-      if (!bId || dismissedReviewBookingIds[b.id] || dismissedReviewBookingIds[bId]) return false;
-
-      // Ownership Check: Must be created on this device or match logged-in customer identity
-      const isDeviceOwned = deviceIds.has(bId);
-      const bPhone = String(b.passengerPhone || b.phone || b.customer?.phone || '').replace(/\D/g, '');
-      const bEmail = String(b.passengerEmail || b.email || b.customer?.email || '').trim().toLowerCase();
-      const bUid = String(b.customerId || b.userId || '').trim();
-
-      const isUserOwned = Boolean(
-        isDeviceOwned ||
-        (uPhone && bPhone && (bPhone.endsWith(uPhone) || uPhone.endsWith(bPhone))) ||
-        (uEmail && bEmail && bEmail === uEmail) ||
-        (uId && bUid && bUid === uId)
-      );
-
-      if (!isUserOwned) return false;
-
-      // Must be completed and not yet rated
-      const isCompleted =
-        b.status === 'completed' ||
-        (Array.isArray(b.serviceProgress) &&
-          b.serviceProgress.length > 0 &&
-          b.serviceProgress.every(m => m.status === 'completed'));
-      const isUnrated = !b.customerRating;
-
-      return isCompleted && isUnrated;
-    });
-
-    if (target && !completionReviewBooking) {
-      const t = setTimeout(() => {
-        setCompletionReviewBooking(target);
-      }, 1000);
-      return () => clearTimeout(t);
-    }
-  }, [bookings, dismissedReviewBookingIds, completionReviewBooking, currentRole, deviceCreatedBookingIds, customerSession, profile]);
-
-  const handleReviewSubmitted = (bookingId, reviewData) => {
-    markReviewDismissed(bookingId);
-    setBookings(prev =>
-      prev.map(b =>
-        b.id === bookingId
-          ? {
-              ...b,
-              customerRating: reviewData.rating,
-              customerFeedback: reviewData.comment,
-            }
-          : b
-      )
-    );
-  };
-
-  const handleCloseReviewModal = () => {
-    if (completionReviewBooking) {
-      markReviewDismissed(completionReviewBooking.id);
-    }
-    setCompletionReviewBooking(null);
-  };
 
   const handleOpenFamilyMemberUrl = member => {
     if (!member) return;
@@ -1125,7 +1016,6 @@ export default function App() {
   const AIRPORTS_STORAGE = '@flightcare_managed_airports';
   const BOOKINGS_STORAGE = '@flightcare_bookings';
   const DEVICE_BOOKINGS_STORAGE = '@flightcare_device_booking_ids_v2';
-const DISMISSED_REVIEWS_STORAGE = '@flightcare_dismissed_reviews_v3';
   AsyncStorage.removeItem('@flightcare_device_booking_ids').catch(() => {});
 
   // Legacy false test booking filter
@@ -5084,6 +4974,116 @@ const DISMISSED_REVIEWS_STORAGE = '@flightcare_dismissed_reviews_v3';
     // Unauthenticated guest: only show bookings created on this device
     return (bookings || []).filter(b => myIds.has(String(b.id || b.bookingId || '').trim().toUpperCase()));
   }, [bookings, customerSession, currentRole, deviceCreatedBookingIds]);
+
+  // Automatic Service Completion Review Popup State for Verified Passengers
+  const [completionReviewBooking, setCompletionReviewBooking] = useState(null);
+  const [dismissedReviewBookingIds, setDismissedReviewBookingIds] = useState({});
+
+  // Proactively load dismissed review IDs from persistent storage
+  useEffect(() => {
+    AsyncStorage.getItem(DISMISSED_REVIEWS_STORAGE).then(val => {
+      if (val) {
+        try {
+          const parsed = JSON.parse(val);
+          if (parsed && typeof parsed === 'object') {
+            setDismissedReviewBookingIds(parsed);
+          }
+        } catch {}
+      }
+    }).catch(() => {});
+  }, []);
+
+  const markReviewDismissed = (bookingId) => {
+    if (!bookingId) return;
+    setDismissedReviewBookingIds(prev => {
+      const next = { ...prev, [bookingId]: true };
+      AsyncStorage.setItem(DISMISSED_REVIEWS_STORAGE, JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+  };
+
+  // STRICT RULE: Review popup ONLY appears to the specific passenger who actually booked that service!
+  // It NEVER appears to random visitors, guests, admins, managers, or other unrelated users.
+  useEffect(() => {
+    // 1. Never prompt reviews to administrative roles or staff officers
+    if (currentRole === 'manager' || currentRole === 'super_admin' || currentRole === 'staff') {
+      return;
+    }
+
+    if (!bookings || bookings.length === 0) return;
+
+    // 2. Identify the set of booking IDs genuinely created on or owned by THIS device
+    const deviceIds = new Set((deviceCreatedBookingIds || []).map(id => String(id).trim().toUpperCase()));
+    const uPhone = String(customerSession?.user?.phone || profile?.phone || '').replace(/\D/g, '');
+    const uEmail = String(customerSession?.user?.email || profile?.email || '').trim().toLowerCase();
+    const uId = String(customerSession?.user?.id || customerSession?.user?.uid || '').trim();
+
+    // If this visitor has no bookings on this device and no customer profile, DO NOT PROMPT!
+    if (deviceIds.size === 0 && !uPhone && !uEmail && !uId) {
+      return;
+    }
+
+    // 3. Find if there is an unrated completed booking that belongs to THIS user
+    const target = (bookings || []).find(b => {
+      if (!b) return false;
+      const bId = String(b.id || b.bookingId || '').trim().toUpperCase();
+      if (!bId || dismissedReviewBookingIds[b.id] || dismissedReviewBookingIds[bId]) return false;
+
+      // Ownership Check: Must be created on this device or match logged-in customer identity
+      const isDeviceOwned = deviceIds.has(bId);
+      const bPhone = String(b.passengerPhone || b.phone || b.customer?.phone || '').replace(/\D/g, '');
+      const bEmail = String(b.passengerEmail || b.email || b.customer?.email || '').trim().toLowerCase();
+      const bUid = String(b.customerId || b.userId || '').trim();
+
+      const isUserOwned = Boolean(
+        isDeviceOwned ||
+        (uPhone && bPhone && (bPhone.endsWith(uPhone) || uPhone.endsWith(bPhone))) ||
+        (uEmail && bEmail && bEmail === uEmail) ||
+        (uId && bUid && bUid === uId)
+      );
+
+      if (!isUserOwned) return false;
+
+      // Must be completed and not yet rated
+      const isCompleted =
+        b.status === 'completed' ||
+        (Array.isArray(b.serviceProgress) &&
+          b.serviceProgress.length > 0 &&
+          b.serviceProgress.every(m => m.status === 'completed'));
+      const isUnrated = !b.customerRating;
+
+      return isCompleted && isUnrated;
+    });
+
+    if (target && !completionReviewBooking) {
+      const t = setTimeout(() => {
+        setCompletionReviewBooking(target);
+      }, 1000);
+      return () => clearTimeout(t);
+    }
+  }, [bookings, dismissedReviewBookingIds, completionReviewBooking, currentRole, deviceCreatedBookingIds, customerSession, profile]);
+
+  const handleReviewSubmitted = (bookingId, reviewData) => {
+    markReviewDismissed(bookingId);
+    setBookings(prev =>
+      prev.map(b =>
+        b.id === bookingId
+          ? {
+              ...b,
+              customerRating: reviewData.rating,
+              customerFeedback: reviewData.comment,
+            }
+          : b
+      )
+    );
+  };
+
+  const handleCloseReviewModal = () => {
+    if (completionReviewBooking) {
+      markReviewDismissed(completionReviewBooking.id);
+    }
+    setCompletionReviewBooking(null);
+  };
 
   if (subPage === 'additional_services') {
     return (

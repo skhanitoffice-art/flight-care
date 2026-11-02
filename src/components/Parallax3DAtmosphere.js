@@ -333,6 +333,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     overflow: 'hidden',
     zIndex: 0,
+    pointerEvents: 'none',
+    width: '100%',
+    maxWidth: '100%',
   },
 
   // 1. Sky Backdrop
