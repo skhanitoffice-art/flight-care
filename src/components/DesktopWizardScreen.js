@@ -54,6 +54,7 @@ import LiveTrackingModal from './LiveTrackingModal';
 import BookingInvoiceModal from './BookingInvoiceModal';
 import VipPlacardModal from './VipPlacardModal';
 import BookingOtpModal from './BookingOtpModal';
+import VisaOnArrivalUploadSection from './VisaOnArrivalUploadSection';
 import {
   isValidPassengerName,
   isValidMobileNumber,
@@ -68,6 +69,7 @@ import {
   calculateBookingPricing,
   validatePromoCode,
   getCalendarEventData,
+  validateVisaOnArrivalDocs,
 } from '../utils/helpers';
 import { getLiveFlightStatus } from '../services/flightService';
 import { getAddonAsset, ADDONS } from '../constants/data';
@@ -183,6 +185,10 @@ export default function DesktopWizardScreen({
   const isZeroOrQuote = totalAmount === 0 || totalAmount == null || Boolean(pricingData.quoteRequired) || Boolean(wiz.onlyAddons && totalAmount === 0);
   const pkgPrice = pricingData.basePrice != null ? pricingData.basePrice : (wiz.pkg?.p != null ? wiz.pkg.p : 500);
   const passengers = pricingData.passengerCount || 1;
+  const pricingBreakdown = pricingData;
+  const selectedPackage = wiz.packageChoice || wiz.pkg?.id || 'business';
+  const discountAmount = Number(wiz.discount?.amount || 0);
+  const rewardPointsDiscount = Number(wiz.rewardPointsUsed ? Math.min(Number(wiz.rewardPointsUsed) * 0.5, totalAmount) : 0);
   const pointsEarned = wiz.onlyAddons
     ? Math.max(10, Math.round(Number(totalAmount) * 0.05))
     : (pkgPrice === 1500 ? 150 : pkgPrice === 1000 ? 100 : 50);
@@ -293,6 +299,8 @@ export default function DesktopWizardScreen({
   const bookingDigits = String(bookingCode || '').replace(/\D/g, '');
   const phoneDigits = String(passengerPhone || wiz.passengerPhone || wiz.phone || '').replace(/\D/g, '');
   const handoverOtp = wiz.handoverOtp || (bookingDigits.length >= 4 ? bookingDigits.slice(-4) : (phoneDigits.length >= 4 ? phoneDigits.slice(-4) : '2026'));
+
+  const isPayAfter = paymentMethod === 'pay_after_service' || wiz.method === 'pay_after_service';
 
   const currentBooking = {
     ...wiz,

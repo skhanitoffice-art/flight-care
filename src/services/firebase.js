@@ -44,18 +44,36 @@ export const isFirebaseConfigured = () => {
   return Boolean(FIREBASE_CONFIG.projectId && FIREBASE_CONFIG.projectId === "flightcare-db2eb");
 };
 
-// Initialize Firebase App
-let firebaseApp;
-if (getApps().length === 0) {
-  firebaseApp = initializeApp(FIREBASE_CONFIG);
-} else {
-  firebaseApp = getApp();
+// Initialize Firebase App safely without crashing frontend if API key is not ready
+let firebaseApp = null;
+let firestoreDb = null;
+let firebaseAuth = null;
+
+try {
+  if (FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId) {
+    if (getApps().length === 0) {
+      firebaseApp = initializeApp(FIREBASE_CONFIG);
+    } else {
+      firebaseApp = getApp();
+    }
+    if (firebaseApp) {
+      try {
+        firestoreDb = getFirestore(firebaseApp);
+      } catch (err) {
+        console.warn('[Firebase] Firestore init warning:', err?.message || err);
+      }
+      try {
+        firebaseAuth = getAuth(firebaseApp);
+      } catch (err) {
+        console.warn('[Firebase] Auth init warning:', err?.message || err);
+      }
+    }
+  }
+} catch (e) {
+  console.warn('[Firebase] App initialization warning:', e?.message || e);
 }
 
-// Initialize Firestore & Auth
-export const firestoreDb = getFirestore(firebaseApp);
-export const firebaseAuth = getAuth(firebaseApp);
-export { firebaseApp };
+export { firestoreDb, firebaseAuth, firebaseApp };
 
 // -----------------------------------------------------------------------------
 // FIREBASE AUTHENTICATION HELPERS
