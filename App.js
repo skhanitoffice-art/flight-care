@@ -5478,6 +5478,9 @@ export default function App() {
             lang={lang}
             setLang={setLang}
             customerSession={customerSession}
+            setCustomerSession={setCustomerSession}
+            profile={profile}
+            setProfile={setProfile}
             t={t}
             responsive={responsive}
             addonCatalog={addonCatalog}

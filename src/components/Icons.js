@@ -927,5 +927,59 @@ export const SslCommerzBadge = ({ size = 28 }) => {
   return <Text style={{ fontSize: 13, fontWeight: '800', color: '#0A3B75' }}>SSLCOMMERZ (কার্ড, এমএফএস ও ইন্টারনেট ব্যাংকিং)</Text>;
 };
 
+// Google Logo (Web SVG / Native Fallback)
+export const GoogleLogo = ({ size = 20 }) => {
+  if (Platform.OS === 'web') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.17 0 9.97 0 12s.45 3.83 1.25 5.42l4.03-3.15z"/>
+        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+      </svg>
+    );
+  }
+  return (
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#CBD5E1', alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: '#EA4335', fontWeight: '900', fontSize: size * 0.65 }}>G</Text>
+    </View>
+  );
+};
+
+// Facebook Logo (Official Brand Style)
+export const FacebookLogo = ({ size = 20 }) => {
+  if (Platform.OS === 'web') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24">
+        <rect width="24" height="24" rx="6" fill="#1877F2" />
+        <path fill="#FFFFFF" d="M15.5 8h-2c-.5 0-1 .5-1 1v2h3l-.5 3h-2.5v7h-3v-7H7.5v-3H9.5V9c0-2.2 1.8-4 4-4h2v3z" />
+      </svg>
+    );
+  }
+  return (
+    <View style={{ width: size, height: size, borderRadius: 5, backgroundColor: '#1877F2', alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: size * 0.7 }}>f</Text>
+    </View>
+  );
+};
+
+// Mobile Phone Badge
+export const MobilePhoneBadge = ({ size = 20, color = '#16A34A' }) => {
+  if (Platform.OS === 'web') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+        <line x1="12" y1="18" x2="12.01" y2="18" />
+      </svg>
+    );
+  }
+  return (
+    <View style={{ width: size, height: size, borderRadius: 4, backgroundColor: color, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: size * 0.6 }}>📱</Text>
+    </View>
+  );
+};
+
+
 
 

@@ -35,6 +35,9 @@ export default function WizardScreen({
   lang = 0,
   setLang,
   customerSession,
+  setCustomerSession,
+  profile,
+  setProfile,
   t,
   responsive,
   handleBack,
@@ -57,6 +60,9 @@ export default function WizardScreen({
         lang={lang}
         setLang={setLang}
         customerSession={customerSession}
+        setCustomerSession={setCustomerSession}
+        profile={profile}
+        setProfile={setProfile}
         setTab={setTab}
         confirm={confirm}
         advanceBooking={advanceBooking}
@@ -717,6 +723,9 @@ export default function WizardScreen({
               handlePayNow={handlePayNow}
               isPaying={isPaying}
               customerSession={customerSession}
+              setCustomerSession={setCustomerSession}
+              profile={profile}
+              setProfile={setProfile}
             />
           )}
 

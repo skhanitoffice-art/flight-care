@@ -26,6 +26,7 @@ import {
 import { validatePromoCode } from '../../utils/helpers';
 import { getCustomerRewards } from '../../services/customerRewardsService';
 import CancellationPolicyModal from '../../components/CancellationPolicyModal';
+import CheckoutAuthSection from '../../components/CheckoutAuthSection';
 import WebsiteComplianceModal from '../../components/WebsiteComplianceModal';
 
 export default function WizardStep2Payment({
@@ -40,6 +41,9 @@ export default function WizardStep2Payment({
   handlePayNow,
   isPaying = false,
   customerSession,
+  setCustomerSession,
+  profile,
+  setProfile,
 }) {
   const isBn = Boolean(lang);
   const [userRewards, setUserRewards] = useState(null);
@@ -292,134 +296,17 @@ export default function WizardStep2Payment({
         </View>
       </View>
 
-      {/* Card 2B: রিওয়ার্ড পয়েন্ট ছাড় (Login Required) */}
-      <View
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: 16,
-          padding: 16,
-          borderWidth: 1,
-          borderColor: '#E2E8F0',
-          marginBottom: 14,
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ fontSize: 16 }}>⭐</Text>
-            <Text style={{ fontSize: 14.5, fontWeight: '800', color: '#0F172A' }}>
-              {isBn ? 'গ্রাহক রিওয়ার্ড পয়েন্ট ছাড়' : 'Reward Points Discount'}
-            </Text>
-          </View>
-          <View
-            style={{
-              backgroundColor: isLoggedIn ? '#DCFCE7' : '#FEF3C7',
-              paddingHorizontal: 7,
-              paddingVertical: 2,
-              borderRadius: 6,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 10.5,
-                fontWeight: '800',
-                color: isLoggedIn ? '#15803D' : '#B45309',
-              }}
-            >
-              {isLoggedIn
-                ? `${userRewards?.points || 0} ${isBn ? 'পয়েন্ট আছে' : 'Pts'}`
-                : `🔒 ${isBn ? 'লকড' : 'LOCKED'}`}
-            </Text>
-          </View>
-        </View>
-
-        {!isLoggedIn ? (
-          <View>
-            <Text style={{ fontSize: 12, color: '#64748B', marginBottom: 10, lineHeight: 17 }}>
-              {isBn
-                ? '১০০ রিওয়ার্ড পয়েন্ট ক্লেইম করে এই বুকিংয়ে তাৎক্ষণিক ছাড় পেতে আপনার অ্যাকাউন্টে লগ ইন করুন।'
-                : 'Log in to claim 100 welcome reward points and get instant discount on this booking.'}
-            </Text>
-            <TouchableOpacity
-              onPress={() => {
-                if (setTab) setTab('profile');
-              }}
-              style={{
-                backgroundColor: '#0F172A',
-                borderRadius: 9,
-                paddingVertical: 9,
-                paddingHorizontal: 14,
-                alignItems: 'center',
-                flexDirection: 'row',
-                justifyContent: 'center',
-                gap: 6,
-              }}
-            >
-              <Text style={{ color: '#FFFFFF', fontSize: 12.5, fontWeight: '800' }}>
-                🔑 {isBn ? 'পয়েন্ট ক্লেইম করতে লগ ইন করুন' : 'Log in to Claim Points'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View>
-            <Text style={{ fontSize: 12, color: '#64748B', marginBottom: 10 }}>
-              {isBn
-                ? `আপনার অ্যাকাউন্টে ${userRewards?.points || 0} পয়েন্ট রয়েছে (১ পয়েন্ট = ১ টাকা ছাড়)।`
-                : `You have ${userRewards?.points || 0} reward points available (1 pt = 1 BDT).`}
-            </Text>
-            {(userRewards?.points || 0) > 0 ? (
-              wiz.rewardPointsUsed ? (
-                <View
-                  style={{
-                    backgroundColor: '#ECFDF5',
-                    padding: 10,
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: '#A7F3D0',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <Text style={{ fontSize: 13, fontWeight: '800', color: '#065F46' }}>
-                    ✓ {wiz.rewardPointsUsed} {isBn ? 'পয়েন্ট ছাড় প্রযুক্ত হয়েছে (-৳' + wiz.rewardPointsUsed + ')' : 'Points applied (-৳' + wiz.rewardPointsUsed + ')'}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => setWiz(prev => ({ ...prev, rewardPointsUsed: 0 }))}
-                    style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}
-                  >
-                    <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#DC2626' }}>
-                      {isBn ? 'মুছুন' : 'Remove'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  onPress={() => {
-                    const maxPts = Math.min(userRewards?.points || 0, Math.floor(totalAmount * 0.5));
-                    setWiz(prev => ({ ...prev, rewardPointsUsed: maxPts }));
-                  }}
-                  style={{
-                    backgroundColor: '#0284C7',
-                    borderRadius: 9,
-                    paddingVertical: 9,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text style={{ color: '#FFFFFF', fontSize: 12.5, fontWeight: '800' }}>
-                    ⚡ {isBn ? `রিওয়ার্ড পয়েন্ট প্রয়োগ করুন (৳${Math.min(userRewards?.points || 0, Math.floor(totalAmount * 0.5))} ছাড়)` : 'Apply Reward Points'}
-                  </Text>
-                </TouchableOpacity>
-              )
-            ) : (
-              <Text style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>
-                {isBn
-                  ? 'আপনার প্রোফাইল থেকে ফ্রি ১০০ ওয়েলকাম রিওয়ার্ড পয়েন্ট ক্লেইম করুন!'
-                  : 'Claim your free 100 Welcome Points from Profile to get discount!'}
-              </Text>
-            )}
-          </View>
-        )}
-      </View>
+      {/* Real Login & Signup System Before Payment Confirmation (Daraz, TikTok, Facebook Style) */}
+      <CheckoutAuthSection
+        wiz={wiz}
+        setWiz={setWiz}
+        customerSession={customerSession}
+        setCustomerSession={setCustomerSession}
+        profile={profile}
+        setProfile={setProfile}
+        lang={lang}
+        totalAmount={totalAmount}
+      />
 
       {/* Row: মোট পরিশোধযোগ্য / Price Breakdown */}
       <View

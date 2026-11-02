@@ -44,6 +44,7 @@ import {
   SslCommerzBadge,
 } from './Icons';
 import CountryCodeModal from './CountryCodeModal';
+import CheckoutAuthSection from './CheckoutAuthSection';
 import CancellationPolicyModal from './CancellationPolicyModal';
 import WebsiteComplianceModal from './WebsiteComplianceModal';
 import DatePickerModal from './DatePickerModal';
@@ -82,6 +83,9 @@ export default function DesktopWizardScreen({
   lang = 0,
   setLang,
   customerSession,
+  setCustomerSession,
+  profile,
+  setProfile,
   setTab,
   confirm,
   advanceBooking,
@@ -2147,6 +2151,19 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                       {lang ? 'পেমেন্ট সম্পন্ন করার সময় বাকি:' : 'Time remaining to pay:'}
                     </Text>
                   </View>
+
+                {/* Real Login & Signup System Before Payment Confirmation (Daraz, TikTok, Facebook Style) */}
+                <CheckoutAuthSection
+                  wiz={wiz}
+                  setWiz={setWiz}
+                  customerSession={customerSession}
+                  setCustomerSession={setCustomerSession}
+                  profile={profile}
+                  setProfile={setProfile}
+                  lang={lang}
+                  totalAmount={totalAmount}
+                />
+
                   <View
                     style={{
                       backgroundColor: secondsLeft < 180 ? '#DC2626' : '#0284C7',
