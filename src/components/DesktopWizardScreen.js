@@ -816,6 +816,7 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         {/* 2. Stepper Progress Bar */}
         <View
+          nativeID="fc-desktop-stepper"
           style={{
             width: '100%',
             backgroundColor: '#FFFFFF',
@@ -823,6 +824,13 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
             borderBottomColor: '#E2E8F0',
             paddingVertical: 18,
             alignItems: 'center',
+            zIndex: 999,
+            ...(Platform.OS === 'web' ? {
+              position: 'sticky',
+              top: 0,
+              WebkitPosition: '-webkit-sticky',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
+            } : {}),
           }}
         >
           <View

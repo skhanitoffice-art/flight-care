@@ -294,7 +294,8 @@ export default function WizardScreen({
       airport: wiz.airport || 'DAC',
     };
 
-    const effectivePaymentMethod = (isZeroOrQuote || totalAmount <= 0) ? 'pay_after_service' : paymentMethod;
+    const effectivePaymentMethod = (isZeroOrQuote || totalAmount <= 0) ? 'pay_after_service' : paymentMethod;
+
     if (effectivePaymentMethod === 'pay_after_service') {
       setIsPaying(false);
       const postServiceResult = {
@@ -427,7 +428,7 @@ export default function WizardScreen({
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
+    <View style={{ flex: 1, backgroundColor: '#F8FAFC', width: '100%', overflow: 'visible' }}>
       {/* Top Header */}
       <View
         style={{
@@ -514,8 +515,10 @@ export default function WizardScreen({
         </TouchableOpacity>
       </View>
 
-      {/* Stepper Progress Bar */}
+      {/* Stepper Progress Bar (Fixed/Sticky on iOS & Android) */}
       <View
+        nativeID="fc-booking-stepper"
+        testID="fc-booking-stepper"
         style={{
           backgroundColor: '#FFFFFF',
           paddingVertical: 12,
@@ -525,6 +528,15 @@ export default function WizardScreen({
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
+          width: '100%',
+          zIndex: 9999,
+          ...(Platform.OS === 'web' ? {
+            position: 'sticky',
+            top: 0,
+            WebkitPosition: '-webkit-sticky',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+            transform: [{ perspective: 1000 }],
+          } : {}),
         }}
       >
         {/* Step 1: Details */}
@@ -662,6 +674,11 @@ export default function WizardScreen({
           paddingBottom: 40,
         }}
         showsVerticalScrollIndicator={false}
+        bounces={false}
+        alwaysBounceVertical={false}
+        alwaysBounceHorizontal={false}
+        directionalLockEnabled={true}
+        overScrollMode="never"
       >
         <View style={{ width: '100%', maxWidth: 460 }}>
           {/* STEP 1: DETAILS */}
