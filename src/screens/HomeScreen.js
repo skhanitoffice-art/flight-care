@@ -1050,7 +1050,7 @@ export default function HomeScreen({
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
-                  if (passengerCount < 9) {
+                  if (passengerCount < 20) {
                     setPassengerCount(passengerCount + 1);
                   }
                 }}
@@ -1058,18 +1058,18 @@ export default function HomeScreen({
                   width: 28,
                   height: 28,
                   borderRadius: 14,
-                  backgroundColor: passengerCount >= 9 ? '#E2E8F0' : '#F1F5F9',
+                  backgroundColor: passengerCount >= 20 ? '#E2E8F0' : '#F1F5F9',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  opacity: passengerCount >= 9 ? 0.6 : 1,
+                  opacity: passengerCount >= 20 ? 0.6 : 1,
                 }}
               >
                 <Text style={{ fontSize: 18, color: '#334155', fontWeight: '800' }}>+</Text>
               </TouchableOpacity>
             </View>
-            {passengerCount >= 9 && (
-              <Text style={{ color: '#D97706', fontSize: 11, fontWeight: '700', marginTop: 4 }}>
-                ⚠️ {lang === 1 ? 'সর্বোচ্চ ৯ জন যাত্রী। ১০+ এর জন্য গ্রুপ বুকিংয়ে যোগাযোগ করুন।' : 'Max 9 passengers. Contact group protocol for 10+.'}
+            {passengerCount >= 20 && (
+              <Text style={{ color: '#0284C7', fontSize: 11, fontWeight: '700', marginTop: 4 }}>
+                ℹ️ {lang === 1 ? 'সর্বোচ্চ ২০ জন যাত্রী নির্বাচন করা হয়েছে।' : 'Maximum 20 passengers selected.'}
               </Text>
             )}
           </View>

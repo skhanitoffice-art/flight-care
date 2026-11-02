@@ -1059,7 +1059,7 @@ export default function DesktopHomeScreen({
                   </Text>
                   <TouchableOpacity
                     activeOpacity={0.8}
-                    onPress={() => setPassengerCount(c => (c >= 5 ? 1 : c + 1))}
+                    onPress={() => setPassengerCount(c => (c >= 20 ? 1 : c + 1))}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
