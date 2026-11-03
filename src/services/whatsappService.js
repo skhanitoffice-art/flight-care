@@ -1,25 +1,52 @@
 /**
  * Flight Care - Support Office WhatsApp Notification Service
- * Dispatches automated alerts to Support Office (+8801347570001)
+ * Dispatches automated alerts to Support Office WhatsApp (+8801347570001 and +8801347570002)
  * via Server-to-Server GreenWeb BD / Gateway API and provides 1-Click WhatsApp Direct Links.
  */
 
 import { Linking, Platform } from 'react-native';
 
 export const SUPPORT_OFFICE_WHATSAPP = '8801347570001';
-export const SUPPORT_OFFICE_PHONE_DISPLAY = '01347-570001';
+export const SUPPORT_OFFICE_WHATSAPP_2 = '8801347570002';
+export const SUPPORT_OFFICE_WHATSAPP_NUMBERS = ['8801347570001', '8801347570002'];
+export const SUPPORT_OFFICE_PHONE_DISPLAY = '01347-570001, 01347-570002';
 
 // In-memory 60-second anti-spam deduplication cache to prevent duplicate alerts
 const dispatchedCache = new Map();
 
+const ADDON_NAMES_MAP = {
+  wheel: { bn: 'হুইলচেয়ার সেবা', en: 'Wheelchair Assistance' },
+  wheelchair: { bn: 'হুইলচেয়ার সেবা', en: 'Wheelchair Assistance' },
+  wrap: { bn: 'লাগেজ র‍্যাপিং', en: 'Luggage Wrapping' },
+  wrapping: { bn: 'লাগেজ র‍্যাপিং', en: 'Luggage Wrapping' },
+  transfer: { bn: 'গাড়ি ভাড়া গাইডেন্স', en: 'Rent a Car Guidance' },
+  rent_car: { bn: 'গাড়ি ভাড়া গাইডেন্স', en: 'Rent a Car Guidance' },
+  pickup: { bn: 'এয়ারপোর্ট পিকআপ', en: 'Airport Pickup' },
+  visa: { bn: 'অন অ্যারাইভাল ভিসা', en: 'Visa On Arrival' },
+  visa_on_arrival: { bn: 'অন অ্যারাইভাল ভিসা', en: 'Visa On Arrival' },
+  print: { bn: 'প্রিন্ট সেবা', en: 'Document Print' },
+  photocopy: { bn: 'ফটোকপি সেবা', en: 'PhotoCopy' },
+  form_fillup: { bn: 'ফর্ম পূরণ', en: 'Form Fillup Assistance' },
+  hotel: { bn: 'হোটেল বুকিং গাইডেন্স', en: 'Hotel Booking Guidance' },
+  food: { bn: 'খাবার গাইডেন্স', en: 'Meal / Food Guidance' },
+  medical: { bn: 'মেডিকেল গাইডেন্স ও অ্যাম্বুলেন্স', en: 'Medical Guidance' },
+  tour: { bn: 'ট্যুর গাইডেন্স', en: 'Tour Guidance' },
+  security: { bn: 'নিরাপত্তা প্রোটোকল', en: 'Security Protocol' },
+};
+
 /**
- * Format structured notification text for the Support Office (+8801347570001)
- * Explicitly includes: Passenger Name, Phone Number, Time, Flight & Booking Details.
+ * Format structured notification text for the Support Office (+8801347570001 & +8801347570002)
+ * Explicitly includes:
+ * 1. Client Info (Name, Phone, Email, Pax count)
+ * 2. Services Purchased (Direction, Package, Addons list)
+ * 3. Payment Details (Exact Amount, Status, Channel, TrxID)
+ * 4. Date & Flight Details (Service date, Flight no, Time, Airport, Route, Terminal)
  */
 export function formatSupportBookingMessage(booking = {}, lang = 1) {
   const isBn = Boolean(lang);
   const bookingCode = booking.id || booking.bookingId || booking.confirmedId || 'FC-PENDING';
   
+  // 1. Client Information
   const passengerName =
     booking.passengerName ||
     booking.name ||
@@ -39,6 +66,27 @@ export function formatSupportBookingMessage(booking = {}, lang = 1) {
     booking.bookerPhone ||
     booking.contactPhone ||
     (isBn ? 'নম্বর উল্লেখ নেই' : 'Not Provided');
+
+  const email =
+    booking.email ||
+    booking.passengerEmail ||
+    booking.passenger_information?.email ||
+    booking.passengerInformation?.email ||
+    '';
+
+  const paxCount =
+    booking.a ||
+    booking.passengers ||
+    (Array.isArray(booking.passengerDetails) ? booking.passengerDetails.length + 1 : 1);
+
+  let bookerInfo = '';
+  if (booking.bookingForSomeoneElse) {
+    const bName = booking.name || booking.bookerName || '';
+    const bPhone = booking.phone || booking.bookerPhone || '';
+    if (bName || bPhone) {
+      bookerInfo = `${bName} (${bPhone})`.trim();
+    }
+  }
 
   // Exact Order Confirmation Time (BST)
   const orderTimestamp =
@@ -64,6 +112,7 @@ export function formatSupportBookingMessage(booking = {}, lang = 1) {
   });
   const orderTimeDisplay = `${formattedOrderDate}, ${formattedOrderTime} BST`;
 
+  // 2. Date & Flight Details
   const serviceDate =
     booking.date ||
     booking.flight?.date ||
@@ -83,13 +132,55 @@ export function formatSupportBookingMessage(booking = {}, lang = 1) {
     'BG-084'
   ).toUpperCase();
 
+  const airline = booking.airline || booking.flight?.airline || '';
+  const route = booking.route || booking.flight?.route || '';
+  const terminal = booking.terminal || booking.flight?.terminal || 'Terminal 1, HSIA';
+
   const airport = booking.airport || booking.airport_code || 'DAC';
   const airportLabel = airport === 'DAC' 
     ? (isBn ? 'ঢাকা (HSIA - DAC)' : 'Dhaka (HSIA - DAC)') 
     : airport;
 
-  const serviceName = booking.service || booking.package || (isBn ? 'ভিআইপি প্রোটোকল সার্ভিস' : 'VIP Protocol Service');
-  const amount = booking.amount != null ? booking.amount : 0;
+  // 3. Services Purchased
+  const direction = booking.dir || booking.direction || (booking.svc?.cat) || 'arr';
+  const isDep = direction === 'dep' || String(direction).toLowerCase().includes('depart');
+  const directionLabel = isDep
+    ? (isBn ? 'প্রস্থান প্রোটোকল (Departure)' : 'Departure Protocol')
+    : (isBn ? 'আগমন প্রোটোকল (Arrival)' : 'Arrival Protocol');
+
+  let serviceName = booking.service || booking.package || '';
+  if (!serviceName && booking.pkg) {
+    serviceName = booking.pkg.n ? booking.pkg.n[isBn ? 1 : 0] : (booking.pkg.t || 'VIP Protocol');
+  }
+  if (!serviceName) {
+    serviceName = isBn ? 'ভিআইপি প্রোটোকল সার্ভিস' : 'VIP Protocol Service';
+  }
+
+  // Format Additional Services
+  const rawAddons = booking.addons || [];
+  let addonsFormattedList = [];
+  if (Array.isArray(rawAddons) && rawAddons.length > 0) {
+    rawAddons.forEach(ad => {
+      const key = typeof ad === 'string' ? ad.toLowerCase() : (ad?.id ? String(ad.id).toLowerCase() : '');
+      const mapped = ADDON_NAMES_MAP[key];
+      if (mapped) {
+        addonsFormattedList.push(isBn ? mapped.bn : mapped.en);
+      } else if (ad && typeof ad === 'object' && ad.name) {
+        addonsFormattedList.push(ad.name);
+      } else if (key) {
+        addonsFormattedList.push(key);
+      }
+    });
+  }
+  const addonsDisplay = addonsFormattedList.length > 0
+    ? addonsFormattedList.join(', ')
+    : (isBn ? 'কোনো অতিরিক্ত সার্ভিস নেওয়া হয়নি' : 'None');
+
+  const specialAssistance = booking.specialAssistance || '';
+
+  // 4. Money & Payment Breakdown
+  const amount = booking.amount != null ? Number(booking.amount) : 0;
+  const formattedAmount = isNaN(amount) ? '0' : amount.toLocaleString('en-US');
   
   const isPayAfter =
     booking.paymentStatus === 'pay_after_service' ||
@@ -97,23 +188,54 @@ export function formatSupportBookingMessage(booking = {}, lang = 1) {
     booking.method === 'pay_after_service' ||
     amount === 0;
 
-  const paymentText = isPayAfter
-    ? (isBn ? 'সার্ভিস সমাপ্তির পর পেমেন্ট (Pay After Service)' : 'Pay After Service')
+  const paymentStatusText = isPayAfter
+    ? (isBn ? 'সার্ভিস সমাপ্তির পর প্রদেয় (Pay After Service)' : 'Pay After Service')
     : (isBn ? 'পেমেন্ট সম্পন্ন (Paid)' : 'Paid Online');
+
+  const rawMethod = String(booking.paidMethod || booking.method || booking.paymentMethod || '').toLowerCase();
+  let paymentMethodText = isBn ? 'অনলাইন পেমেন্ট' : 'Online Payment';
+  if (rawMethod.includes('ssl')) {
+    paymentMethodText = isBn ? 'এসএসএল কমার্স (SSLCOMMERZ)' : 'SSLCOMMERZ';
+  } else if (rawMethod.includes('bkash')) {
+    paymentMethodText = isBn ? 'বিকাশ (bKash)' : 'bKash';
+  } else if (rawMethod.includes('nagad')) {
+    paymentMethodText = isBn ? 'নগদ (Nagad)' : 'Nagad';
+  } else if (rawMethod.includes('banglaqr') || rawMethod.includes('qr')) {
+    paymentMethodText = isBn ? 'বাংলা কিউআর (Bangla QR)' : 'Bangla QR';
+  } else if (rawMethod.includes('card') || rawMethod.includes('bank')) {
+    paymentMethodText = isBn ? 'ব্যাংক কার্ড (Card)' : 'Card';
+  } else if (isPayAfter) {
+    paymentMethodText = isBn ? 'সার্ভিস সমাপ্তির পর পেমেন্ট' : 'Pay After Service';
+  }
+
+  const trxId = booking.trxId || booking.paymentId || '';
 
   if (isBn) {
     return `🛫 *নতুন বুকিং অর্ডার — ফ্লাইট কেয়ার সাপোর্ট অফিস*
 ━━━━━━━━━━━━━━━━━━━━━
 🎫 *বুকিং রেফারেন্স আইডি:* #${bookingCode}
-👤 *যাত্রীর নাম:* ${passengerName}
-📱 *যাত্রীর মোবাইল নম্বর:* ${passengerPhone}
-🕒 *বুকিংয়ের সময়:* ${orderTimeDisplay}
-📅 *সার্ভিসের তারিখ:* ${serviceDate}
-⏰ *ফ্লাইটের সময়:* ${serviceTime} BST
-✈️ *ফ্লাইট নম্বর:* ${flightNumber}
-📍 *বিমানবন্দর:* ${airportLabel}
-🎯 *সার্ভিস প্যাকেজ:* ${serviceName}
-💰 *মূল্য / ফি:* ৳${amount} (${paymentText})
+
+👤 *ক্লায়েন্ট বিবরণ:*
+• নাম: ${passengerName}
+• মোবাইল নম্বর: ${passengerPhone}${email ? `\n• ইমেইল: ${email}` : ''}
+• যাত্রী সংখ্যা: ${paxCount} জন${bookerInfo ? `\n• বুকিং করেছেন: ${bookerInfo}` : ''}
+
+🎯 *গৃহীত সার্ভিসসমূহ:*
+• সেবার ধরন: ${directionLabel}
+• মূল প্যাকেজ: ${serviceName}
+• অতিরিক্ত সেবা: ${addonsDisplay}${specialAssistance ? `\n• বিশেষ অনুরোধ: ${specialAssistance}` : ''}
+
+💰 *টাকার বিবরণ ও পেমেন্ট:*
+• মোট ফি: ৳${formattedAmount}
+• পেমেন্ট স্ট্যাটাস: ${paymentStatusText}
+• পেমেন্ট মাধ্যম: ${paymentMethodText}${trxId ? `\n• ট্রানজেকশন আইডি: ${trxId}` : ''}
+
+📅 *তারিখ ও ফ্লাইট বিবরণ:*
+• সার্ভিসের তারিখ: ${serviceDate}
+• ফ্লাইটের সময়: ${serviceTime} BST
+• ফ্লাইট নম্বর: ${flightNumber}${airline ? `\n• এয়ারলাইন্স: ${airline}${route ? ` (${route})` : ''}` : ''}
+• বিমানবন্দর: ${airportLabel} (${terminal})
+• অর্ডার নিশ্চিতের সময়: ${orderTimeDisplay}
 ━━━━━━━━━━━━━━━━━━━━━
 📍 *ডিজিটাল প্লেকার্ড ও ট্র্যাকিং লিংক:*
 https://flightcaresbd.com/?trackBooking=${bookingCode}
@@ -124,15 +246,28 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
   return `🛫 *New Booking Order — Flight Care Support Office*
 ━━━━━━━━━━━━━━━━━━━━━
 🎫 *Booking Reference ID:* #${bookingCode}
-👤 *Passenger Name:* ${passengerName}
-📱 *Passenger Phone:* ${passengerPhone}
-🕒 *Booking Time:* ${orderTimeDisplay}
-📅 *Service Date:* ${serviceDate}
-⏰ *Flight Time:* ${serviceTime} BST
-✈️ *Flight Number:* ${flightNumber}
-📍 *Airport:* ${airportLabel}
-🎯 *Service Package:* ${serviceName}
-💰 *Amount:* ৳${amount} (${paymentText})
+
+👤 *Client Information:*
+• Name: ${passengerName}
+• Phone: ${passengerPhone}${email ? `\n• Email: ${email}` : ''}
+• Passengers: ${paxCount} Pax${bookerInfo ? `\n• Booker: ${bookerInfo}` : ''}
+
+🎯 *Services Purchased:*
+• Direction: ${directionLabel}
+• Main Package: ${serviceName}
+• Additional Services: ${addonsDisplay}${specialAssistance ? `\n• Special Notes: ${specialAssistance}` : ''}
+
+💰 *Payment Details:*
+• Total Amount: BDT ${formattedAmount}
+• Payment Status: ${paymentStatusText}
+• Payment Method: ${paymentMethodText}${trxId ? `\n• TrxID: ${trxId}` : ''}
+
+📅 *Date & Flight Details:*
+• Service Date: ${serviceDate}
+• Flight Time: ${serviceTime} BST
+• Flight Number: ${flightNumber}${airline ? `\n• Airline: ${airline}${route ? ` (${route})` : ''}` : ''}
+• Airport: ${airportLabel} (${terminal})
+• Confirmation Time: ${orderTimeDisplay}
 ━━━━━━━━━━━━━━━━━━━━━
 📍 *Live Tracking & Placard Link:*
 https://flightcaresbd.com/?trackBooking=${bookingCode}
@@ -141,16 +276,18 @@ Please confirm this booking immediately.`;
 }
 
 /**
- * Returns direct WhatsApp link pre-filled to Support Office (+8801347570001)
+ * Returns direct WhatsApp link pre-filled to Support Office
+ * Defaults to primary number 8801347570001, or accepts targetPhone ('8801347570001' / '8801347570002')
  */
-export function getSupportWhatsAppUrl(booking = {}, lang = 1) {
+export function getSupportWhatsAppUrl(booking = {}, lang = 1, targetPhone = SUPPORT_OFFICE_WHATSAPP) {
   const text = formatSupportBookingMessage(booking, lang);
-  return `https://wa.me/${SUPPORT_OFFICE_WHATSAPP}?text=${encodeURIComponent(text)}`;
+  const cleanPhone = String(targetPhone).replace(/[^0-9]/g, '');
+  return `https://wa.me/${cleanPhone || SUPPORT_OFFICE_WHATSAPP}?text=${encodeURIComponent(text)}`;
 }
 
 /**
- * Dispatches automated booking notification to Support Office via Server Proxy /api/whatsapp/send.php
- * Powered by GreenWeb BD / Gateway API to +8801347570001
+ * Dispatches automated booking notification to Support Office WhatsApp (+8801347570001 and +8801347570002)
+ * via Server Proxy /api/whatsapp/send.php
  */
 export async function dispatchSupportOfficeWhatsAppAlert(booking = {}) {
   try {
@@ -183,12 +320,28 @@ export async function dispatchSupportOfficeWhatsAppAlert(booking = {}) {
       booking.bookerPhone ||
       '';
 
+    const email =
+      booking.email ||
+      booking.passengerEmail ||
+      booking.passenger_information?.email ||
+      booking.passengerInformation?.email ||
+      '';
+
+    const paxCount = booking.a || booking.passengers || 1;
     const serviceDate = booking.date || booking.flight?.date || booking.serviceDate || '';
     const serviceTime = booking.time || booking.flight?.time || booking.serviceTime || '';
     const flightNumber = (booking.fno || booking.flightNumber || booking.flight?.number || 'BG-084').toUpperCase();
-    const serviceName = booking.service || booking.package || 'VIP Protocol';
+    
+    let serviceName = booking.service || booking.package || '';
+    if (!serviceName && booking.pkg) {
+      serviceName = booking.pkg.n ? booking.pkg.n[0] : (booking.pkg.t || 'VIP Protocol');
+    }
+
+    const direction = booking.dir || booking.direction || (booking.svc?.cat) || 'arr';
     const amount = booking.amount != null ? booking.amount : 0;
     const paymentStatus = booking.paymentStatus || booking.paidMethod || 'pay_after_service';
+    const paymentMethod = booking.paidMethod || booking.method || booking.paymentMethod || '';
+    const trxId = booking.trxId || booking.paymentId || '';
 
     const orderTimestamp =
       booking.paidAt ||
@@ -214,20 +367,34 @@ export async function dispatchSupportOfficeWhatsAppAlert(booking = {}) {
         bookingCode,
         passengerName,
         passengerPhone,
+        email,
+        passengers: paxCount,
+        direction,
+        serviceName,
+        addons: booking.addons || [],
+        specialAssistance: booking.specialAssistance || '',
         orderTime: formattedOrderTime,
         serviceDate,
         serviceTime,
         flightNumber,
-        serviceName,
+        airline: booking.airline || booking.flight?.airline || '',
+        route: booking.route || booking.flight?.route || '',
+        terminal: booking.terminal || booking.flight?.terminal || 'Terminal 1',
         amount,
         paymentStatus,
+        paymentMethod,
+        trxId,
         airport: booking.airport || 'DAC',
+        bookingForSomeoneElse: Boolean(booking.bookingForSomeoneElse),
+        bookerName: booking.name || booking.bookerName || '',
+        bookerPhone: booking.phone || booking.bookerPhone || '',
+        supportPhones: SUPPORT_OFFICE_WHATSAPP_NUMBERS,
       }),
     });
 
     if (response.ok) {
       const data = await response.json();
-      console.log('✅ Support Office WhatsApp Alert Dispatched to 01347-570001:', data);
+      console.log('✅ Support Office WhatsApp Alert Dispatched to 01347-570001 & 01347-570002:', data);
       return data;
     }
   } catch (err) {
@@ -237,10 +404,11 @@ export async function dispatchSupportOfficeWhatsAppAlert(booking = {}) {
 }
 
 /**
- * 1-Click Launch WhatsApp to Support Office (+8801347570001)
+ * 1-Click Launch WhatsApp to Support Office
+ * Defaults to primary (+8801347570001) or opens given number (+8801347570002)
  */
-export function openSupportOfficeWhatsApp(booking = {}, lang = 1) {
-  const url = getSupportWhatsAppUrl(booking, lang);
+export function openSupportOfficeWhatsApp(booking = {}, lang = 1, targetPhone = SUPPORT_OFFICE_WHATSAPP) {
+  const url = getSupportWhatsAppUrl(booking, lang, targetPhone);
   Linking.openURL(url).catch(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.open(url, '_blank');
@@ -250,6 +418,8 @@ export function openSupportOfficeWhatsApp(booking = {}, lang = 1) {
 
 export default {
   SUPPORT_OFFICE_WHATSAPP,
+  SUPPORT_OFFICE_WHATSAPP_2,
+  SUPPORT_OFFICE_WHATSAPP_NUMBERS,
   SUPPORT_OFFICE_PHONE_DISPLAY,
   formatSupportBookingMessage,
   getSupportWhatsAppUrl,

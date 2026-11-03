@@ -76,7 +76,10 @@ import { getAddonAsset, ADDONS } from '../constants/data';
 import {
   openSupportOfficeWhatsApp,
   dispatchSupportOfficeWhatsAppAlert,
+  SUPPORT_OFFICE_WHATSAPP,
+  SUPPORT_OFFICE_WHATSAPP_2,
 } from '../services/whatsappService';
+import { sendPaymentConfirmationSms } from '../services/smsGateway';
 
 
 export default function DesktopWizardScreen({
@@ -342,14 +345,43 @@ export default function DesktopWizardScreen({
     handoverOtp,
   };
 
-  // Auto-dispatch Support Office WhatsApp Alert (+8801347570001) on Step 3 confirmation
+  // Auto-dispatch Support Office WhatsApp Alert (01347-570001 & 01347-570002) and Customer Confirmation SMS on Step 3
   useEffect(() => {
     if (step === 3 && currentBooking && (currentBooking.id || bookingCode)) {
-      dispatchSupportOfficeWhatsAppAlert({
+      const fullBookingPayload = {
         ...currentBooking,
         id: bookingCode,
         amount: totalAmount,
-      }).catch(err => console.warn('[Desktop Support Alert] Error:', err));
+        addons: wiz.addons || [],
+        email: passengerEmail || wiz.email || '',
+        phone: passengerPhone || wiz.phone || '',
+        passengerPhone: passengerPhone || wiz.passengerPhone || wiz.phone || '',
+        name: passengerName || wiz.name || '',
+        passengerName: passengerName || wiz.passengerName || wiz.name || '',
+        a: wiz.a || 1,
+        dir: wiz.dir || (isDep ? 'dep' : 'arr'),
+        fno: wiz.fno || 'BG-084',
+        date: wiz.date,
+        paidMethod: paymentMethod,
+        paymentStatus: isPayAfter ? 'pay_after_service' : 'paid',
+        trxId: wiz.trxId || '',
+      };
+
+      // 1. WhatsApp notification to 01347570001 & 01347570002
+      dispatchSupportOfficeWhatsAppAlert(fullBookingPayload).catch(err => {
+        console.warn('[Desktop Support Alert] Error:', err);
+      });
+
+      // 2. Customer Confirmation SMS (Handles both Online Paid and Pay After Service)
+      sendPaymentConfirmationSms({
+        booking: fullBookingPayload,
+        amount: totalAmount,
+        trxId: wiz.trxId,
+        method: paymentMethod,
+        lang,
+      }).catch(smsErr => {
+        console.warn('[Desktop Customer SMS] Error:', smsErr);
+      });
     }
   }, [step, bookingCode]);
 

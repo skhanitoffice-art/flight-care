@@ -347,6 +347,15 @@ export async function sendPaymentConfirmationSms({
 
     // Identify human-friendly payment channel
     const rawMethod = String(method || booking.paidMethod || booking.method || '').toLowerCase();
+    const isPayAfter =
+      booking.paymentStatus === 'pay_after_service' ||
+      booking.paidMethod === 'pay_after_service' ||
+      rawMethod.includes('pay_after') ||
+      rawMethod.includes('service') ||
+      method === 'pay_after_service' ||
+      booking.method === 'pay_after_service' ||
+      rawAmount === 0;
+
     let methodLabelBn = 'অনলাইন পেমেন্ট';
     let methodLabelEn = 'Online Payment';
 
@@ -365,23 +374,34 @@ export async function sendPaymentConfirmationSms({
     } else if (rawMethod.includes('card') || rawMethod.includes('bank')) {
       methodLabelBn = 'ব্যাংক কার্ড';
       methodLabelEn = 'Bank Card';
+    } else if (isPayAfter) {
+      methodLabelBn = 'সার্ভিস সমাপ্তির পর পেমেন্ট';
+      methodLabelEn = 'Pay After Service';
     }
 
-    const helpline = '01347-570001';
+    const helpline = '01347-570001, 01347-570002';
+    const trackingUrl = `https://flightcaresbd.com/?trackBooking=${bookingId}`;
 
-    // Structured SMS text stating the exact deducted amount
-    const messageBn = `Flight Care: প্রিয় ${passengerName}, আপনার পেমেন্ট নিশ্চিত হয়েছে! বুকিং #${bookingId}-এর জন্য আপনার অ্যাকাউন্ট থেকে মোট ৳${formattedAmount} কেটে নেওয়া হয়েছে (${methodLabelBn})। TrxID: ${finalTrxId}। ফ্লাইট: ${flightNo}${flightDate ? `, তারিখ: ${flightDate}` : ''}। হেল্পলাইন: ${helpline}`;
+    let messageBn = '';
+    let messageEn = '';
 
-    const messageEn = `Flight Care: Dear ${passengerName}, your payment for Booking #${bookingId} is confirmed! BDT ${formattedAmount} has been deducted via ${methodLabelEn}. TrxID: ${finalTrxId}. Flight: ${flightNo}${flightDate ? `, Date: ${flightDate}` : ''}. Helpline: ${helpline}`;
+    if (isPayAfter) {
+      messageBn = `Flight Care: প্রিয় ${passengerName}, আপনার বুকিং #${bookingId} সফলভাবে নিশ্চিত হয়েছে! মোট ফি: ৳${formattedAmount} (সার্ভিস সমাপ্তির পর প্রদেয়)। ফ্লাইট: ${flightNo}${flightDate ? `, তারিখ: ${flightDate}` : ''}। ই-টিকেট ও ট্র্যাক: ${trackingUrl}। হেল্পলাইন: ${helpline}`;
+      messageEn = `Flight Care: Dear ${passengerName}, your Booking #${bookingId} is confirmed! Total Fee: BDT ${formattedAmount} (Pay after service). Flight: ${flightNo}${flightDate ? `, Date: ${flightDate}` : ''}. E-Ticket: ${trackingUrl}. Helpline: ${helpline}`;
+    } else {
+      // Structured SMS text stating the exact deducted amount
+      messageBn = `Flight Care: প্রিয় ${passengerName}, আপনার পেমেন্ট নিশ্চিত হয়েছে! বুকিং #${bookingId}-এর জন্য আপনার অ্যাকাউন্ট থেকে মোট ৳${formattedAmount} কেটে নেওয়া হয়েছে (${methodLabelBn})। TrxID: ${finalTrxId}। ফ্লাইট: ${flightNo}${flightDate ? `, তারিখ: ${flightDate}` : ''}। ট্র্যাকিং: ${trackingUrl}। হেল্পলাইন: ${helpline}`;
+      messageEn = `Flight Care: Dear ${passengerName}, your payment for Booking #${bookingId} is confirmed! BDT ${formattedAmount} has been deducted via ${methodLabelEn}. TrxID: ${finalTrxId}. Flight: ${flightNo}${flightDate ? `, Date: ${flightDate}` : ''}. Tracking: ${trackingUrl}. Helpline: ${helpline}`;
+    }
 
     const message = isBn ? messageBn : messageEn;
 
-    console.log(`[Payment SMS] Sending confirmation to ${passengerPhone} (Deducted: ৳${formattedAmount})`);
+    console.log(`[Payment SMS] Sending confirmation to ${passengerPhone} (Amount: ৳${formattedAmount}, PayAfter: ${isPayAfter})`);
 
     const result = await sendLiveSms({
       to: passengerPhone,
       message,
-      title: 'Payment Confirmation SMS',
+      title: isPayAfter ? 'Booking Confirmation SMS' : 'Payment Confirmation SMS',
     });
 
     // Also notify booker if booking was made for someone else and booker phone differs
@@ -400,5 +420,8 @@ export async function sendPaymentConfirmationSms({
     return { ok: false, error: err?.message };
   }
 }
+
+export const sendBookingConfirmationSms = sendPaymentConfirmationSms;
+
 
 

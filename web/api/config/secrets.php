@@ -31,8 +31,10 @@ return [
 
     // 2.5 Support Office WhatsApp & Automated Notification Gateway
     'whatsapp' => [
+        'support_phones' => ['8801347570001', '8801347570002'],
         'support_phone' => '8801347570001',
-        'support_phone_display' => '01347-570001',
+        'support_phone_2' => '8801347570002',
+        'support_phone_display' => '01347-570001, 01347-570002',
         'provider' => getenv('FC_WHATSAPP_PROVIDER') ?: 'greenweb_bd',
         'api_key' => getenv('FC_WHATSAPP_API_KEY') ?: (getenv('FC_SMS_API_KEY') ?: '140382043261792939406bc2932aa5e0375dcef66e98d5df11f8b'),
         'api_url' => getenv('FC_WHATSAPP_API_URL') ?: 'https://api.greenweb.com.bd/api.php',

@@ -51,40 +51,6 @@ export default function WizardStep3Confirmation({
   const [copiedId, setCopiedId] = useState(false);
   const [calendarSaved, setCalendarSaved] = useState(false);
 
-  // Auto-dispatch booking alert to Support Office (+8801347570001) and Passenger Payment SMS
-  useEffect(() => {
-    const bookingPayload = {
-      ...wiz,
-      id: bookingCode,
-      name: passengerName,
-      passengerName,
-      phone: wiz.passengerPhone || wiz.phone || '',
-      passengerPhone: wiz.passengerPhone || wiz.phone || '',
-      amount: totalAmount,
-      date: serviceDate,
-      time: wiz.time || wiz.flightTime || '12:00 PM',
-      fno: flightNumber,
-      service: packageName,
-      airport,
-      paymentStatus: isPayAfter ? 'pay_after_service' : 'paid',
-    };
-
-    dispatchSupportOfficeWhatsAppAlert(bookingPayload).catch(err => {
-      console.warn('[WhatsApp Alert] Error dispatching to 01347-570001:', err);
-    });
-
-    if (!isPayAfter) {
-      sendPaymentConfirmationSms({
-        booking: bookingPayload,
-        amount: totalAmount,
-        trxId: wiz.trxId,
-        method: wiz.paidMethod,
-        lang,
-      }).catch(() => {});
-    }
-  }, [bookingCode]);
-
-
   // Passenger & Service Info
   const passengerName = (wiz.bookingForSomeoneElse ? wiz.passengerName || wiz.name : wiz.name) || (isBn ? 'সম্মানিত যাত্রী' : 'Valued Passenger');
   const flightNumber = (wiz.fno || 'BG-084').toUpperCase();
@@ -99,6 +65,47 @@ export default function WizardStep3Confirmation({
         : (isBn ? 'স্ট্যান্ডার্ড প্রোটোকল' : 'Standard Protocol'));
 
   const isPayAfter = wiz.paidMethod === 'pay_after_service' || wiz.method === 'pay_after_service' || wiz.paymentStatus === 'pay_after_service';
+
+  // Auto-dispatch booking alert to Support Office WhatsApp (01347-570001 & 01347-570002) and Customer Confirmation SMS
+  useEffect(() => {
+    const bookingPayload = {
+      ...wiz,
+      id: bookingCode,
+      name: passengerName,
+      passengerName,
+      phone: wiz.passengerPhone || wiz.phone || '',
+      passengerPhone: wiz.passengerPhone || wiz.phone || '',
+      email: wiz.email || wiz.passengerEmail || '',
+      passengers: wiz.a || 1,
+      addons: wiz.addons || [],
+      dir: wiz.dir || (isDep ? 'dep' : 'arr'),
+      amount: totalAmount,
+      date: serviceDate,
+      time: wiz.time || wiz.flightTime || '12:00 PM',
+      fno: flightNumber,
+      service: packageName,
+      airport,
+      paymentStatus: isPayAfter ? 'pay_after_service' : 'paid',
+      paidMethod: wiz.paidMethod || wiz.method || (isPayAfter ? 'pay_after_service' : 'sslcommerz'),
+      trxId: wiz.trxId || '',
+    };
+
+    // 1. WhatsApp notification to both 01347570001 and 01347570002
+    dispatchSupportOfficeWhatsAppAlert(bookingPayload).catch(err => {
+      console.warn('[WhatsApp Alert] Error dispatching to 01347-570001 & 01347-570002:', err);
+    });
+
+    // 2. Customer Confirmation SMS (Handles both Online Paid and Pay After Service)
+    sendPaymentConfirmationSms({
+      booking: bookingPayload,
+      amount: totalAmount,
+      trxId: wiz.trxId,
+      method: bookingPayload.paidMethod,
+      lang,
+    }).catch(smsErr => {
+      console.warn('[Customer Confirmation SMS] Error:', smsErr);
+    });
+  }, [bookingCode]);
 
   // Calculate Handover OTP for client completion verification
   const bookingDigits = String(bookingCode || '').replace(/\D/g, '');

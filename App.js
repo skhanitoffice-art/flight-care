@@ -4883,15 +4883,16 @@ export default function App() {
     dispatchSupportOfficeWhatsAppAlert(booking).catch(() => {});
 
 
-    if (booking.paymentStatus === 'paid') {
-      sendPaymentConfirmationSms({
-        booking,
-        amount: payableAmount,
-        trxId: booking.trxId || `PAY-${bookingCode}`,
-        method: chosenPaymentMethod,
-        lang,
-      }).catch(err => console.warn('[Payment SMS] Confirm SMS error:', err));
+    // Multi-channel Customer Confirmation SMS (Handles both Online Paid and Pay After Service)
+    sendPaymentConfirmationSms({
+      booking,
+      amount: payableAmount,
+      trxId: booking.trxId || `PAY-${bookingCode}`,
+      method: chosenPaymentMethod,
+      lang,
+    }).catch(err => console.warn('[Payment SMS] Confirm SMS error:', err));
 
+    if (booking.paymentStatus === 'paid') {
       dispatchMultiChannelNotification({
         eventType: COMMUNICATION_EVENTS.PAYMENT_SUCCESS,
         booking,
