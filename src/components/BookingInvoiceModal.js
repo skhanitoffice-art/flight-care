@@ -802,7 +802,7 @@ export default function BookingInvoiceModal({
             ? 'আমাদের নির্ধারিত প্রোটোকল কর্মকর্তা বোর্ডিং ব্রিজ / ইমিগ্রেশন গেট প্রস্থানস্থলে আপনার নাম সম্বলিত ভিআইপি নেমবোর্ড নিয়ে সাদরে অভ্যর্থনা জানাবেন।'
             : 'Our designated Protocol Officer will welcome you right after Boarding Bridge/immigration exit gate holding your personalized VIP placard.')}
       <br/><br/>
-      <strong>📞 ${isBn ? '২৪/৭ জরুরি হেল্পলাইন:' : '24/7 VIP Helpline:'}</strong> +880 1347-570013 / +880 1347-570017
+      <strong>📞 ${isBn ? '২৪/৭ জরুরি হেল্পলাইন:' : '24/7 VIP Helpline:'}</strong> 01347-570001 / 01347-570002
     </div>
 
     <div class="disclaimer-box">
@@ -1253,7 +1253,7 @@ export default function BookingInvoiceModal({
     ctx.fillStyle = '#B45309';
     ctx.font = '800 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif';
     ctx.fillText(
-      isBn ? '📞 ২৪/৭ জরুরি হেল্পলাইন: +880 1347-570013 / +880 1347-570017' : '📞 24/7 VIP Helpline: +880 1347-570013 / +880 1347-570017',
+      isBn ? '📞 ২৪/৭ জরুরি হেল্পলাইন: 01347-570001 / 01347-570002' : '📞 24/7 VIP Helpline: 01347-570001 / 01347-570002',
       infoX + 32,
       infoY + infoH - 32
     );
@@ -1923,7 +1923,7 @@ export default function BookingInvoiceModal({
                       : 'Our designated Protocol Officer will welcome you right after the Boarding Bridge/immigration gate with your personalized VIP placard.')}
               </Text>
               <Text style={{ fontSize: 11.5, color: '#854D0E', fontWeight: '700', marginTop: 6 }}>
-                📞 {isBn ? 'জরুরি হেল্পলাইন:' : 'Concierge Hotline:'} +880 1347-570013 / +880 1347-570017
+                📞 {isBn ? 'জরুরি হেল্পলাইন:' : 'Concierge Hotline:'} 01347-570001 / 01347-570002
               </Text>
             </View>
 

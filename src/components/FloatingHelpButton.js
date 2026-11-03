@@ -8,6 +8,7 @@ import {
   Linking,
   StyleSheet,
   Platform,
+  Modal,
   useWindowDimensions,
 } from 'react-native';
 
@@ -24,14 +25,18 @@ export default function FloatingHelpButton({
   lang = 1, // 1 = Bn, 0 = En
   onOpenBooking,
   isWide = false,
-  phoneNumber = '+8801347570013',
-  whatsappNumber = '8801347570013',
+  phoneNumber = '01347-570001',
+  phoneNumber2 = '01347-570002',
+  whatsappNumber = '8801347570001',
+  whatsappNumber2 = '8801347570002',
 }) {
   const isBn = lang === 1;
   const { width: winWidth } = useWindowDimensions();
   const isMobile = !isWide || winWidth < 768;
 
   const [isOpen, setIsOpen] = useState(false);
+  const [callModalVisible, setCallModalVisible] = useState(false);
+  const [waModalVisible, setWaModalVisible] = useState(false);
   const animProgress = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -89,18 +94,39 @@ export default function FloatingHelpButton({
     });
   };
 
-  const handleWhatsApp = () => {
+  const handleDialNumber = (number) => {
+    const cleanNumber = number.replace(/[\s-]/g, '');
+    const telUri = `tel:+88${cleanNumber.replace(/^\+?88/, '')}`;
+    if (typeof window !== 'undefined') {
+      try {
+        window.location.href = telUri;
+      } catch (e) {}
+    }
+    Linking.openURL(telUri).catch(() => {});
+    setCallModalVisible(false);
+  };
+
+  const handleOpenWhatsAppNumber = (targetWa) => {
+    const cleanWa = targetWa.replace(/[\s-+]/g, '');
     const text = isBn
       ? encodeURIComponent('আসসালামু আলাইকুম, ফ্লাইট কেয়ার এয়ারপোর্ট প্রোটোকল সার্ভিস সম্পর্কে জানতে চাই।')
       : encodeURIComponent('Hello Flight Care, I need airport protocol & concierge assistance.');
-    const url = `https://wa.me/${whatsappNumber}?text=${text}`;
+    const url = `https://wa.me/${cleanWa}?text=${text}`;
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
     Linking.openURL(url).catch(() => {});
+    setWaModalVisible(false);
+  };
+
+  const handleWhatsApp = () => {
     handleClose();
+    setWaModalVisible(true);
   };
 
   const handleCall = () => {
-    Linking.openURL(`tel:${phoneNumber}`).catch(() => {});
     handleClose();
+    setCallModalVisible(true);
   };
 
   const handleBooking = () => {
@@ -241,7 +267,7 @@ export default function FloatingHelpButton({
                     {isBn ? 'হটলাইনে কল করুন' : 'Direct Call'}
                   </Text>
                   <Text style={styles.optionSub}>
-                    +880 1347-570013 (24/7)
+                    01347-570001 / 01347-570002
                   </Text>
                 </View>
                 <View style={[styles.optionIconDisc, styles.callDisc]}>
@@ -273,7 +299,7 @@ export default function FloatingHelpButton({
                     <View style={styles.liveOnlineDot} />
                   </View>
                   <Text style={styles.optionSub}>
-                    {isBn ? '২৪/৭ লাইভ অ্যাসিস্ট্যান্স' : '24/7 Live Concierge'}
+                    01347-570001 / 01347-570002
                   </Text>
                 </View>
                 <View style={[styles.optionIconDisc, styles.waDisc]}>
@@ -333,6 +359,172 @@ export default function FloatingHelpButton({
           </TouchableOpacity>
         </Animated.View>
       </View>
+
+      {/* Direct Call Selector Modal (Hotline 01 & 02) */}
+      <Modal
+        visible={callModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCallModalVisible(false)}
+      >
+        <View style={styles.selectorModalOverlay}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => setCallModalVisible(false)}
+          />
+          <View style={styles.selectorModalCard}>
+            <View style={styles.selectorModalHeader}>
+              <View style={[styles.optionIconDisc, styles.callDisc, { width: 38, height: 38 }]}>
+                <Text style={{ fontSize: 18 }}>📞</Text>
+              </View>
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={styles.selectorModalTitle}>
+                  {isBn ? 'হটলাইনে সরাসরি কল করুন' : 'Direct Call Helpline'}
+                </Text>
+                <Text style={styles.selectorModalSub}>
+                  {isBn ? '২৪/৭ ভিআইপি এয়ারপোর্ট মিট অ্যান্ড গ্রিট সহায়তা' : '24/7 VIP Airport Meet & Greet Support'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setCallModalVisible(false)}
+                style={styles.selectorCloseBtn}
+              >
+                <Text style={{ fontSize: 16, color: '#64748B', fontWeight: 'bold' }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ gap: 10, marginTop: 14 }}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                accessibilityRole="link"
+                href="tel:+8801347570001"
+                onPress={() => handleDialNumber('01347-570001')}
+                style={styles.selectorActionBtn}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={[styles.optionIconDisc, styles.callDisc, { width: 34, height: 34 }]}>
+                    <Text style={{ fontSize: 15 }}>📞</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.selectorActionNum}>01347-570001</Text>
+                    <Text style={styles.selectorActionTag}>
+                      {isBn ? 'হটলাইন ০১ • সার্বক্ষণিক ডেস্ক' : 'Hotline 01 • 24/7 Dedicated Desk'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.selectorActionArrow}>→</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                accessibilityRole="link"
+                href="tel:+8801347570002"
+                onPress={() => handleDialNumber('01347-570002')}
+                style={styles.selectorActionBtn}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={[styles.optionIconDisc, styles.callDisc, { width: 34, height: 34 }]}>
+                    <Text style={{ fontSize: 15 }}>📞</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.selectorActionNum}>01347-570002</Text>
+                    <Text style={styles.selectorActionTag}>
+                      {isBn ? 'হটলাইন ০২ • সার্বক্ষণিক ডেস্ক' : 'Hotline 02 • 24/7 Dedicated Desk'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.selectorActionArrow}>→</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* WhatsApp Chat Selector Modal (WhatsApp 01 & 02) */}
+      <Modal
+        visible={waModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setWaModalVisible(false)}
+      >
+        <View style={styles.selectorModalOverlay}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => setWaModalVisible(false)}
+          />
+          <View style={styles.selectorModalCard}>
+            <View style={styles.selectorModalHeader}>
+              <View style={[styles.optionIconDisc, styles.waDisc, { width: 38, height: 38 }]}>
+                <Text style={{ fontSize: 18 }}>💬</Text>
+              </View>
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={styles.selectorModalTitle}>
+                  {isBn ? 'WhatsApp সাপোর্ট চ্যাট' : 'WhatsApp Support Chat'}
+                </Text>
+                <Text style={styles.selectorModalSub}>
+                  {isBn ? '২৪/৭ লাইভ কনসিয়ার্জ সহায়তা' : '24/7 Live Concierge Assistance'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setWaModalVisible(false)}
+                style={styles.selectorCloseBtn}
+              >
+                <Text style={{ fontSize: 16, color: '#64748B', fontWeight: 'bold' }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ gap: 10, marginTop: 14 }}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                accessibilityRole="link"
+                href="https://wa.me/8801347570001"
+                target="_blank"
+                rel="noopener noreferrer"
+                onPress={() => handleOpenWhatsAppNumber('8801347570001')}
+                style={[styles.selectorActionBtn, { borderColor: '#86EFAC', backgroundColor: '#F0FDF4' }]}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={[styles.optionIconDisc, styles.waDisc, { width: 34, height: 34 }]}>
+                    <Text style={{ fontSize: 15 }}>💬</Text>
+                  </View>
+                  <View>
+                    <Text style={[styles.selectorActionNum, { color: '#15803D' }]}>01347-570001</Text>
+                    <Text style={styles.selectorActionTag}>
+                      {isBn ? 'WhatsApp ০১ • সার্বক্ষণিক চ্যাট' : 'WhatsApp 01 • Live Chat 24/7'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={[styles.selectorActionArrow, { color: '#15803D' }]}>→</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                accessibilityRole="link"
+                href="https://wa.me/8801347570002"
+                target="_blank"
+                rel="noopener noreferrer"
+                onPress={() => handleOpenWhatsAppNumber('8801347570002')}
+                style={[styles.selectorActionBtn, { borderColor: '#86EFAC', backgroundColor: '#F0FDF4' }]}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={[styles.optionIconDisc, styles.waDisc, { width: 34, height: 34 }]}>
+                    <Text style={{ fontSize: 15 }}>💬</Text>
+                  </View>
+                  <View>
+                    <Text style={[styles.selectorActionNum, { color: '#15803D' }]}>01347-570002</Text>
+                    <Text style={styles.selectorActionTag}>
+                      {isBn ? 'WhatsApp ০২ • সার্বক্ষণিক চ্যাট' : 'WhatsApp 02 • Live Chat 24/7'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={[styles.selectorActionArrow, { color: '#15803D' }]}>→</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -494,6 +686,79 @@ const styles = StyleSheet.create({
     fontSize: 14.5,
     fontWeight: '800',
     letterSpacing: 0.3,
+  },
+
+  // Selector Modals
+  selectorModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    zIndex: 999999,
+  },
+  selectorModalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    maxWidth: 420,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  selectorModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    paddingBottom: 12,
+  },
+  selectorModalTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  selectorModalSub: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  selectorCloseBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectorActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#BAE6FD',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  selectorActionNum: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0369A1',
+  },
+  selectorActionTag: {
+    fontSize: 11.5,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  selectorActionArrow: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0284C7',
   },
 });
 
