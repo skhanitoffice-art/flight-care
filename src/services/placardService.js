@@ -1,3 +1,12 @@
+function escapePlacardHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 // src/services/placardService.js
 // Flight Care Enterprise - VIP Airport Protocol Placard Maker & Audit History Service
 
@@ -472,7 +481,7 @@ export function printPlacardDirect({
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Flight Care VIP Placard - ${formattedName} (${cleanFlight})</title>
+        <title>Flight Care VIP Placard - ${escapePlacardHtml(formattedName)} (${escapePlacardHtml(cleanFlight)})</title>
         <style>
           @page {
             size: A4 landscape;
@@ -576,13 +585,13 @@ export function printPlacardDirect({
       <body>
         <div class="placard-container">
           <img src="${PLACARD_TEMPLATE_B64}" class="bg-image" />
-          <div class="name-overlay">${formattedName}</div>
+          <div class="name-overlay">${escapePlacardHtml(formattedName)}</div>
           <div class="flight-date-overlay">
             <div class="info-group">
               <img src="${PLACARD_PLANE_ICON_B64}" class="info-icon plane-icon" />
               <div class="info-text">
                 <span class="info-label">FLIGHT:</span>
-                <span class="info-val">${cleanFlight}</span>
+                <span class="info-val">${escapePlacardHtml(cleanFlight)}</span>
               </div>
             </div>
             <div class="gold-divider-bar"></div>
@@ -590,7 +599,7 @@ export function printPlacardDirect({
               <img src="${PLACARD_CAL_ICON_B64}" class="info-icon cal-icon" />
               <div class="info-text">
                 <span class="info-label">DATE:</span>
-                <span class="info-val">${formattedDate}</span>
+                <span class="info-val">${escapePlacardHtml(formattedDate)}</span>
               </div>
             </div>
           </div>

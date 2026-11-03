@@ -11,6 +11,16 @@ export const bilingual = value => (
 export const convertBnDigitsToEn = value =>
   String(value || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d));
 
+export const escapeHtml = (unsafe) => {
+  if (unsafe === null || unsafe === undefined) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
 export const isValidPassengerName = value => {
   if (!value) return false;
   const trimmed = String(value).trim();

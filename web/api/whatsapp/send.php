@@ -37,6 +37,51 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// 1.5 IP Rate Limiting (Max 10 notification requests per minute per IP)
+function fc_wa_get_client_ip() {
+    if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) return $_SERVER['HTTP_CF_CONNECTING_IP'];
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        return trim($ips[0]);
+    }
+    return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1';
+}
+
+$client_ip = fc_wa_get_client_ip();
+$rl_dir = sys_get_temp_dir() . '/flightcare_wa_rl';
+if (!is_dir($rl_dir)) {
+    @mkdir($rl_dir, 0700, true);
+}
+$rl_file = $rl_dir . '/wa_' . md5($client_ip) . '.json';
+$now = time();
+$requests = [];
+
+if (file_exists($rl_file)) {
+    $raw = @file_get_contents($rl_file);
+    $parsed = json_decode($raw, true);
+    if (is_array($parsed)) {
+        foreach ($parsed as $t) {
+            if (($now - $t) < 60) { // 1 minute window
+                $requests[] = $t;
+            }
+        }
+    }
+}
+
+if (count($requests) >= 10) {
+    http_response_code(429);
+    header('Retry-After: 60');
+    echo json_encode([
+        'ok' => false,
+        'error' => 'Too many WhatsApp notification requests. Please wait a minute before retrying.',
+        'retryAfter' => 60
+    ]);
+    exit;
+}
+
+$requests[] = $now;
+@file_put_contents($rl_file, json_encode($requests));
+
 // 2. Load Secrets Server-Side
 $secrets_path = __DIR__ . '/../config/secrets.php';
 if (!file_exists($secrets_path)) {

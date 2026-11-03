@@ -86,10 +86,16 @@ $authenticated = false;
 $matched_id = $identifier;
 $user_role = $role;
 
+// Exact Identifier Matching Only (Prevents Substring Collision / Authentication Bypass)
+$clean_id = trim(strtolower($identifier));
+
 if ($role === 'manager' || $role === 'admin') {
     $managers = isset($creds['managers']) ? $creds['managers'] : [];
     foreach ($managers as $m_id => $m_hash) {
-        if (strcasecmp($m_id, $identifier) === 0 || strpos(strtolower($identifier), strtolower($m_id)) !== false || strpos(strtolower($m_id), strtolower($identifier)) !== false) {
+        $m_id_lower = strtolower($m_id);
+        // Allow exact match OR clean phone match without substring bleed
+        if ($m_id_lower === $clean_id || 
+            preg_replace('/[^0-9]/', '', $m_id_lower) === preg_replace('/[^0-9]/', '', $clean_id)) {
             if (hash_equals($m_hash, $input_hash)) {
                 $authenticated = true;
                 $matched_id = $m_id;
@@ -99,21 +105,13 @@ if ($role === 'manager' || $role === 'admin') {
     }
 } else {
     $staff = isset($creds['staff']) ? $creds['staff'] : [];
-    // Direct match by ID
-    if (isset($staff[$identifier])) {
-        if (hash_equals($staff[$identifier], $input_hash)) {
-            $authenticated = true;
-            $matched_id = $identifier;
-        }
-    } else {
-        // Fallback match by fuzzy identifier
-        foreach ($staff as $s_id => $s_hash) {
-            if (strcasecmp($s_id, $identifier) === 0 || strpos(strtolower($identifier), strtolower($s_id)) !== false) {
-                if (hash_equals($s_hash, $input_hash)) {
-                    $authenticated = true;
-                    $matched_id = $s_id;
-                    break;
-                }
+    // Strict exact match by ID
+    foreach ($staff as $s_id => $s_hash) {
+        if (strtolower($s_id) === $clean_id) {
+            if (hash_equals($s_hash, $input_hash)) {
+                $authenticated = true;
+                $matched_id = $s_id;
+                break;
             }
         }
     }

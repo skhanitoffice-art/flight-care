@@ -93,6 +93,41 @@ if (empty($to) || empty($message)) {
     exit;
 }
 
+// Anti-SMS Relay & Content Policy Enforcement
+// Messages must originate from legitimate Flight Care transactions
+$msg_trimmed = trim($message);
+$msg_lower = strtolower($msg_trimmed);
+
+// Reject oversized payloads (Max 300 characters)
+if (mb_strlen($msg_trimmed, 'UTF-8') > 300) {
+    http_response_code(400);
+    echo json_encode(['ok' => false, 'error' => 'Message exceeds maximum allowable length (300 characters).']);
+    exit;
+}
+
+// Require Flight Care branding or verification context
+$is_fc_msg = (
+    strpos($msg_lower, 'flight care') !== false ||
+    strpos($msg_lower, 'flightcare') !== false ||
+    strpos($msg_lower, 'ফ্লাইট কেয়ার') !== false ||
+    strpos($msg_lower, 'otp') !== false ||
+    strpos($msg_lower, 'pin') !== false ||
+    strpos($msg_lower, 'বুকিং') !== false
+);
+
+if (!$is_fc_msg) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'Unauthorized SMS content. Only Flight Care service notifications are permitted.']);
+    exit;
+}
+
+// Block external phishing links (only flightcaresbd.com permitted)
+if (preg_match('/https?:\/\/(?!flightcaresbd\.com|www\.flightcaresbd\.com)[a-zA-Z0-9.-]+/i', $msg_trimmed)) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'External links in SMS are strictly forbidden for security.']);
+    exit;
+}
+
 // Normalize BD Phone Number: 8801XXXXXXXXX
 $clean_phone = preg_replace('/[^0-9]/', '', $to);
 if (strpos($clean_phone, '880') !== 0) {

@@ -343,7 +343,7 @@ export default function BookingInvoiceModal({
 <html lang="${isBn ? 'bn' : 'en'}">
 <head>
   <meta charset="UTF-8">
-  <title>FlightCare_Invoice_${bookingId}</title>
+  <title>FlightCare_Invoice_${escapeHtml(bookingId)}</title>
   <style>
     @page {
       size: A4 portrait;
@@ -640,7 +640,7 @@ export default function BookingInvoiceModal({
     <div class="ref-bar">
       <div>
         <div class="ref-label">${isBn ? 'বুকিং রেফারেন্স আইডি:' : 'BOOKING REFERENCE:'}</div>
-        <div class="ref-val">#${bookingId}</div>
+        <div class="ref-val">#${escapeHtml(bookingId)}</div>
       </div>
       <div>
         <div class="ref-label" style="text-align: right;">${isBn ? 'বুকিংয়ের সময়:' : 'BOOKED AT:'}</div>
@@ -654,27 +654,27 @@ export default function BookingInvoiceModal({
     <div class="section-title">${isBn ? '👤 যাত্রী ও ভ্রমণের পূর্ণ বিবরণ' : '👤 Passenger & Travel Details'}</div>
     <div class="row">
       <span class="label">${isBn ? 'মূল যাত্রী:' : 'Lead Passenger:'}</span>
-      <span class="value">${passengerName}</span>
+      <span class="value">${escapeHtml(passengerName)}</span>
     </div>
     <div class="row">
       <span class="label">${isBn ? 'মোবাইল নম্বর:' : 'Mobile Phone:'}</span>
-      <span class="value">${phone}</span>
+      <span class="value">${escapeHtml(phone)}</span>
     </div>
     <div class="row">
       <span class="label">${isBn ? 'ইমেইল:' : 'Email Address:'}</span>
-      <span class="value">${email}</span>
+      <span class="value">${escapeHtml(email)}</span>
     </div>
     <div class="row">
       <span class="label">${isBn ? 'এয়ারলাইন্স ও ফ্লাইট:' : 'Airline & Flight:'}</span>
-      <span class="value" style="color: #0284c7; font-size: 14.5px; font-weight: 800;">${airlineName} • ${flightNumber}</span>
+      <span class="value" style="color: #0284c7; font-size: 14.5px; font-weight: 800;">${escapeHtml(airlineName)} • ${escapeHtml(flightNumber)}</span>
     </div>
     <div class="row">
       <span class="label">${isBn ? 'ফ্লাইট রুট ও দিক:' : 'Route & Direction:'}</span>
-      <span class="value">${flightOrigin} ➔ ${flightDestination} (${direction})</span>
+      <span class="value">${escapeHtml(flightOrigin)} ➔ ${escapeHtml(flightDestination)} (${escapeHtml(direction)})</span>
     </div>
     <div class="row">
       <span class="label">${isBn ? 'বিমানবন্দর ও টার্মিনাল:' : 'Airport & Terminal:'}</span>
-      <span class="value">${airport} • ${terminal}</span>
+      <span class="value">${escapeHtml(airport)} • ${escapeHtml(terminal)}</span>
     </div>
     <div class="row">
       <span class="label">${isBn ? 'সেবার তারিখ ও সময়:' : 'Service Date & Time:'}</span>
@@ -694,8 +694,8 @@ export default function BookingInvoiceModal({
       <div style="width: 100%; display: flex; flex-direction: column; gap: 3px; margin-top: 4px;">
         ${passengerDetailsList.map((p, pIdx) => `
           <div style="font-size: 12px; color: #1e293b; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
-            <span>${pIdx + 1}. <strong>${p.name || p.fullName || `${passengerName} (${pIdx + 1})`}</strong> ${p.type ? `(${p.type})` : ''}</span>
-            <span style="color: #64748b;">${p.passport || p.nid || p.phone || ''}</span>
+            <span>${pIdx + 1}. <strong>${escapeHtml(p.name || p.fullName || `${passengerName} (${pIdx + 1})`)}</strong> ${p.type ? `(${escapeHtml(p.type)})` : ''}</span>
+            <span style="color: #64748b;">${escapeHtml(p.passport || p.nid || p.phone || '')}</span>
           </div>
         `).join('')}
       </div>

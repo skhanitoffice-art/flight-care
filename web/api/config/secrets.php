@@ -44,7 +44,7 @@ return [
     // 3. Aviation Live Flight Radar (AviationStack)
     'aviation' => [
         'api_key' => getenv('FC_AVIATION_API_KEY') ?: '8d8516477e2f13b46ad8faccbefb3083',
-        'base_url' => 'http://api.aviationstack.com/v1/flights',
+        'base_url' => 'https://api.aviationstack.com/v1/flights',
     ],
 
     // 4. Server-Side HMAC Token Signing Secret

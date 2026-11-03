@@ -87,11 +87,12 @@ if (!empty($clean_flight)) {
     $params['airline_iata'] = $clean_airline;
 }
 
-$query_url = 'http://api.aviationstack.com/v1/flights?' . http_build_query($params);
+$query_url = 'https://api.aviationstack.com/v1/flights?' . http_build_query($params);
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $query_url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 12);
 $response_body = curl_exec($ch);
 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);

@@ -35,14 +35,24 @@ Options -Indexes +FollowSymLinks
 
 # Block any direct HTTP access to API files, environment files, source code & backups
 <FilesMatch "(^#.*#|\.(bak|conf|dist|fla|in[ci]|log|psd|sh|sql|sw[op]|env.*|lock|md|ts|tsx|map|key|pem|cert|crt|p12)|api\.js|apiCore\.js|App\.js|package\.json|package-lock\.json|firebase\.json|firestore\.indexes\.json|app\.json|eas\.json|\.env|\.git.*|secrets\.php|credentials\.php|config\.local\.php)$">
-  Order allow,deny
-  Deny from all
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
 </FilesMatch>
 
 # Block access to dot-hidden files except .htaccess and .well-known
 <FilesMatch "^\.(?!well-known|htaccess)">
-  Order allow,deny
-  Deny from all
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
 </FilesMatch>
 
 # ===============================================================
@@ -63,7 +73,11 @@ Options -Indexes +FollowSymLinks
   RewriteBase /
 
   # Immediate 403 Forbidden for anyone scanning for API files or secrets
-  RewriteCond %{THE_REQUEST} (\.env|api\.js|apiCore\.js|package\.json|package-lock\.json|firebase\.json|firestore|\.git) [NC]
+  RewriteCond %{THE_REQUEST} (\.env|api\.js|apiCore\.js|package\.json|package-lock\.json|firebase\.json|firestore|\.git|secrets\.php|credentials\.php|config\.local\.php) [NC,OR]
+  RewriteCond %{REQUEST_URI} ^/api/config [NC,OR]
+  RewriteCond %{REQUEST_URI} ^/api/auth/(credentials|config)\.php [NC,OR]
+  RewriteCond %{REQUEST_URI} ^/api/payment/config [NC,OR]
+  RewriteCond %{REQUEST_URI} ^/api/payment/logs [NC]
   RewriteRule ^ - [F,L]
 
   # Redirect alternate domain flightcare.app or www to primary flightcaresbd.com
