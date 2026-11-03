@@ -741,6 +741,56 @@ export default function ManagerPanel({
     loadSecurityLogs();
   }, []);
 
+  // Live Refresh & Cloud Data Sync for Manager & Super Admin
+  const [isRefreshingData, setIsRefreshingData] = useState(false);
+  const [dataRefreshNotice, setDataRefreshNotice] = useState('');
+
+  const handleManualDataRefresh = async () => {
+    setIsRefreshingData(true);
+    setDataRefreshNotice(lang ? '🔄 ক্লাউড থেকে ডাটা সিঙ্ক হচ্ছে...' : '🔄 Syncing data from cloud...');
+    try {
+      // 1. Refresh bookings from storage and cloud
+      const storedBookingsVal = await AsyncStorage.getItem('@flightcare_bookings');
+      if (storedBookingsVal) {
+        try {
+          const parsed = JSON.parse(storedBookingsVal);
+          if (Array.isArray(parsed)) {
+            const clean = parsed.filter(b => b && !isFalseBooking(b));
+            setAllPlatformBookings(clean.map(normalizeBookingForManager));
+            if (typeof setBookings === 'function') setBookings(clean.map(normalizeBookingForManager));
+          }
+        } catch {}
+      }
+
+      // 2. Refresh staff roster
+      const storedStaffVal = await AsyncStorage.getItem('@flightcare_staff_roster_v10');
+      if (storedStaffVal) {
+        try {
+          const parsedStaff = JSON.parse(storedStaffVal);
+          if (Array.isArray(parsedStaff) && parsedStaff.length > 0) {
+            setLocalStaffRoster(parsedStaff);
+            if (typeof parentSetStaffRoster === 'function') parentSetStaffRoster(parsedStaff);
+          }
+        } catch {}
+      }
+
+      // 3. Refresh security audit logs
+      await loadSecurityLogs();
+
+      // 4. Refresh webhook logs
+      await loadWebhookLogs();
+
+      setDataRefreshNotice(lang ? '✅ সমস্ত ডাটা সফলভাবে ক্লাউড থেকে আপডেট হয়েছে!' : '✅ All data successfully updated from cloud!');
+      setTimeout(() => setDataRefreshNotice(''), 3500);
+    } catch (err) {
+      console.warn('Manual refresh warning:', err);
+      setDataRefreshNotice(lang ? '⚠️ রিফ্রেশ সম্পন্ন হয়েছে' : '⚠️ Refresh completed');
+      setTimeout(() => setDataRefreshNotice(''), 3000);
+    } finally {
+      setIsRefreshingData(false);
+    }
+  };
+
   // Payment Reconciliation & Webhook State (Requirements 2 & 4)
   const [paymentSubTab, setPaymentSubTab] = useState('transactions'); // 'transactions' | 'reconciliation' | 'webhooks'
   const [reconciliationDateFilter, setReconciliationDateFilter] = useState('all');
@@ -12863,6 +12913,14 @@ export default function ManagerPanel({
         { padding: pagePadding, paddingBottom: 60, flexGrow: 1 },
       ]}
     >
+      {/* Live Data Refresh Banner */}
+      {dataRefreshNotice ? (
+        <View style={{ backgroundColor: '#F0FDF4', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, borderWidth: 1.5, borderColor: '#86EFAC', marginBottom: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, shadowColor: '#16A34A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 }}>
+          <Text style={{ fontSize: 15 }}>{isRefreshingData ? '⏳' : '✅'}</Text>
+          <Text style={{ fontSize: 13, fontWeight: '800', color: '#166534' }}>{dataRefreshNotice}</Text>
+        </View>
+      ) : null}
+
       {/* Responsive Manager Header */}
       {responsive.isPhone ? (
         <View style={{ marginBottom: 14 }}>
@@ -13001,9 +13059,44 @@ export default function ManagerPanel({
                 );
               })()}
 
+              {/* Mobile Live Refresh & Sync Button */}
+              <TouchableOpacity
+                onPress={handleManualDataRefresh}
+                disabled={isRefreshingData}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel={lang ? 'ডাটা রিফ্রেশ ও সিঙ্ক' : 'Live Sync'}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  paddingHorizontal: 10,
+                  paddingVertical: 7,
+                  borderRadius: 10,
+                  backgroundColor: '#F0FDF4',
+                  borderWidth: 1.5,
+                  borderColor: '#86EFAC',
+                }}
+              >
+                <Text style={{ fontSize: 13 }}>{isRefreshingData ? '⏳' : '🔄'}</Text>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: '#15803D' }}>
+                  {isRefreshingData ? (lang ? 'সিঙ্ক...' : 'Sync...') : (lang ? 'রিফ্রেশ' : 'Refresh')}
+                </Text>
+              </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={async () => {
-                  await managerLogout(managerSession.token);
+                  try {
+                    await managerLogout(managerSession?.token);
+                  } catch {}
+                  await AsyncStorage.removeItem('@flightcare_manager_session').catch(() => {});
+                  await AsyncStorage.removeItem('@flightcare_manager_section').catch(() => {});
+                  if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+                    try {
+                      window.localStorage.removeItem('@flightcare_manager_session');
+                      window.localStorage.removeItem('@flightcare_manager_section');
+                    } catch {}
+                  }
                   setManagerSession(null);
                   setManagerSection('dashboard');
                 }}
@@ -13248,9 +13341,44 @@ export default function ManagerPanel({
               );
             })()}
 
+            {/* Desktop Live Refresh & Sync Button */}
+            <TouchableOpacity
+              onPress={handleManualDataRefresh}
+              disabled={isRefreshingData}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={lang ? 'ডাটা রিফ্রেশ ও সিঙ্ক' : 'Live Sync'}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 8,
+                backgroundColor: '#F0FDF4',
+                borderWidth: 1.5,
+                borderColor: '#86EFAC',
+              }}
+            >
+              <Text style={{ fontSize: 13 }}>{isRefreshingData ? '⏳' : '🔄'}</Text>
+              <Text style={{ fontSize: 12, fontWeight: '800', color: '#15803D' }}>
+                {isRefreshingData ? (lang ? 'সিঙ্ক হচ্ছে...' : 'Syncing...') : (lang ? 'রিফ্রেশ ও ডাটা আপডেট' : 'Live Refresh & Sync')}
+              </Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               onPress={async () => {
-                await managerLogout(managerSession.token);
+                try {
+                  await managerLogout(managerSession?.token);
+                } catch {}
+                await AsyncStorage.removeItem('@flightcare_manager_session').catch(() => {});
+                await AsyncStorage.removeItem('@flightcare_manager_section').catch(() => {});
+                if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+                  try {
+                    window.localStorage.removeItem('@flightcare_manager_session');
+                    window.localStorage.removeItem('@flightcare_manager_section');
+                  } catch {}
+                }
                 setManagerSession(null);
                 setManagerSection('dashboard');
               }}

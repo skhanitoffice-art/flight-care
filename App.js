@@ -183,6 +183,8 @@ import { initAntiTheftProtection } from './src/services/antiTheftProtection';
 injectWeb3DStyles();
 initAntiTheftProtection();
 const DISMISSED_REVIEWS_STORAGE = '@flightcare_dismissed_reviews_v3';
+export const MANAGER_SESSION_STORAGE = '@flightcare_manager_session';
+export const MANAGER_SECTION_STORAGE = '@flightcare_manager_section';
 
 const getInitialWebRoute = () => {
   if (Platform.OS !== 'web' || typeof window === 'undefined') {
@@ -197,6 +199,14 @@ const getInitialWebRoute = () => {
     if (clean === 'manager' || clean === 'admin' || clean === 'admin-panel' || clean === 'adminpanel' || clean === 'platform-admin' || clean === 'dashboard') {
       return { tab: 'manager', subPage: null };
     }
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const storedMgr = window.localStorage.getItem('@flightcare_manager_session');
+        if (storedMgr && (p.toLowerCase().includes('manager') || p.toLowerCase().includes('admin') || p.toLowerCase().includes('dashboard'))) {
+          return { tab: 'manager', subPage: null };
+        }
+      }
+    } catch {}
     if (clean === 'booking' || clean === 'bookings') {
       return { tab: 'bookings', subPage: null };
     }
@@ -405,13 +415,43 @@ export default function App() {
   const [authNotice, setAuthNotice] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
 
-  // Manager state (Null by default: requires authenticated login with Firebase Cloud credentials)
-  const [managerSession, setManagerSession] = useState(null);
+  // Manager state: Restores synchronously from localStorage on browser refresh to prevent logout
+  const [managerSession, setManagerSession] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const raw = window.localStorage.getItem('@flightcare_manager_session');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.token && parsed.user && (parsed.user.role === 'manager' || parsed.user.role === 'admin')) {
+            return parsed;
+          }
+        }
+        const rawCust = window.localStorage.getItem('@flightcare_customer_session');
+        if (rawCust) {
+          const parsedCust = JSON.parse(rawCust);
+          if (parsedCust && parsedCust.user && (parsedCust.user.role === 'manager' || parsedCust.user.role === 'admin')) {
+            return parsedCust;
+          }
+        }
+      } catch {}
+    }
+    return null;
+  });
   const [managerEmail, setManagerEmail] = useState('');
   const [managerPassword, setManagerPassword] = useState('');
   const [managerLoginError, setManagerLoginError] = useState('');
   const [managerBusy, setManagerBusy] = useState(false);
-  const [managerSection, setManagerSection] = useState('dashboard');
+  const [managerSection, setManagerSection] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const raw = window.localStorage.getItem('@flightcare_manager_section');
+        if (raw && typeof raw === 'string') {
+          return raw.replace(/^"|"$/g, '');
+        }
+      } catch {}
+    }
+    return 'dashboard';
+  });
   const [managerWorkflow, setManagerWorkflow] = useState(DEFAULT_BOOKING_WORKFLOW);
   const [managerWorkflowLoading, setManagerWorkflowLoading] = useState(false);
   const [managerWorkflowSaving, setManagerWorkflowSaving] = useState(false);
@@ -919,6 +959,37 @@ export default function App() {
     };
   }, []);
 
+  // Persistent Manager & Super Admin Session Storage across Browser Refreshes
+  useEffect(() => {
+    if (managerSession && managerSession.token && managerSession.user) {
+      AsyncStorage.setItem(MANAGER_SESSION_STORAGE, JSON.stringify(managerSession)).catch(() => {});
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+        try {
+          window.localStorage.setItem(MANAGER_SESSION_STORAGE, JSON.stringify(managerSession));
+        } catch {}
+      }
+    } else if (managerSession === null) {
+      AsyncStorage.removeItem(MANAGER_SESSION_STORAGE).catch(() => {});
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+        try {
+          window.localStorage.removeItem(MANAGER_SESSION_STORAGE);
+          window.localStorage.removeItem(MANAGER_SECTION_STORAGE);
+        } catch {}
+      }
+    }
+  }, [managerSession]);
+
+  useEffect(() => {
+    if (managerSection) {
+      AsyncStorage.setItem(MANAGER_SECTION_STORAGE, managerSection).catch(() => {});
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+        try {
+          window.localStorage.setItem(MANAGER_SECTION_STORAGE, managerSection);
+        } catch {}
+      }
+    }
+  }, [managerSection]);
+
   // Web Browser URL & History Synchronization
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined' || !window.history) return;
@@ -1229,8 +1300,10 @@ export default function App() {
       AsyncStorage.getItem(PAYMENTS_STORAGE),
       AsyncStorage.getItem(PRICING_STORAGE),
       AsyncStorage.getItem(STAFF_STORAGE),
+      AsyncStorage.getItem(MANAGER_SESSION_STORAGE),
+      AsyncStorage.getItem(MANAGER_SECTION_STORAGE),
     ])
-      .then(([airportsVal, settingsVal, bookingsVal, deviceBookingsVal, notificationsVal, profileVal, sessionVal, paymentsVal, pricingVal, staffVal]) => {
+      .then(([airportsVal, settingsVal, bookingsVal, deviceBookingsVal, notificationsVal, profileVal, sessionVal, paymentsVal, pricingVal, staffVal, managerSessionVal, managerSectionVal]) => {
         if (!active) return;
         let loadedAirports = DEFAULT_MANAGED_AIRPORTS;
         if (airportsVal) {
@@ -1315,6 +1388,26 @@ export default function App() {
             const parsed = JSON.parse(sessionVal);
             if (parsed && typeof parsed === 'object') {
               setCustomerSession(parsed);
+              if (parsed.user && (parsed.user.role === 'manager' || parsed.user.role === 'admin')) {
+                setManagerSession(parsed);
+                AsyncStorage.setItem(MANAGER_SESSION_STORAGE, JSON.stringify(parsed)).catch(() => {});
+              }
+            }
+          } catch {}
+        }
+        if (managerSessionVal) {
+          try {
+            const parsedMgr = JSON.parse(managerSessionVal);
+            if (parsedMgr && parsedMgr.token && parsedMgr.user && (parsedMgr.user.role === 'manager' || parsedMgr.user.role === 'admin')) {
+              setManagerSession(parsedMgr);
+            }
+          } catch {}
+        }
+        if (managerSectionVal) {
+          try {
+            const parsedSec = typeof managerSectionVal === 'string' && managerSectionVal.startsWith('"') ? JSON.parse(managerSectionVal) : managerSectionVal;
+            if (parsedSec && typeof parsedSec === 'string') {
+              setManagerSection(parsedSec);
             }
           } catch {}
         }
