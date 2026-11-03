@@ -25,12 +25,13 @@ import {
   recordEpsonPrintSuccess,
   getEpsonTestPrintHtml,
   subscribeEpsonLock,
+  ALL_DOC_PRINT_ADDON_KEYS,
 } from '../services/epsonL3250Service';
 
-export const FOUR_DOC_SERVICES = [
+export const ALL_DOC_PRINT_SERVICES = [
   {
     id: 'visa',
-    matchKeys: ['visa', 'visa_on_arrival'],
+    matchKeys: ['visa', 'visa_on_arrival', 'visa_immigration'],
     nameBn: 'অন অ্যারাইভাল ভিসা (Visa On Arrival)',
     nameEn: 'Visa On Arrival',
     descBn: '৪টি আবশ্যক ডকুমেন্ট যাচাই ও অন-অ্যারাইভাল ভিসা সহায়তা। সার্ভিস চার্জ ১৫০০ টাকা/জন। ($50 USD সরকারি ফি কাউন্টারে সরাসরি প্রদেয়)।',
@@ -39,8 +40,8 @@ export const FOUR_DOC_SERVICES = [
     priceUnit: 'person',
     priceDisplayBn: '৳১,৫০০ / জন',
     priceDisplayEn: '৳1,500 / person',
-    extraBadgeBn: '$50 সরকারি ফি',
-    extraBadgeEn: '$50 Govt Fee',
+    extraBadgeBn: '$50 সরকারি ফি • 🔒 অনুমোদন সাপেক্ষ',
+    extraBadgeEn: '$50 Govt Fee • 🔒 Approval Required',
     icon: '🛂',
   },
   {
@@ -54,9 +55,54 @@ export const FOUR_DOC_SERVICES = [
     priceUnit: 'request',
     priceDisplayBn: '৳১০০ / অনুরোধ',
     priceDisplayEn: '৳100 / request',
-    extraBadgeBn: 'বোর্ডিং পাস ও ভিসা • EPSON L3250',
-    extraBadgeEn: 'Boarding Pass & Visa • EPSON L3250',
+    extraBadgeBn: 'বোর্ডিং পাস ও ভিসা • 🔒 অনুমোদন সাপেক্ষ',
+    extraBadgeEn: 'Boarding Pass & Visa • 🔒 Approval Required',
     icon: '🖨️',
+  },
+  {
+    id: 'air_suvidha',
+    matchKeys: ['air_suvidha', 'suvidha', 'airsuvidha'],
+    nameBn: 'এয়ার সুবিধা প্রিন্ট (Air Suvidha Print)',
+    nameEn: 'Air Suvidha Print',
+    descBn: 'ভারতগামী ও ট্রানজিট যাত্রীদের জন্য এয়ার সুবিধা সেলফ ডিক্লারেশন ফর্ম পূরণ ও প্রিন্ট সহায়তা।',
+    descEn: 'Air Suvidha self-declaration form fillup & printout support for India-bound & transit passengers.',
+    price: 150,
+    priceUnit: 'request',
+    priceDisplayBn: '৳১৫০ / অনুরোধ',
+    priceDisplayEn: '৳150 / request',
+    extraBadgeBn: 'ভারতগামী যাত্রী • 🔒 অনুমোদন সাপেক্ষ',
+    extraBadgeEn: 'India Bound • 🔒 Approval Required',
+    icon: '🇮🇳',
+  },
+  {
+    id: 'bmet_clearance',
+    matchKeys: ['bmet_clearance', 'bmet', 'smart_card'],
+    nameBn: 'বিএমইটি ক্লিয়ারেন্স ও কার্ড প্রিন্ট',
+    nameEn: 'BMET Clearance & Smart Card',
+    descBn: 'প্রবাসী কর্মীদের বিএমইটি স্মার্ট কার্ড, ম্যানপাওয়ার সার্টিফিকেট ও ইমিগ্রেশন ছাড়পত্র প্রিন্ট সেবা।',
+    descEn: 'BMET smart card, manpower certificate & immigration clearance printout for migrant workers.',
+    price: 100,
+    priceUnit: 'request',
+    priceDisplayBn: '৳১০০ / অনুরোধ',
+    priceDisplayEn: '৳100 / request',
+    extraBadgeBn: 'প্রবাসী কর্মী • 🔒 অনুমোদন সাপেক্ষ',
+    extraBadgeEn: 'Migrant Workers • 🔒 Approval Required',
+    icon: '🛂',
+  },
+  {
+    id: 'hotel_ticket_print',
+    matchKeys: ['hotel_ticket_print', 'hotel_ticket'],
+    nameBn: 'হোটেল বুকিং ও টিকিট প্রিন্ট',
+    nameEn: 'Hotel & Return Ticket Print',
+    descBn: 'ইমিগ্রেশন ও ভিসা চেকিংয়ের জন্য কনফার্মড হোটেল বুকিং ভাউচার ও রিটার্ন এয়ার টিকিট প্রিন্ট সেবা।',
+    descEn: 'Confirmed hotel booking voucher and return air ticket printout for immigration clearance.',
+    price: 100,
+    priceUnit: 'request',
+    priceDisplayBn: '৳১০০ / অনুরোধ',
+    priceDisplayEn: '৳100 / request',
+    extraBadgeBn: 'ভ্রমণকারী ও পর্যটক • 🔒 অনুমোদন সাপেক্ষ',
+    extraBadgeEn: 'Tourists & Expatriates • 🔒 Approval Required',
+    icon: '🏨',
   },
   {
     id: 'photocopy',
@@ -69,8 +115,8 @@ export const FOUR_DOC_SERVICES = [
     priceUnit: 'request',
     priceDisplayBn: '৳৫০ / অনুরোধ',
     priceDisplayEn: '৳50 / request',
-    extraBadgeBn: 'ডকুমেন্টস কপি • EPSON L3250',
-    extraBadgeEn: 'Documents Copy • EPSON L3250',
+    extraBadgeBn: 'ডকুমেন্টস কপি • 🔒 অনুমোদন সাপেক্ষ',
+    extraBadgeEn: 'Documents Copy • 🔒 Approval Required',
     icon: '📄',
   },
   {
@@ -84,11 +130,44 @@ export const FOUR_DOC_SERVICES = [
     priceUnit: 'quote',
     priceDisplayBn: 'অনুরোধ সাপেক্ষে / উদ্ধৃতি',
     priceDisplayEn: 'On Request / Quote',
-    extraBadgeBn: 'কাস্টমস ও ইমিগ্রেশন',
-    extraBadgeEn: 'Customs & Immigration',
+    extraBadgeBn: 'কাস্টমস ও ইমিগ্রেশন • 🔒 অনুমোদন সাপেক্ষ',
+    extraBadgeEn: 'Customs & Immigration • 🔒 Approval Required',
     icon: '📝',
   },
+  {
+    id: 'health_cert_print',
+    matchKeys: ['health_cert_print', 'vaccine_cert', 'health_cert'],
+    nameBn: 'ভ্যাকসিন ও স্বাস্থ্য সনদ প্রিন্ট',
+    nameEn: 'Vaccine & Health Cert Print',
+    descBn: 'আন্তর্জাতিক ভ্রমণের জন্য কোভিড-১৯ টিকাদান সনদ, পোলিও ও জরুরি স্বাস্থ্য সার্টিফিকেট প্রিন্ট সেবা।',
+    descEn: 'COVID-19 vaccination, yellow fever, or medical health certificate printout for international travel.',
+    price: 100,
+    priceUnit: 'request',
+    priceDisplayBn: '৳১০০ / অনুরোধ',
+    priceDisplayEn: '৳100 / request',
+    extraBadgeBn: 'স্বাস্থ্য ও ভ্যাকসিন • 🔒 অনুমোদন সাপেক্ষ',
+    extraBadgeEn: 'Health & Vaccine • 🔒 Approval Required',
+    icon: '💉',
+  },
+  {
+    id: 'other_print',
+    matchKeys: ['other_print', 'customs_print'],
+    nameBn: 'অন্যান্য ভ্রমণ ডকুমেন্ট প্রিন্ট',
+    nameEn: 'Other Travel Documents Print',
+    descBn: 'কাস্টমস ডিক্লারেশন, ব্যাংক স্টেটমেন্ট, ইনভিটেশন লেটার ও অন্যান্য জরুরি ভ্রমণ ডকুমেন্ট প্রিন্ট সেবা।',
+    descEn: 'Customs declaration, bank statement, invitation letter & emergency travel documents printing.',
+    price: 100,
+    priceUnit: 'request',
+    priceDisplayBn: '৳১০০ / অনুরোধ',
+    priceDisplayEn: '৳100 / request',
+    extraBadgeBn: 'জরুরি ডকুমেন্ট • 🔒 অনুমোদন সাপেক্ষ',
+    extraBadgeEn: 'Emergency Prints • 🔒 Approval Required',
+    icon: '📑',
+  },
 ];
+
+// Backwards compatibility alias
+export const FOUR_DOC_SERVICES = ALL_DOC_PRINT_SERVICES;
 
 export default function DocServicesPermissionDashboard({
   allPlatformBookings = [],
@@ -150,7 +229,7 @@ export default function DocServicesPermissionDashboard({
   });
 
   // Active filter & search
-  const [filter, setFilter] = useState('all'); // 'all' | 'pending' | 'approved' | 'print' | 'photocopy' | 'visa' | 'form_fillup'
+  const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [showWalkinModal, setShowWalkinModal] = useState(false);
   const [notice, setNotice] = useState('');
@@ -160,7 +239,7 @@ export default function DocServicesPermissionDashboard({
     name: '',
     phone: '',
     flight: '',
-    serviceId: 'print',
+    serviceId: 'air_suvidha',
     copies: '1',
     autoGrant: true,
     notes: '',
@@ -201,7 +280,7 @@ export default function DocServicesPermissionDashboard({
     } catch (e) {}
     showToast(
       val
-        ? (isBn ? 'ডকুমেন্ট প্রিন্টিংয়ে ড্যাশবোর্ড পারমিশন বাধ্যতামূলক করা হয়েছে।' : 'Dashboard permission is now mandatory before printing.')
+        ? (isBn ? 'ডকুমেন্ট ও এয়ার সুবিধা প্রিন্টিংয়ে ড্যাশবোর্ড পারমিশন বাধ্যতামূলক করা হয়েছে।' : 'Dashboard permission is now mandatory before printing.')
         : (isBn ? 'প্রিন্ট অনুমতি বাধ্যবাধকতা বন্ধ করা হয়েছে।' : 'Mandatory print permission requirement disabled.')
     );
   };
@@ -376,22 +455,22 @@ export default function DocServicesPermissionDashboard({
       name: '',
       phone: '',
       flight: '',
-      serviceId: 'print',
+      serviceId: 'air_suvidha',
       copies: '1',
       autoGrant: true,
       notes: '',
     });
-    showToast(isBn ? 'নতুন কাউন্টার রিকোয়েস্ট সফলভাবে সেভ ও অনুমোদন করা হয়েছে!' : 'Walk-in document request recorded successfully!');
+    showToast(isBn ? 'নতুন কাউন্টার সেবা রিকোয়েস্ট সফলভাবে সেভ ও অনুমোদন করা হয়েছে!' : 'Walk-in document request recorded successfully!');
   };
 
-  // Compile combined queue of bookings with these 4 services + walkin requests
+  // Compile combined queue of bookings with these services + walkin requests
   const queue = useMemo(() => {
     const list = [];
     const sourceBookings = allPlatformBookings && allPlatformBookings.length > 0 ? allPlatformBookings : bookings;
 
     (sourceBookings || []).forEach(b => {
       const bAddons = b.addons || [];
-      FOUR_DOC_SERVICES.forEach(svc => {
+      ALL_DOC_PRINT_SERVICES.forEach(svc => {
         const isMatched = svc.matchKeys.some(k => bAddons.includes(k));
         if (isMatched) {
           const permKey = `${b.id}_${svc.id}`;
@@ -419,7 +498,7 @@ export default function DocServicesPermissionDashboard({
     });
 
     (walkinRequests || []).forEach(w => {
-      const svc = FOUR_DOC_SERVICES.find(s => s.id === w.serviceId) || FOUR_DOC_SERVICES[1];
+      const svc = ALL_DOC_PRINT_SERVICES.find(s => s.id === w.serviceId) || ALL_DOC_PRINT_SERVICES[1];
       const permKey = `${w.id}_${w.serviceId}`;
       const permInfo = permissions[permKey];
       const isGranted = Boolean(permInfo?.granted ?? w.isGranted);
@@ -449,7 +528,8 @@ export default function DocServicesPermissionDashboard({
     return queue.filter(item => {
       if (filter === 'pending' && item.isGranted) return false;
       if (filter === 'approved' && !item.isGranted) return false;
-      if (['print', 'photocopy', 'visa', 'form_fillup'].includes(filter) && item.serviceId !== filter) return false;
+      const validServiceKeys = ALL_DOC_PRINT_SERVICES.map(s => s.id);
+      if (validServiceKeys.includes(filter) && item.serviceId !== filter) return false;
 
       if (search.trim()) {
         const q = search.toLowerCase().trim();
@@ -464,11 +544,11 @@ export default function DocServicesPermissionDashboard({
     const total = queue.length;
     const pending = queue.filter(q => !q.isGranted).length;
     const approved = queue.filter(q => q.isGranted).length;
-    const print = queue.filter(q => q.serviceId === 'print').length;
-    const photocopy = queue.filter(q => q.serviceId === 'photocopy').length;
-    const visa = queue.filter(q => q.serviceId === 'visa').length;
-    const form = queue.filter(q => q.serviceId === 'form_fillup').length;
-    return { total, pending, approved, print, photocopy, visa, form };
+    const serviceCounts = {};
+    ALL_DOC_PRINT_SERVICES.forEach(s => {
+      serviceCounts[s.id] = queue.filter(q => q.serviceId === s.id).length;
+    });
+    return { total, pending, approved, ...serviceCounts };
   }, [queue]);
 
   const handleExecutePrint = (item) => {
@@ -840,10 +920,10 @@ export default function DocServicesPermissionDashboard({
           >
             {epsonLocked
               ? (isBn
-                  ? 'কাউন্টার সুরক্ষা নীতি: ওয়েবসাইট থেকে লক সক্রিয় থাকায় কাউন্টার স্টাফ ম্যানেজার অনুমোদন বা ভেরিফাইড ওটিপি পিন ছাড়া কোনো বোর্ডিং পাস, ভিসা কিংবা ডকুমেন্টস প্রিন্ট করতে পারবে না।'
-                  : 'Counter Security Active: The Epson L3250 printer is locked from the website. Staff cannot print boarding passes, visas, or travel documents without manager approval.')
+                  ? 'কাউন্টার সুরক্ষা নীতি: ওয়েবসাইট থেকে EPSON L3250 লক সক্রিয় থাকায় অন-অ্যারাইভাল ভিসা, এয়ার সুবিধা, বিএমইটি ও অন্যান্য কোনো প্রিন্ট ড্যাশবোর্ড অনুমোদন বা ভেরিফাইড ওটিপি পিন ছাড়া বের করা যাবে না।'
+                  : 'Counter Security Active: The Epson L3250 printer is locked from the website. Staff cannot print Visa on Arrival, Air Suvidha, BMET clearance, or other documents without manager approval.')
               : (isBn
-                  ? 'কাউন্টার প্রিন্টার সক্রিয়: অনুমোদিত প্রিন্ট জবে স্বয়ংক্রিয় ডিজিটাল সিকিউরিটি ওয়াটারমার্ক ও অথরাইজেশন কিউআর কোড যুক্ত হবে।'
+                  ? 'কাউন্টার প্রিন্টার সক্রিয়: অনুমোদিত প্রতিটি প্রিন্ট জবে স্বয়ংক্রিয় ডিজিটাল সিকিউরিটি ওয়াটারমার্ক ও অথরাইজেশন কিউআর কোড যুক্ত হবে।'
                   : 'Counter printer is active. Authorized print jobs will include digital security verification watermarks.')}
           </Text>
         </View>
@@ -870,13 +950,13 @@ export default function DocServicesPermissionDashboard({
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Text style={{ fontSize: 24 }}>📑</Text>
               <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>
-                {isBn ? 'ডকুমেন্ট ও কাউন্টার সেবা নিয়ন্ত্রণ গেট' : 'Document & Additional Services Control Gate'}
+                {isBn ? 'ডকুমেন্ট ও এয়ার সুবিধা প্রিন্ট অনুমোদন গেট' : 'Document & Air Suvidha Print Approval Gate'}
               </Text>
             </View>
             <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4, lineHeight: 18 }}>
               {isBn
-                ? 'অন-অ্যারাইভাল ভিসা, প্রিন্ট, ফটোকপি ও ফর্ম পূরণ সেবার ড্যাশবোর্ড অনুমোদন ও পারমিশন কন্ট্রোল।'
-                : 'Centralized control for Visa On Arrival, Print, PhotoCopy, and Form Fillup. Unapproved prints are strictly locked.'}
+                ? 'অন-অ্যারাইভাল ভিসা, এয়ার সুবিধা, বিএমইটি ক্লিয়ারেন্স, বোর্ডিং পাস, টিকিট ও ফটোকপি সেবার ড্যাশবোর্ড অনুমোদন ও পারমিশন কন্ট্রোল।'
+                : 'Centralized control for Visa On Arrival, Air Suvidha, BMET clearance, boarding pass, ticket, and photocopy printing. Unapproved prints are strictly locked.'}
             </Text>
           </View>
 
@@ -934,15 +1014,15 @@ export default function DocServicesPermissionDashboard({
           >
             <Text style={{ fontSize: 14, color: '#FFFFFF' }}>➕</Text>
             <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>
-              {isBn ? 'নতুন কাউন্টার রিকোয়েস্ট' : '+ Walk-in Service'}
+              {isBn ? 'নতুন কাউন্টার সেবা রিকোয়েস্ট' : '+ Walk-in Service'}
             </Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* 4 Additional Services Overview Grid (Exact Match with Image) */}
+      {/* ALL Print & Document Services Overview Grid */}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-        {FOUR_DOC_SERVICES.map(svc => {
+        {ALL_DOC_PRINT_SERVICES.map(svc => {
           const asset = getAddonAsset(svc.id);
           const reqCount = queue.filter(q => q.serviceId === svc.id).length;
           const pendingCount = queue.filter(q => q.serviceId === svc.id && !q.isGranted).length;
@@ -952,7 +1032,7 @@ export default function DocServicesPermissionDashboard({
               key={svc.id}
               style={{
                 flex: 1,
-                minWidth: 240,
+                minWidth: 260,
                 backgroundColor: '#FFFFFF',
                 borderRadius: 14,
                 padding: 14,
@@ -966,17 +1046,17 @@ export default function DocServicesPermissionDashboard({
               }}
             >
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                   {asset ? (
                     <Image source={asset} style={{ width: 32, height: 32, resizeMode: 'contain' }} />
                   ) : (
                     <Text style={{ fontSize: 24 }}>{svc.icon}</Text>
                   )}
-                  <View>
-                    <Text style={{ fontSize: 14, fontWeight: '900', color: '#0F172A' }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '900', color: '#0F172A' }} numberOfLines={1}>
                       {isBn ? svc.nameBn : svc.nameEn}
                     </Text>
-                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#0284C7' }}>
+                    <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#0284C7' }} numberOfLines={1}>
                       {isBn ? svc.extraBadgeBn : svc.extraBadgeEn}
                     </Text>
                   </View>
@@ -1006,7 +1086,7 @@ export default function DocServicesPermissionDashboard({
                   {isBn ? svc.priceDisplayBn : svc.priceDisplayEn}
                 </Text>
                 <Text style={{ fontSize: 11, color: '#64748B' }}>
-                  {reqCount} {isBn ? 'টি বুকিং' : 'requests'}
+                  {reqCount} {isBn ? 'টি রিকোয়েস্ট' : 'requests'}
                 </Text>
               </View>
             </View>
@@ -1032,13 +1112,18 @@ export default function DocServicesPermissionDashboard({
       >
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
           {[
-            { key: 'all', label: isBn ? `সব রিকোয়েস্ট (${counts.total})` : `All (${counts.total})` },
+            { key: 'all', label: isBn ? `সব সেবা (${counts.total})` : `All (${counts.total})` },
             { key: 'pending', label: isBn ? `অনুমোদন বাকি (${counts.pending})` : `Pending (${counts.pending})`, alert: counts.pending > 0 },
             { key: 'approved', label: isBn ? `অনুমোদিত (${counts.approved})` : `Approved (${counts.approved})` },
-            { key: 'print', label: isBn ? `🖨️ প্রিন্ট (${counts.print})` : `Print (${counts.print})` },
-            { key: 'photocopy', label: isBn ? `📄 ফটোকপি (${counts.photocopy})` : `PhotoCopy (${counts.photocopy})` },
-            { key: 'visa', label: isBn ? `🛂 ভিসা (${counts.visa})` : `Visa (${counts.visa})` },
-            { key: 'form_fillup', label: isBn ? `📝 ফর্ম (${counts.form})` : `Form (${counts.form})` },
+            { key: 'air_suvidha', label: isBn ? `🇮🇳 এয়ার সুবিধা (${counts.air_suvidha || 0})` : `Air Suvidha (${counts.air_suvidha || 0})` },
+            { key: 'print', label: isBn ? `🖨️ প্রিন্ট (${counts.print || 0})` : `Print (${counts.print || 0})` },
+            { key: 'bmet_clearance', label: isBn ? `🛂 বিএমইটি (${counts.bmet_clearance || 0})` : `BMET (${counts.bmet_clearance || 0})` },
+            { key: 'hotel_ticket_print', label: isBn ? `🏨 হোটেল/টিকিট (${counts.hotel_ticket_print || 0})` : `Hotel/Ticket (${counts.hotel_ticket_print || 0})` },
+            { key: 'photocopy', label: isBn ? `📄 ফটোকপি (${counts.photocopy || 0})` : `PhotoCopy (${counts.photocopy || 0})` },
+            { key: 'visa', label: isBn ? `🛂 অন-অ্যারাইভাল (${counts.visa || 0})` : `Visa (${counts.visa || 0})` },
+            { key: 'form_fillup', label: isBn ? `📝 ফর্ম (${counts.form_fillup || 0})` : `Form (${counts.form_fillup || 0})` },
+            { key: 'health_cert_print', label: isBn ? `💉 ভ্যাকসিন (${counts.health_cert_print || 0})` : `Vaccine (${counts.health_cert_print || 0})` },
+            { key: 'other_print', label: isBn ? `📑 অন্যান্য (${counts.other_print || 0})` : `Other (${counts.other_print || 0})` },
           ].map(tab => {
             const active = filter === tab.key;
             return (
@@ -1047,7 +1132,7 @@ export default function DocServicesPermissionDashboard({
                 activeOpacity={0.8}
                 onPress={() => setFilter(tab.key)}
                 style={{
-                  paddingHorizontal: 12,
+                  paddingHorizontal: 11,
                   paddingVertical: 7,
                   borderRadius: 8,
                   backgroundColor: active ? '#0B3B60' : (tab.alert ? '#FEF2F2' : '#F1F5F9'),
@@ -1057,7 +1142,7 @@ export default function DocServicesPermissionDashboard({
               >
                 <Text
                   style={{
-                    fontSize: 12,
+                    fontSize: 11.5,
                     fontWeight: active ? '800' : '700',
                     color: active ? '#FFFFFF' : (tab.alert ? '#DC2626' : '#475569'),
                   }}
@@ -1109,7 +1194,7 @@ export default function DocServicesPermissionDashboard({
           </Text>
           <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center' }}>
             {isBn
-              ? 'বর্তমানে এই ফিল্টারে কোনো পেন্ডিং অথবা অনুমোদিত ডকুমেন্ট সার্ভিস নেই।'
+              ? 'বর্তমানে এই ফিল্টারে কোনো পেন্ডিং অথবা অনুমোদিত ডকুমেন্ট সেবা নেই।'
               : 'There are no matching document or print service requests at the moment.'}
           </Text>
         </View>
@@ -1159,7 +1244,7 @@ export default function DocServicesPermissionDashboard({
                       <strong>{isBn ? item.serviceObj?.nameBn : item.serviceObj?.nameEn}</strong> • {item.flight} ({item.flightDate})
                     </Text>
                     <Text style={{ fontSize: 11, color: '#64748B' }}>
-                      আইডি: <strong style={{ color: '#0F172A' }}>#{item.bookingId}</strong> • ফোন: {item.phone}
+                      আইডি: <strong style={{ color: '#0F172A' }}>#{item.bookingId}</strong> • ফোন: {item.phone} • ফি: {isBn ? item.serviceObj?.priceDisplayBn : item.serviceObj?.priceDisplayEn}
                     </Text>
 
                     {item.grantedAt && isApproved && (
@@ -1289,7 +1374,7 @@ export default function DocServicesPermissionDashboard({
 
             <Text style={{ fontSize: 12.5, color: '#475569', marginBottom: 14, lineHeight: 18 }}>
               {isBn
-                ? 'কাউন্টার স্টাফের জরুরি অফলাইন প্রিন্টের জন্য এই ৬-ডিজিটের সিকিউরিটি পিনটি প্রদান করুন। এটি ১৫ মিনিট সক্রিয় থাকবে।'
+                ? 'কাউন্টার স্টাফের জরুরি অফলাইন প্রিন্ট (এয়ার সুবিধা, ভিসা বা টিকিট)-এর জন্য এই ৬-ডিজিটের সিকিউরিটি পিনটি প্রদান করুন। এটি ১৫ মিনিট সক্রিয় থাকবে।'
                 : 'Provide this 6-digit security PIN to counter staff to authorize an offline or walk-in print. Valid for 15 minutes.'}
             </Text>
 
@@ -1486,11 +1571,11 @@ export default function DocServicesPermissionDashboard({
       </Modal>
 
       {/* ============================================================== */}
-      {/* MODAL 4: WALK-IN ENTRY MODAL */}
+      {/* MODAL 4: WALK-IN ENTRY MODAL WITH ALL SERVICES */}
       {/* ============================================================== */}
       <Modal visible={showWalkinModal} transparent animationType="fade" onRequestClose={() => setShowWalkinModal(false)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 22, width: '100%', maxWidth: 480, maxHeight: '90%', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 }}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 22, width: '100%', maxWidth: 500, maxHeight: '90%', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={{ fontSize: 22 }}>🖨️</Text>
@@ -1536,7 +1621,7 @@ export default function DocServicesPermissionDashboard({
               <TextInput
                 value={walkinForm.flight}
                 onChangeText={v => setWalkinForm(p => ({ ...p, flight: v }))}
-                placeholder="e.g. BG-084, EK-582"
+                placeholder="e.g. BG-084, EK-582, 6E-1861"
                 placeholderTextColor="#94A3B8"
                 autoCapitalize="characters"
                 style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#CBD5E1', borderRadius: 8, padding: 10, fontSize: 13, marginBottom: 14, color: '#0F172A' }}
@@ -1544,10 +1629,10 @@ export default function DocServicesPermissionDashboard({
 
               {/* Service Selection */}
               <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155', marginBottom: 6 }}>
-                {isBn ? 'সার্ভিস নির্বাচন করুন *' : 'Select Service *'}
+                {isBn ? 'সেবা নির্বাচন করুন (🔒 অনুমোদন সাপেক্ষ) *' : 'Select Service (🔒 Approval Required) *'}
               </Text>
               <View style={{ gap: 6, marginBottom: 14 }}>
-                {FOUR_DOC_SERVICES.map(s => {
+                {ALL_DOC_PRINT_SERVICES.map(s => {
                   const sel = walkinForm.serviceId === s.id;
                   return (
                     <TouchableOpacity
@@ -1564,10 +1649,10 @@ export default function DocServicesPermissionDashboard({
                         justifyContent: 'space-between',
                       }}
                     >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                         <Text style={{ fontSize: 18 }}>{s.icon}</Text>
-                        <View>
-                          <Text style={{ fontSize: 13, fontWeight: '800', color: sel ? '#0284C7' : '#0F172A' }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 13, fontWeight: '800', color: sel ? '#0284C7' : '#0F172A' }} numberOfLines={1}>
                             {isBn ? s.nameBn : s.nameEn}
                           </Text>
                           <Text style={{ fontSize: 11, color: '#64748B' }}>

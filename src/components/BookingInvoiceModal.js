@@ -16,6 +16,7 @@ import {
   verifyEpsonUnlockPin,
   getEpsonWatermarkHtml,
   recordEpsonPrintSuccess,
+  ALL_DOC_PRINT_ADDON_KEYS,
 } from '../services/epsonL3250Service';
 import { openCustomerWhatsApp } from '../services/whatsappService';
 import { FLIGHTCARE_LOGO_DATA_URL } from '../constants/flightcareLogoBase64';
@@ -858,7 +859,7 @@ export default function BookingInvoiceModal({
       }
     }
     // Check if document print permission is required
-    const targetAddons = ['print', 'photocopy', 'form_fillup', 'visa', 'visa_on_arrival'];
+    const targetAddons = ALL_DOC_PRINT_ADDON_KEYS;
     const bookingAddons = booking.addons || [];
     const hasDocAddon = targetAddons.some(t => bookingAddons.includes(t));
     
@@ -1514,7 +1515,7 @@ export default function BookingInvoiceModal({
       return;
     }
     // Check if document print permission is required
-    const targetAddons = ['print', 'photocopy', 'form_fillup', 'visa', 'visa_on_arrival'];
+    const targetAddons = ALL_DOC_PRINT_ADDON_KEYS;
     const bookingAddons = booking.addons || [];
     const hasDocAddon = targetAddons.some(t => bookingAddons.includes(t));
     

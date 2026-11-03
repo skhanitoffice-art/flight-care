@@ -246,6 +246,34 @@ export const verifyEpsonUnlockPin = (inputPin) => {
 /**
  * Check if printing is authorized for a specific booking / service
  */
+export const ALL_DOC_PRINT_ADDON_KEYS = [
+  'print',
+  'printer',
+  'print_docs',
+  'photocopy',
+  'form_fillup',
+  'form',
+  'formfillup',
+  'visa',
+  'visa_on_arrival',
+  'air_suvidha',
+  'suvidha',
+  'airsuvidha',
+  'bmet_clearance',
+  'bmet',
+  'smart_card',
+  'hotel_ticket_print',
+  'hotel_ticket',
+  'health_cert_print',
+  'vaccine_cert',
+  'health_cert',
+  'other_print',
+  'customs_print',
+];
+
+/**
+ * Check if printing is authorized for a specific booking / service
+ */
 export const canPrintOnEpsonL3250 = (booking = {}) => {
   // If master printer is unlocked, permission is clear
   if (!isEpsonL3250Locked()) {
@@ -254,7 +282,7 @@ export const canPrintOnEpsonL3250 = (booking = {}) => {
 
   // If strict mode, printer is locked for everything
   const config = getEpsonConfig();
-  const targetAddons = ['print', 'photocopy', 'form_fillup', 'visa', 'visa_on_arrival'];
+  const targetAddons = ALL_DOC_PRINT_ADDON_KEYS;
   const bookingAddons = booking.addons || [];
   const hasDocAddon = targetAddons.some((t) => bookingAddons.includes(t));
 
@@ -291,7 +319,7 @@ const checkIndividualBookingPermission = (bookingCode) => {
       const permsRaw = window.localStorage.getItem('flightcare_doc_service_permissions');
       if (!permsRaw) return false;
       const perms = JSON.parse(permsRaw);
-      const targetAddons = ['print', 'photocopy', 'form_fillup', 'visa', 'visa_on_arrival'];
+      const targetAddons = ALL_DOC_PRINT_ADDON_KEYS;
       return targetAddons.some(
         (t) => perms[bookingCode + '_' + t]?.granted || perms[bookingCode + '_print']?.granted
       );
@@ -455,3 +483,4 @@ export const getEpsonTestPrintHtml = () => {
 </body>
 </html>`;
 };
+

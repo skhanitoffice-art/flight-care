@@ -119,3 +119,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 function sanitize_text_field($str) {
     return htmlspecialchars(strip_tags(trim($str)), ENT_QUOTES, 'UTF-8');
 }
+

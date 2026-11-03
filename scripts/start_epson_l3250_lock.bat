@@ -9,3 +9,4 @@ echo   Connecting counter printer to Flight Care Web Dashboard...
 echo.
 python "%~dp0epson_l3250_lock_bridge.py"
 pause
+
