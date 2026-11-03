@@ -1520,50 +1520,6 @@ export default function DesktopHomeScreen({
                 <ChevronRight size={16} color="#0284C7" />
               </TouchableOpacity>
 
-              {/* Official International Arrival Cards Portal Card */}
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => setShowArrivalCardsModal(true)}
-                style={{
-                  backgroundColor: '#F0FDFA',
-                  borderRadius: 12,
-                  borderWidth: 1.5,
-                  borderColor: '#99F6E4',
-                  padding: 11,
-                  marginBottom: 12,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 12,
-                }}
-              >
-                <View
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 10,
-                    backgroundColor: '#CCFBF1',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ fontSize: 20 }}>🛂</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#0F766E' }}>
-                      {lang ? 'আন্তর্জাতিক এ্যারাইভাল কার্ড' : 'International Arrival Cards'}
-                    </Text>
-                    <View style={{ backgroundColor: '#0D9488', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8 }}>
-                      <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>20 Portals</Text>
-                    </View>
-                  </View>
-                  <Text style={{ fontSize: 11.5, color: '#115E59', marginTop: 1 }}>
-                    {lang ? 'সিঙ্গাপুর, মালয়েশিয়া, ভারত, থাইল্যান্ডসহ ২০টি দেশের সরকারি আগমন কার্ড ↗' : 'Fill official digital arrival cards for 20 international destinations ↗'}
-                  </Text>
-                </View>
-                <ChevronRight size={16} color="#0D9488" />
-              </TouchableOpacity>
-
               {/* Validation Alert Banner if inputs incomplete */}
               {Boolean(Object.values(errors).some(msg => typeof msg === 'string' && msg.trim().length > 0)) && (
                 <View
