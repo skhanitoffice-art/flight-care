@@ -1475,80 +1475,112 @@ export default function HomeScreen({
               : 'Dedicated airport Meet & Greet solutions for BRAC Bank, IFIC, EBL, Mercantile Bank cardholders and remittance expatriates.'}
           </Text>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ width: '100%', marginTop: 2 }}>
+            {/* 1. B2B WhatsApp Desk Button - Full width, comfortable pill layout, never distorted */}
             <TouchableOpacity
               activeOpacity={0.85}
+              accessibilityRole="link"
+              href="https://wa.me/8801347570001?text=Hello%20Flight%20Care,%20Corporate/Bank%20Partnership%20inquiry"
+              target="_blank"
+              rel="noopener noreferrer"
               onPress={() => {
+                const waUrl = 'https://wa.me/8801347570001?text=Hello%20Flight%20Care,%20Corporate/Bank%20Partnership%20inquiry';
                 if (typeof window !== 'undefined') {
-                  window.open('https://wa.me/8801347570001?text=Hello%20Flight%20Care,%20Corporate/Bank%20Partnership%20inquiry', '_blank');
+                  window.open(waUrl, '_blank');
                 }
+                Linking.openURL(waUrl).catch(() => {});
               }}
               style={{
                 backgroundColor: '#25D366',
-                flex: 1,
-                paddingVertical: 10,
-                borderRadius: 8,
+                width: '100%',
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderRadius: 10,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 6,
+                gap: 8,
+                marginBottom: 10,
+                shadowColor: '#25D366',
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.35,
+                shadowRadius: 5,
+                elevation: 3,
+                cursor: 'pointer',
               }}
             >
-              <Text style={{ fontSize: 14 }}>💬</Text>
-              <Text style={{ fontSize: 12, fontWeight: '800', color: '#FFFFFF' }}>
-                {lang === 1 ? 'WhatsApp ডেস্ক' : 'B2B WhatsApp'}
+              <Text style={{ fontSize: 16 }}>💬</Text>
+              <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.3 }}>
+                {lang === 1 ? 'করপোরেট WhatsApp ডেস্ক' : 'B2B WhatsApp Desk'}
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => {
-                if (typeof window !== 'undefined') {
-                  window.location.href = 'tel:+8801347570001';
-                }
-              }}
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.2)',
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <Text style={{ fontSize: 13 }}>📞</Text>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#FFFFFF' }}>
-                01347-570001
-              </Text>
-            </TouchableOpacity>
+            {/* 2. Direct Phone Call Buttons - 2 Column Grid, always active & instantly dialable */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%' }}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                accessibilityRole="link"
+                href="tel:+8801347570001"
+                onPress={() => {
+                  const telUrl = 'tel:+8801347570001';
+                  if (typeof window !== 'undefined') {
+                    window.location.href = telUrl;
+                  }
+                  Linking.openURL(telUrl).catch(() => {});
+                }}
+                style={{
+                  flex: 1,
+                  backgroundColor: 'rgba(30, 41, 59, 0.85)',
+                  paddingVertical: 11,
+                  paddingHorizontal: 8,
+                  borderRadius: 10,
+                  borderWidth: 1.5,
+                  borderColor: 'rgba(56, 189, 248, 0.45)',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  cursor: 'pointer',
+                }}
+              >
+                <Text style={{ fontSize: 14 }}>📞</Text>
+                <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#FFFFFF' }} numberOfLines={1}>
+                  01347-570001
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => {
-                if (typeof window !== 'undefined') {
-                  window.location.href = 'tel:+8801347570002';
-                }
-              }}
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.2)',
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <Text style={{ fontSize: 13 }}>📞</Text>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#FFFFFF' }}>
-                01347-570002
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                accessibilityRole="link"
+                href="tel:+8801347570002"
+                onPress={() => {
+                  const telUrl = 'tel:+8801347570002';
+                  if (typeof window !== 'undefined') {
+                    window.location.href = telUrl;
+                  }
+                  Linking.openURL(telUrl).catch(() => {});
+                }}
+                style={{
+                  flex: 1,
+                  backgroundColor: 'rgba(30, 41, 59, 0.85)',
+                  paddingVertical: 11,
+                  paddingHorizontal: 8,
+                  borderRadius: 10,
+                  borderWidth: 1.5,
+                  borderColor: 'rgba(56, 189, 248, 0.45)',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  cursor: 'pointer',
+                }}
+              >
+                <Text style={{ fontSize: 14 }}>📞</Text>
+                <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#FFFFFF' }} numberOfLines={1}>
+                  01347-570002
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>

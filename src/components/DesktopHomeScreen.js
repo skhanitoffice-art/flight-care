@@ -8,6 +8,7 @@ import {
   Image,
   Modal,
   Platform,
+  Linking,
   ActivityIndicator,
   Animated,
 } from 'react-native';
@@ -1905,10 +1906,16 @@ export default function DesktopHomeScreen({
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                   <TouchableOpacity
                     activeOpacity={0.85}
+                    accessibilityRole="link"
+                    href="https://wa.me/8801347570001?text=Hello%20Flight%20Care,%20we%20are%20interested%20in%20a%20Corporate/Bank%20Partnership%20agreement"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     onPress={() => {
+                      const waUrl = 'https://wa.me/8801347570001?text=Hello%20Flight%20Care,%20we%20are%20interested%20in%20a%20Corporate/Bank%20Partnership%20agreement';
                       if (typeof window !== 'undefined') {
-                        window.open('https://wa.me/8801347570001?text=Hello%20Flight%20Care,%20we%20are%20interested%20in%20a%20Corporate/Bank%20Partnership%20agreement', '_blank');
+                        window.open(waUrl, '_blank');
                       }
+                      Linking.openURL(waUrl).catch(() => {});
                     }}
                     style={{
                       backgroundColor: '#25D366',
@@ -1919,6 +1926,10 @@ export default function DesktopHomeScreen({
                       alignItems: 'center',
                       gap: 8,
                       cursor: 'pointer',
+                      shadowColor: '#25D366',
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.35,
+                      shadowRadius: 5,
                     }}
                   >
                     <Text style={{ fontSize: 16 }}>💬</Text>
@@ -1929,18 +1940,22 @@ export default function DesktopHomeScreen({
 
                   <TouchableOpacity
                     activeOpacity={0.85}
+                    accessibilityRole="link"
+                    href="tel:+8801347570001"
                     onPress={() => {
+                      const telUrl = 'tel:+8801347570001';
                       if (typeof window !== 'undefined') {
-                        window.location.href = 'tel:+8801347570001';
+                        window.location.href = telUrl;
                       }
+                      Linking.openURL(telUrl).catch(() => {});
                     }}
                     style={{
-                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      backgroundColor: 'rgba(30, 41, 59, 0.75)',
                       paddingHorizontal: 18,
                       paddingVertical: 12,
                       borderRadius: 10,
-                      borderWidth: 1,
-                      borderColor: 'rgba(255,255,255,0.2)',
+                      borderWidth: 1.5,
+                      borderColor: 'rgba(56, 189, 248, 0.45)',
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: 8,
@@ -1948,25 +1963,29 @@ export default function DesktopHomeScreen({
                     }}
                   >
                     <Text style={{ fontSize: 15 }}>📞</Text>
-                    <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#FFFFFF' }}>
+                    <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#FFFFFF' }}>
                       01347-570001
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     activeOpacity={0.85}
+                    accessibilityRole="link"
+                    href="tel:+8801347570002"
                     onPress={() => {
+                      const telUrl = 'tel:+8801347570002';
                       if (typeof window !== 'undefined') {
-                        window.location.href = 'tel:+8801347570002';
+                        window.location.href = telUrl;
                       }
+                      Linking.openURL(telUrl).catch(() => {});
                     }}
                     style={{
-                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      backgroundColor: 'rgba(30, 41, 59, 0.75)',
                       paddingHorizontal: 18,
                       paddingVertical: 12,
                       borderRadius: 10,
-                      borderWidth: 1,
-                      borderColor: 'rgba(255,255,255,0.2)',
+                      borderWidth: 1.5,
+                      borderColor: 'rgba(56, 189, 248, 0.45)',
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: 8,
@@ -1974,7 +1993,7 @@ export default function DesktopHomeScreen({
                     }}
                   >
                     <Text style={{ fontSize: 15 }}>📞</Text>
-                    <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#FFFFFF' }}>
+                    <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#FFFFFF' }}>
                       01347-570002
                     </Text>
                   </TouchableOpacity>
