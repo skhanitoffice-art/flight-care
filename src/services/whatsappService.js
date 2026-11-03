@@ -4,7 +4,7 @@
  * via Server-to-Server GreenWeb BD / Gateway API and provides 1-Click WhatsApp Direct Links.
  */
 
-import { Linking, Platform } from 'react-native';
+import { Linking, Platform, Alert } from 'react-native';
 
 export const SUPPORT_OFFICE_WHATSAPP = '8801347570001';
 export const SUPPORT_OFFICE_WHATSAPP_2 = '8801347570002';
@@ -416,7 +416,210 @@ export function openSupportOfficeWhatsApp(booking = {}, lang = 1, targetPhone = 
   });
 }
 
+
+/**
+ * Extract and normalize client phone for WhatsApp (e.g. 88017XXXXXXXX)
+ */
+export function extractClientWhatsAppNumber(booking = {}) {
+  const raw =
+    booking.phone ||
+    booking.passengerPhone ||
+    booking.customerPhone ||
+    booking.contactPhone ||
+    booking.contactNumber ||
+    booking.passenger_information?.phone ||
+    booking.passengerInformation?.phone ||
+    booking.leadPassenger?.phone ||
+    booking.bookerPhone ||
+    (Array.isArray(booking.passengers) && booking.passengers[0]?.phone) ||
+    '';
+  let clean = String(raw).replace(/[^0-9]/g, '');
+  if (!clean) return '';
+  if (clean.startsWith('01') && clean.length === 11) {
+    clean = '88' + clean;
+  } else if (clean.startsWith('1') && clean.length === 10) {
+    clean = '880' + clean;
+  }
+  return clean;
+}
+
+/**
+ * Format official customer booking confirmation / update message for WhatsApp
+ */
+export function formatCustomerBookingMessage(booking = {}, lang = 1) {
+  const isBn = Boolean(lang);
+  const bookingCode = booking.id || booking.bookingId || booking.confirmedId || 'FC-PENDING';
+
+  const passengerName =
+    booking.passengerName ||
+    booking.name ||
+    booking.passenger_information?.name ||
+    booking.passengerInformation?.name ||
+    booking.leadPassenger?.name ||
+    booking.bookerName ||
+    (Array.isArray(booking.passengers) && booking.passengers[0]?.name) ||
+    (isBn ? 'সম্মানিত যাত্রী' : 'Valued Passenger');
+
+  const flightNumber = (
+    booking.fno ||
+    booking.flightNumber ||
+    booking.flight?.number ||
+    'BG-084'
+  ).toUpperCase();
+
+  const serviceDate =
+    booking.date ||
+    booking.flight?.date ||
+    booking.serviceDate ||
+    '';
+
+  const serviceTime =
+    booking.time ||
+    booking.flight?.time ||
+    booking.serviceTime ||
+    '';
+
+  const airport = booking.airport || booking.airport_code || 'DAC';
+  const airportLabel = airport === 'DAC' 
+    ? (isBn ? 'ঢাকা বিমানবন্দর (HSIA)' : 'Dhaka Airport (HSIA)') 
+    : airport;
+  const terminal = booking.terminal || booking.flight?.terminal || 'Terminal 1';
+
+  const direction = booking.dir || booking.direction || (booking.svc?.cat) || 'arr';
+  const isDep = direction === 'dep' || String(direction).toLowerCase().includes('depart');
+  const directionLabel = isDep
+    ? (isBn ? 'প্রস্থান প্রোটোকল (Departure)' : 'Departure Protocol')
+    : (isBn ? 'আগমন প্রোটোকল (Arrival)' : 'Arrival Protocol');
+
+  let serviceName = booking.service || booking.package || '';
+  if (!serviceName && booking.pkg) {
+    serviceName = booking.pkg.n ? booking.pkg.n[isBn ? 1 : 0] : (booking.pkg.t || 'VIP Protocol');
+  }
+  if (!serviceName) {
+    serviceName = isBn ? 'ভিআইপি প্রোটোকল সার্ভিস' : 'VIP Protocol Service';
+  }
+
+  const rawAddons = booking.addons || [];
+  let addonsFormattedList = [];
+  if (Array.isArray(rawAddons) && rawAddons.length > 0) {
+    rawAddons.forEach(ad => {
+      const key = typeof ad === 'string' ? ad.toLowerCase() : (ad?.id ? String(ad.id).toLowerCase() : '');
+      const mapped = ADDON_NAMES_MAP[key];
+      if (mapped) {
+        addonsFormattedList.push(isBn ? mapped.bn : mapped.en);
+      } else if (ad && typeof ad === 'object' && ad.name) {
+        addonsFormattedList.push(ad.name);
+      } else if (key) {
+        addonsFormattedList.push(key);
+      }
+    });
+  }
+  const addonsDisplay = addonsFormattedList.length > 0 ? addonsFormattedList.join(', ') : '';
+
+  const amount = booking.amount != null ? Number(booking.amount) : 0;
+  const formattedAmount = isNaN(amount) ? '0' : amount.toLocaleString('en-US');
+
+  const isPayAfter =
+    booking.paymentStatus === 'pay_after_service' ||
+    booking.paidMethod === 'pay_after_service' ||
+    booking.method === 'pay_after_service';
+
+  const paymentStatusText = isPayAfter
+    ? (isBn ? 'সার্ভিস শেষে প্রদেয় (Pay After Service)' : 'Pay After Service')
+    : (booking.paymentStatus === 'paid'
+        ? (isBn ? 'পেমেন্ট সম্পন্ন (Paid)' : 'Paid Online')
+        : (isBn ? 'বকেয়া (Pending)' : 'Pending'));
+
+  const staffName = booking.staff || booking.leadStaffName || '';
+  const staffPhone = booking.staffPhone || booking.leadStaffPhone || '';
+
+  if (isBn) {
+    return `🛫 *ফ্লাইট কেয়ার — এয়ারপোর্ট ভিআইপি প্রোটোকল সার্ভিস*
+━━━━━━━━━━━━━━━━━━━━━
+সম্মানিত *${passengerName}*,
+ফ্লাইট কেয়ারে আপনার এয়ারপোর্ট মিট অ্যান্ড গ্রিট সার্ভিস সংক্রান্ত বিবরণ:
+
+🎫 *বুকিং রেফারেন্স আইডি:* #${bookingCode}
+✈️ *ফ্লাইট নম্বর:* ${flightNumber}
+📅 *সার্ভিসের তারিখ:* ${serviceDate}${serviceTime ? ` (${serviceTime} BST)` : ''}
+📍 *বিমানবন্দর:* ${airportLabel} (${terminal})
+🎯 *সার্ভিস:* ${directionLabel} — ${serviceName}${addonsDisplay ? `\n📦 *অতিরিক্ত সেবা:* ${addonsDisplay}` : ''}
+💰 *ফি ও পেমেন্ট স্ট্যাটাস:* ৳${formattedAmount} (${paymentStatusText})${staffName ? `\n👤 *নিযুক্ত প্রোটোকল কর্মকর্তা:* ${staffName}${staffPhone ? ` (${staffPhone})` : ''}` : ''}
+━━━━━━━━━━━━━━━━━━━━━
+📍 *আপনার লাইভ সার্ভিস ট্র্যাকিং ও প্লেকার্ড লিংক:*
+https://flightcaresbd.com/?trackBooking=${bookingCode}
+
+📞 যেকোনো সহায়তায় ফ্লাইট কেয়ার হেল্পলাইন:
+01347-570001, 01347-570002
+
+আপনার যাত্রা নিরাপদ ও আনন্দময় হোক!`;
+  }
+
+  return `🛫 *Flight Care — Airport VIP Protocol Service*
+━━━━━━━━━━━━━━━━━━━━━
+Dear *${passengerName}*,
+Here are your Airport Meet & Greet service details with Flight Care:
+
+🎫 *Booking ID:* #${bookingCode}
+✈️ *Flight No:* ${flightNumber}
+📅 *Service Date:* ${serviceDate}${serviceTime ? ` (${serviceTime} BST)` : ''}
+📍 *Airport:* ${airportLabel} (${terminal})
+🎯 *Service:* ${directionLabel} — ${serviceName}${addonsDisplay ? `\n📦 *Extra Addons:* ${addonsDisplay}` : ''}
+💰 *Total Fee:* ৳${formattedAmount} (${paymentStatusText})${staffName ? `\n👤 *Assigned Protocol Officer:* ${staffName}${staffPhone ? ` (${staffPhone})` : ''}` : ''}
+━━━━━━━━━━━━━━━━━━━━━
+📍 *Live Status Tracking & Placard:*
+https://flightcaresbd.com/?trackBooking=${bookingCode}
+
+📞 Support Hotline: +880 1347-570001, +880 1347-570002
+
+We look forward to welcoming you at the airport!`;
+}
+
+/**
+ * Generate 1-Click WhatsApp URL for Client
+ */
+export function getCustomerWhatsAppUrl(booking = {}, lang = 1) {
+  const phone = extractClientWhatsAppNumber(booking);
+  const text = formatCustomerBookingMessage(booking, lang);
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
+
+/**
+ * 1-Click Launch WhatsApp directly chatting with Customer / Client
+ */
+export function openCustomerWhatsApp(booking = {}, lang = 1) {
+  const phone = extractClientWhatsAppNumber(booking);
+  if (!phone) {
+    const errorTitle = lang ? 'ফোন নম্বর পাওয়া যায়নি' : 'No Phone Number';
+    const errorMsg = lang
+      ? 'এই বুকিংয়ে ক্লায়েন্টের কোনো মোবাইল নম্বর সংরক্ষিত নেই।'
+      : 'No client mobile phone number found for this booking.';
+    if (typeof window !== 'undefined' && window.alert) {
+      window.alert(`${errorTitle}: ${errorMsg}`);
+    } else {
+      Alert.alert(errorTitle, errorMsg);
+    }
+    return false;
+  }
+
+  const url = getCustomerWhatsAppUrl(booking, lang);
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    window.open(url, '_blank');
+  } else {
+    Linking.openURL(url).catch(() => {
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.open(url, '_blank');
+      }
+    });
+  }
+  return true;
+}
+
 export default {
+  extractClientWhatsAppNumber,
+  formatCustomerBookingMessage,
+  getCustomerWhatsAppUrl,
+  openCustomerWhatsApp,
   SUPPORT_OFFICE_WHATSAPP,
   SUPPORT_OFFICE_WHATSAPP_2,
   SUPPORT_OFFICE_WHATSAPP_NUMBERS,

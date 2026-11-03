@@ -43,6 +43,7 @@ import {
   setNotificationSoundEnabled,
   playTestNotificationSound,
 } from '../services/notificationSoundService';
+import { openCustomerWhatsApp } from '../services/whatsappService';
 import { sendPaymentConfirmationSms } from '../services/smsGateway.js';
 import {
   generateDailyReconciliation,
@@ -6754,6 +6755,34 @@ export default function ManagerPanel({
 
                   {/* Operational Action Buttons Bar */}
                   <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 10 }}>
+                    {/* Send WhatsApp Message to Client */}
+                    <TouchableOpacity
+                      onPress={() => openCustomerWhatsApp(b, lang)}
+                      style={{
+                        paddingHorizontal: 11,
+                        paddingVertical: 6.5,
+                        borderRadius: 8,
+                        backgroundColor: '#25D366',
+                        borderWidth: 1,
+                        borderColor: '#1EBE5D',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 5,
+                        cursor: 'pointer',
+                        shadowColor: '#16A34A',
+                        shadowOffset: { width: 0, height: 1 },
+                        shadowOpacity: 0.15,
+                        shadowRadius: 2,
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={lang ? 'ক্লায়েন্টকে হোয়াটসঅ্যাপ করুন' : 'WhatsApp Client'}
+                    >
+                      <Text style={{ fontSize: 13, color: '#FFFFFF' }}>💬</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#FFFFFF' }}>
+                        {lang ? 'হোয়াটসঅ্যাপ' : 'WhatsApp'}
+                      </Text>
+                    </TouchableOpacity>
+
                     {/* View Details */}
                     <TouchableOpacity
                       onPress={() => handleOpenBookingDetails(b)}
@@ -7641,6 +7670,13 @@ export default function ManagerPanel({
                   <View style={{ backgroundColor: '#F8FAFC', padding: 14, borderTopWidth: 1, borderTopColor: '#E2E8F0', flexDirection: 'row', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
                     {(isAdmin || isManager) && (
                       <>
+                        <TouchableOpacity
+                          onPress={() => openCustomerWhatsApp(selectedBooking, lang)}
+                          style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: '#25D366', borderWidth: 1, borderColor: '#1EBE5D', flexDirection: 'row', alignItems: 'center', gap: 5, cursor: 'pointer' }}
+                        >
+                          <Text style={{ fontSize: 13, color: '#FFFFFF' }}>💬</Text>
+                          <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#FFFFFF' }}>{lang ? 'ক্লায়েন্ট হোয়াটসঅ্যাপ' : 'Client WhatsApp'}</Text>
+                        </TouchableOpacity>
                         <TouchableOpacity
                           onPress={() => {
                             const target = selectedBooking;
