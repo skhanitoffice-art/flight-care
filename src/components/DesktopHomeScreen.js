@@ -596,7 +596,7 @@ export default function DesktopHomeScreen({
                   letterSpacing: -0.3,
                 }}
               >
-                {lang ? 'বিমানবন্দরে মিট অ্যান্ড গ্রিট সেবা - ঢাকা' : 'Airport Meet & Greet in Dhaka'}
+                {lang ? 'মিট অ্যান্ড গ্রিট সার্ভিস বাংলাদেশ - ঢাকা বিমানবন্দর' : 'Meet and Greet Service Bangladesh Dhaka'}
               </Text>
 
               {/* Continuous Auto-Swapping Hero Image Slider */}
