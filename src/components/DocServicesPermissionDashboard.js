@@ -216,6 +216,7 @@ export default function DocServicesPermissionDashboard({
   const [showAuditModal, setShowAuditModal] = useState(false);
   const [auditLogs, setAuditLogs] = useState([]);
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showGuardModal, setShowGuardModal] = useState(false);
   const [configForm, setConfigForm] = useState(() => ({ ...getEpsonConfig() }));
 
   // 4. Walk-in Counter Requests State
@@ -741,6 +742,11 @@ export default function DocServicesPermissionDashboard({
                   লক মোড: <strong style={{ color: epsonLocked ? '#DC2626' : '#16A34A' }}>{epsonConfig.lockMode === 'strict' ? 'Strict (সম্পূর্ণ লক)' : 'Addons Only'}</strong>
                 </Text>
               </View>
+              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#86EFAC' }}>
+                <Text style={{ fontSize: 10.5, color: '#166534', fontWeight: 'bold' }}>
+                  🛡️ উইন্ডোজ গার্ড: আন-বাইপাসযোগ্য
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -874,6 +880,24 @@ export default function DocServicesPermissionDashboard({
             >
               <Text style={{ fontSize: 12, fontWeight: '700', color: '#475569' }}>
                 📋 {isBn ? 'লগ' : 'Logs'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Windows Hardware Guard Guide */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => setShowGuardModal(true)}
+              style={{
+                backgroundColor: '#EDE9FE',
+                borderWidth: 1.5,
+                borderColor: '#C4B5FD',
+                paddingHorizontal: 10,
+                paddingVertical: 9,
+                borderRadius: 10,
+              }}
+            >
+              <Text style={{ fontSize: 12, fontWeight: '800', color: '#6D28D9' }}>
+                🛡️ {isBn ? 'পিসি গার্ড' : 'PC Guard'}
               </Text>
             </TouchableOpacity>
 
@@ -1569,6 +1593,86 @@ export default function DocServicesPermissionDashboard({
                 </Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ============================================================== */}
+      {/* MODAL: WINDOWS PC HARDWARE GUARD SETUP & TAMPER-PROOF LOCK */}
+      {/* ============================================================== */}
+      <Modal visible={showGuardModal} transparent animationType="fade" onRequestClose={() => setShowGuardModal(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.75)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 22, width: '100%', maxWidth: 540, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ fontSize: 24 }}>🛡️</Text>
+                <Text style={{ fontSize: 17, fontWeight: '900', color: '#0F172A' }}>
+                  {isBn ? 'কাউন্টার পিসি টেম্পার-প্রুফ হার্ডওয়্যার গার্ড' : 'Counter PC Tamper-Proof Guard'}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowGuardModal(false)}>
+                <Text style={{ fontSize: 18, color: '#64748B', fontWeight: 'bold' }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FCA5A5', padding: 12, borderRadius: 10, marginBottom: 14 }}>
+              <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#991B1B', lineHeight: 18 }}>
+                🔒 উদ্দেশ্য: কাউন্টার স্টাফ যাতে ওয়েবসাইটের বাইরে গিয়েও (যেমন: ওয়ার্ড, এক্সেল, পিডিএফ বা অন্য ব্রাউজার থেকে) কোনোভাবেই প্রিন্টার চালু করতে না পারে।
+              </Text>
+            </View>
+
+            <ScrollView style={{ maxHeight: 320 }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#0B3B60', marginBottom: 6 }}>
+                📌 কাউন্টার পিসিতে ১-ক্লিকে সেটআপ করার নিয়ম:
+              </Text>
+
+              <View style={{ gap: 10, marginBottom: 14 }}>
+                <View style={{ backgroundColor: '#F8FAFC', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F172A', marginBottom: 2 }}>
+                    ১. স্ক্রিপ্ট রান করুন (Run as Administrator):
+                  </Text>
+                  <Text style={{ fontSize: 11.5, color: '#475569', lineHeight: 16 }}>
+                    কাউন্টার পিসির ফোল্ডার থেকে <strong style={{ color: '#0B3B60' }}>INSTALL_COUNTER_LOCK_GUARD.bat</strong> ফাইলটিতে রাইট ক্লিক করে <strong>"Run as Administrator"</strong> দিন।
+                  </Text>
+                </View>
+
+                <View style={{ backgroundColor: '#F8FAFC', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F172A', marginBottom: 2 }}>
+                    ২. সম্পূর্ণ ইনভিজিবল ব্যাকগ্রাউন্ডে চলবে:
+                  </Text>
+                  <Text style={{ fontSize: 11.5, color: '#475569', lineHeight: 16 }}>
+                    কোনো কালো উইন্ডো ওপেন থাকবে না। এটি উইন্ডোজের ভেতরে ব্যাকগ্রাউন্ড সার্ভিস হিসেবে গোপনে চলবে, তাই কাউন্টার স্টাফ এটি বন্ধ করতে পারবে না।
+                  </Text>
+                </View>
+
+                <View style={{ backgroundColor: '#F8FAFC', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F172A', marginBottom: 2 }}>
+                    ৩. পিসি রিস্টার্ট হলেও স্বয়ংক্রিয় চালু:
+                  </Text>
+                  <Text style={{ fontSize: 11.5, color: '#475569', lineHeight: 16 }}>
+                    কাউন্টার স্টাফ পিসি রিস্টার্ট করলেও এটি উইন্ডোজ অন হওয়ার সাথে সাথে স্বয়ংক্রিয়ভাবে রান হয়ে ওয়েবসাইট থেকে ম্যানেজারের লাইভ লক কমান্ড টেনে নেবে।
+                  </Text>
+                </View>
+
+                <View style={{ backgroundColor: '#F8FAFC', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F172A', marginBottom: 2 }}>
+                    ৪. বাইরের সব প্রিন্ট স্বয়ংক্রিয় ডিলিট:
+                  </Text>
+                  <Text style={{ fontSize: 11.5, color: '#475569', lineHeight: 16 }}>
+                    ম্যানেজার ওয়েবসাইট থেকে লক রাখলে বাইরে থেকে আসা যেকোনো প্রিন্ট জব ১ সেকেন্ডের মধ্যে স্বয়ংক্রিয়ভাবে ডিলিট হয়ে যাবে। ফলে কাগজ কখনো প্রিন্ট হবে না!
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            <TouchableOpacity
+              onPress={() => setShowGuardModal(false)}
+              style={{ marginTop: 12, paddingVertical: 10, borderRadius: 8, backgroundColor: '#0B3B60', alignItems: 'center' }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>
+                ✓ {isBn ? 'বুঝেছি / বন্ধ করুন' : 'Got it / Close'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

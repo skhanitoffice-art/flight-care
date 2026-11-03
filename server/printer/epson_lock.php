@@ -1,8 +1,8 @@
 <?php
 /**
  * Flight Care - Epson EcoTank L3250 Smart Lock Cloud API
- * Synchronizes hardware/web lock status and service permissions between the
- * Flight Care Web Platform, Manager Devices, and Counter PC Print Bridges.
+ * Synchronizes hardware/web lock status, service permissions, and security
+ * alerts between the Flight Care Web Platform and Counter PC Hardware Guards.
  * Endpoint: /api/printer/epson_lock.php
  */
 
@@ -55,7 +55,8 @@ $defaultState = [
     'tempUnlockUntil' => null,
     'requirePermission' => true,
     'activeTokens' => [],
-    'permissions' => []
+    'permissions' => [],
+    'securityAlerts' => []
 ];
 
 function loadState($stateFile, $defaultState) {
@@ -127,6 +128,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (isset($input['permissions']) && is_array($input['permissions'])) {
         $state['permissions'] = array_merge($state['permissions'], $input['permissions']);
+    }
+
+    if (isset($input['security_alert']) && is_array($input['security_alert'])) {
+        if (!isset($state['securityAlerts']) || !is_array($state['securityAlerts'])) {
+            $state['securityAlerts'] = [];
+        }
+        array_unshift($state['securityAlerts'], $input['security_alert']);
+        $state['securityAlerts'] = array_slice($state['securityAlerts'], 0, 30);
     }
 
     saveState($stateFile, $state);
