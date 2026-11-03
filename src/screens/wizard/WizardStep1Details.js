@@ -1359,18 +1359,23 @@ export default function WizardStep1Details({
               ) : null}
             </View>
 
-            {/* 6. Passengers (EditText input) */}
+            {/* 6. Passengers (Fixed / Read-only from previous page) */}
             <View style={{ marginBottom: 6 }}>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569', marginBottom: 6 }}>
-                {lang ? 'যাত্রী সংখ্যা *' : 'Passengers *'}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>
+                  {lang ? 'যাত্রী সংখ্যা *' : 'Passengers *'}
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
+                </View>
+              </View>
               <View
                 style={{
                   height: 48,
                   borderWidth: 1.5,
-                  borderColor: '#CBD5E1',
+                  borderColor: '#E2E8F0',
                   borderRadius: 10,
-                  backgroundColor: '#FFFFFF',
+                  backgroundColor: '#F8FAFC',
                   paddingHorizontal: 12,
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -1378,30 +1383,13 @@ export default function WizardStep1Details({
                 }}
               >
                 <UserIcon size={18} color="#0284C7" />
-                <TextInput
-                  style={{ flex: 1, fontSize: 14, fontWeight: '600', color: '#0F172A', outlineStyle: 'none' }}
-                  value={wiz.passengersText !== undefined ? String(wiz.passengersText) : String(wiz.a || 1)}
-                  keyboardType="numeric"
-                  maxLength={1}
-                  onChangeText={v => {
-                    const raw = v.replace(/\D/g, '');
-                    const parsed = parseInt(raw, 10);
-                    const clamped = isNaN(parsed) || parsed < 1 ? 1 : Math.min(9, parsed);
-                    setWiz(c => ({
-                      ...c,
-                      passengersText: raw ? String(clamped) : '',
-                      a: clamped,
-                    }));
-                  }}
-                  placeholder={lang ? 'যাত্রী সংখ্যা (১-৯)' : 'Number of passengers (1-9)'}
-                  placeholderTextColor="#94A3B8"
-                />
-              </View>
-              {Number(wiz.a || 1) >= 9 && (
-                <Text style={{ color: '#D97706', fontSize: 11, fontWeight: '700', marginTop: 4 }}>
-                  ⚠️ {lang ? 'সর্বোচ্চ ৯ জন যাত্রী নির্বাচন করা যাবে। ১০ বা ততোধিক যাত্রীর জন্য গ্রুপ বুকিংয়ে যোগাযোগ করুন।' : 'Max 9 passengers per booking. For 10+, contact group protocol.'}
+                <Text
+                  style={{ flex: 1, fontSize: 14, fontWeight: '700', color: '#0F172A' }}
+                  numberOfLines={1}
+                >
+                  {`${wiz.a || 1} ${lang ? 'জন যাত্রী' : ((wiz.a || 1) > 1 ? 'Passengers' : 'Passenger')}`}
                 </Text>
-              )}
+              </View>
             </View>
           </View>
 

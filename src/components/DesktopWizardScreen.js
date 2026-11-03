@@ -1479,57 +1479,42 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                     </View>
                   </View>
 
-                  {/* Passengers */}
+                  {/* Passengers (Fixed / Read-only from previous page) */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155', marginBottom: 6 }}>
-                      {lang ? 'যাত্রী সংখ্যা *' : 'Passengers *'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>
+                        {lang ? 'যাত্রী সংখ্যা *' : 'Passengers *'}
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                        <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
+                      </View>
+                    </View>
                     <View
                       style={{
                         height: 46,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: '#F8FAFC',
                         borderWidth: 1.5,
-                        borderColor: '#CBD5E1',
+                        borderColor: '#E2E8F0',
                         borderRadius: 10,
                         paddingHorizontal: 12,
                         gap: 8,
                       }}
                     >
                       <UserIcon size={18} color="#0284C7" />
-                      <TextInput
+                      <Text
                         style={{
                           flex: 1,
                           fontSize: 14,
-                          fontWeight: '600',
+                          fontWeight: '700',
                           color: '#0F172A',
-                          outlineStyle: 'none',
                         }}
-                        keyboardType="numeric"
-                        maxLength={1}
-                        value={wiz.passengersText !== undefined ? String(wiz.passengersText) : String(wiz.a || 1)}
-                        onChangeText={v => {
-                          const digitsOnly = v.replace(/\D/g, '');
-                          const parsed = parseInt(digitsOnly, 10);
-                          const clamped = isNaN(parsed) || parsed < 1 ? 1 : Math.min(9, parsed);
-                          setWiz(c => ({
-                            ...c,
-                            passengersText: clamped > 0 ? String(clamped) : '',
-                            a: clamped,
-                          }));
-                        }}
-                        placeholder={lang ? 'যাত্রী সংখ্যা (যেমন: 1)' : 'Number of passengers (e.g. 1)'}
-                        placeholderTextColor="#94A3B8"
-                      />
+                        numberOfLines={1}
+                      >
+                        {`${wiz.a || 1} ${lang ? 'জন যাত্রী' : ((wiz.a || 1) > 1 ? 'Passengers' : 'Passenger')}`}
+                      </Text>
                     </View>
-                    {Number(wiz.a) >= 9 && (
-                      <View style={{ marginTop: 6, padding: 8, backgroundColor: '#FFFBEB', borderRadius: 8, borderWidth: 1, borderColor: '#FDE68A' }}>
-                        <Text style={{ fontSize: 11, color: '#B45309', fontWeight: '700' }}>
-                          ⚠️ {lang ? 'অনলাইনে সর্বোচ্চ ৯ জন যাত্রী বুক করা যাবে। গ্রুপ বুকিংয়ের জন্য সাপোর্টে যোগাযোগ করুন।' : 'Maximum 9 passengers allowed per booking. Contact support for group bookings.'}
-                        </Text>
-                      </View>
-                    )}
                   </View>
                 </View>
 
