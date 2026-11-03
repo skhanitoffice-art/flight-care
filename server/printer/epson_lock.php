@@ -1,8 +1,8 @@
 <?php
 /**
  * Flight Care - Epson EcoTank L3250 Smart Lock Cloud API
- * Synchronizes hardware/web lock status between the Flight Care Web Platform
- * and the airport counter Epson L3250 printer bridge.
+ * Synchronizes hardware/web lock status and service permissions between the
+ * Flight Care Web Platform, Manager Devices, and Counter PC Print Bridges.
  * Endpoint: /api/printer/epson_lock.php
  */
 
@@ -22,6 +22,10 @@ if (in_array($origin, $allowed_origins)) {
     header("Access-Control-Allow-Credentials: true");
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
     header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+} else {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -31,7 +35,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 header('Content-Type: application/json; charset=UTF-8');
 
+// Determine writable state file location
 $stateFile = __DIR__ . '/lock_state.json';
+if (!file_exists($stateFile) && !is_writable(__DIR__)) {
+    $tempDir = sys_get_temp_dir();
+    if (is_writable($tempDir)) {
+        $stateFile = $tempDir . '/flightcare_epson_lock.json';
+    }
+}
 
 // Default State (Locked by default for security)
 $defaultState = [
@@ -40,24 +51,28 @@ $defaultState = [
     'spoolerName' => 'EPSON L3250 Series',
     'location' => 'HSIA Airport Terminal 1 & 2 Concierge Desk',
     'lastUpdated' => date('c'),
-    'updatedBy' => 'System',
+    'updatedBy' => 'System (Default Safety Lock)',
     'tempUnlockUntil' => null,
-    'activeTokens' => []
+    'requirePermission' => true,
+    'activeTokens' => [],
+    'permissions' => []
 ];
 
 function loadState($stateFile, $defaultState) {
     if (file_exists($stateFile)) {
-        $content = file_get_contents($stateFile);
-        $data = json_decode($content, true);
-        if (is_array($data)) {
-            return array_merge($defaultState, $data);
+        $content = @file_get_contents($stateFile);
+        if ($content) {
+            $data = json_decode($content, true);
+            if (is_array($data)) {
+                return array_merge($defaultState, $data);
+            }
         }
     }
     return $defaultState;
 }
 
 function saveState($stateFile, $data) {
-    file_put_contents($stateFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+    @file_put_contents($stateFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
 }
 
 $state = loadState($stateFile, $defaultState);
@@ -106,6 +121,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $state['model'] = sanitize_text_field($input['model']);
     }
 
+    if (isset($input['requirePermission'])) {
+        $state['requirePermission'] = (bool)$input['requirePermission'];
+    }
+
+    if (isset($input['permissions']) && is_array($input['permissions'])) {
+        $state['permissions'] = array_merge($state['permissions'], $input['permissions']);
+    }
+
     saveState($stateFile, $state);
 
     echo json_encode([
@@ -119,4 +142,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 function sanitize_text_field($str) {
     return htmlspecialchars(strip_tags(trim($str)), ENT_QUOTES, 'UTF-8');
 }
-

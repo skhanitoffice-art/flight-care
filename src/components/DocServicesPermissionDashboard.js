@@ -26,6 +26,7 @@ import {
   getEpsonTestPrintHtml,
   subscribeEpsonLock,
   ALL_DOC_PRINT_ADDON_KEYS,
+  syncLockStateToBackend,
 } from '../services/epsonL3250Service';
 
 export const ALL_DOC_PRINT_SERVICES = [
@@ -276,6 +277,7 @@ export default function DocServicesPermissionDashboard({
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.setItem('flightcare_require_print_perm', JSON.stringify(val));
+        syncLockStateToBackend(epsonLocked, managerName);
       }
     } catch (e) {}
     showToast(
@@ -403,6 +405,7 @@ export default function DocServicesPermissionDashboard({
       try {
         if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.setItem('flightcare_doc_service_permissions', JSON.stringify(updated));
+          syncLockStateToBackend(epsonLocked, managerName);
         }
       } catch (e) {}
 

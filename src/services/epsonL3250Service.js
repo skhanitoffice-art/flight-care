@@ -1,8 +1,8 @@
 /**
  * Flight Care - Epson EcoTank L3250 Hardware & Cloud Smart Lock Service
  * Controls and enforces hardware/web lock for the counter printer: EPSON EcoTank L3250.
- * Ensures no boarding pass, visa, invoice, travel form, or photocopy document can be
- * printed or sent to the counter printer without explicit manager permission from the website.
+ * Includes real-time cross-device cloud synchronization, background polling,
+ * global Ctrl+P keyboard interceptor, and CSS print blanking protection.
  */
 
 import { Platform } from 'react-native';
@@ -12,6 +12,33 @@ const STORAGE_KEY_CONFIG = 'flightcare_epson_l3250_config';
 const STORAGE_KEY_TOKENS = 'flightcare_epson_l3250_tokens';
 const STORAGE_KEY_AUDIT = 'flightcare_epson_l3250_audit_log';
 const STORAGE_KEY_TEMP_UNLOCK = 'flightcare_epson_temp_unlock_until';
+const STORAGE_KEY_PERMS = 'flightcare_doc_service_permissions';
+const STORAGE_KEY_REQUIRE_PERM = 'flightcare_require_print_perm';
+
+export const ALL_DOC_PRINT_ADDON_KEYS = [
+  'print',
+  'printer',
+  'print_docs',
+  'photocopy',
+  'form_fillup',
+  'form',
+  'formfillup',
+  'visa',
+  'visa_on_arrival',
+  'air_suvidha',
+  'suvidha',
+  'airsuvidha',
+  'bmet_clearance',
+  'bmet',
+  'smart_card',
+  'hotel_ticket_print',
+  'hotel_ticket',
+  'health_cert_print',
+  'vaccine_cert',
+  'health_cert',
+  'other_print',
+  'customs_print',
+];
 
 export const EPSON_PRINTER_DEFAULT_CONFIG = {
   model: 'EPSON EcoTank L3250',
@@ -23,7 +50,7 @@ export const EPSON_PRINTER_DEFAULT_CONFIG = {
   ipAddress: '192.168.1.150',
   rawPort: 9100,
   paperFormat: 'A4 (210 x 297 mm)',
-  lockMode: 'strict', // 'strict' = All prints blocked without dashboard auth | 'addons_only' = Blocks only 4 doc services
+  lockMode: 'strict', // 'strict' = All prints blocked without dashboard auth | 'addons_only' = Blocks only doc services
   masterPin: '2026', // Emergency Manager Override PIN
 };
 
@@ -46,6 +73,48 @@ const notifySubscribers = (locked, config) => {
 };
 
 /**
+ * Injects or removes CSS @media print protection
+ * If locked, any print dialog produces a prominent lock warning instead of data
+ */
+const updatePrintShieldCss = (locked) => {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+  try {
+    let style = document.getElementById('flightcare-epson-print-shield');
+    if (locked) {
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'flightcare-epson-print-shield';
+        document.head.appendChild(style);
+      }
+      style.innerHTML = `
+        @media print {
+          body > * { display: none !important; }
+          body::after {
+            content: "🔒 EPSON EcoTank L3250 প্রিন্টার লক করা আছে\\A\\A The counter printer is locked by Flight Care Management.\\A ড্যাশবোর্ড অনুমোদন ও ভেরিফাইড ওটিপি পিন ছাড়া প্রিন্ট সম্পূর্ণ নিষিদ্ধ।\\A\\A Contact Duty Manager: 01347-570001 / 01347-570002";
+            white-space: pre-wrap;
+            display: block !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 18pt;
+            font-weight: 800;
+            color: #DC2626;
+            text-align: center;
+            margin: 120px 40px;
+            border: 4px dashed #DC2626;
+            padding: 40px 20px;
+            border-radius: 12px;
+            background: #FEF2F2;
+          }
+        }
+      `;
+    } else {
+      if (style && style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
+    }
+  } catch (e) {}
+};
+
+/**
  * Check whether the Epson L3250 is currently LOCKED from the website.
  * Default is TRUE (Locked) for safety until unlocked by Manager.
  */
@@ -60,6 +129,7 @@ export const isEpsonL3250Locked = () => {
     if (tempUnlockRaw) {
       const until = parseInt(tempUnlockRaw, 10);
       if (!isNaN(until) && Date.now() < until) {
+        updatePrintShieldCss(false);
         return false; // Active temporary unlock window
       }
     }
@@ -69,9 +139,12 @@ export const isEpsonL3250Locked = () => {
     if (lockedRaw === null) {
       // First time initialization: Lock is ON by default!
       window.localStorage.setItem(STORAGE_KEY_LOCKED, 'true');
+      updatePrintShieldCss(true);
       return true;
     }
-    return lockedRaw === 'true';
+    const locked = lockedRaw === 'true';
+    updatePrintShieldCss(locked);
+    return locked;
   } catch (e) {
     return true;
   }
@@ -121,8 +194,7 @@ export const saveEpsonConfig = (newConfig) => {
 
 /**
  * Set the Epson L3250 Lock State from the Website
- * @param {boolean} locked - true to lock, false to unlock
- * @param {string} actor - Name or role of the person changing state
+ * Broadcasts to cloud backend so counter staff PC instantly updates
  */
 export const setEpsonL3250Lock = (locked, actor = 'Duty Manager') => {
   if (Platform.OS !== 'web' || typeof window === 'undefined' || !window.localStorage) return;
@@ -132,7 +204,9 @@ export const setEpsonL3250Lock = (locked, actor = 'Duty Manager') => {
       window.localStorage.removeItem(STORAGE_KEY_TEMP_UNLOCK); // Clear any temp unlock
     }
 
-    // Sync to local bridge file/API if possible
+    updatePrintShieldCss(locked);
+
+    // Sync to cloud backend
     syncLockStateToBackend(locked, actor);
 
     // Audit Log
@@ -160,6 +234,7 @@ export const grantTemporaryUnlock = (minutes = 5, actor = 'Duty Manager') => {
     const until = Date.now() + minutes * 60 * 1000;
     window.localStorage.setItem(STORAGE_KEY_TEMP_UNLOCK, until.toString());
 
+    updatePrintShieldCss(false);
     syncLockStateToBackend(false, actor, until);
 
     logEpsonAudit({
@@ -182,7 +257,7 @@ export const generateEpsonOneTimeOtp = (reason = 'Counter Document Print', actor
     code: `EP-${pin}`,
     pin,
     createdAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 mins validity
+    expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     used: false,
     reason,
     actor,
@@ -193,7 +268,6 @@ export const generateEpsonOneTimeOtp = (reason = 'Counter Document Print', actor
       const raw = window.localStorage.getItem(STORAGE_KEY_TOKENS);
       const list = raw ? JSON.parse(raw) : [];
       list.unshift(token);
-      // Keep only last 20
       window.localStorage.setItem(STORAGE_KEY_TOKENS, JSON.stringify(list.slice(0, 20)));
     }
   } catch (e) {}
@@ -246,41 +320,12 @@ export const verifyEpsonUnlockPin = (inputPin) => {
 /**
  * Check if printing is authorized for a specific booking / service
  */
-export const ALL_DOC_PRINT_ADDON_KEYS = [
-  'print',
-  'printer',
-  'print_docs',
-  'photocopy',
-  'form_fillup',
-  'form',
-  'formfillup',
-  'visa',
-  'visa_on_arrival',
-  'air_suvidha',
-  'suvidha',
-  'airsuvidha',
-  'bmet_clearance',
-  'bmet',
-  'smart_card',
-  'hotel_ticket_print',
-  'hotel_ticket',
-  'health_cert_print',
-  'vaccine_cert',
-  'health_cert',
-  'other_print',
-  'customs_print',
-];
-
-/**
- * Check if printing is authorized for a specific booking / service
- */
 export const canPrintOnEpsonL3250 = (booking = {}) => {
   // If master printer is unlocked, permission is clear
   if (!isEpsonL3250Locked()) {
     return { allowed: true, reason: 'Printer unlocked on website.' };
   }
 
-  // If strict mode, printer is locked for everything
   const config = getEpsonConfig();
   const targetAddons = ALL_DOC_PRINT_ADDON_KEYS;
   const bookingAddons = booking.addons || [];
@@ -316,7 +361,7 @@ export const canPrintOnEpsonL3250 = (booking = {}) => {
 const checkIndividualBookingPermission = (bookingCode) => {
   try {
     if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
-      const permsRaw = window.localStorage.getItem('flightcare_doc_service_permissions');
+      const permsRaw = window.localStorage.getItem(STORAGE_KEY_PERMS);
       if (!permsRaw) return false;
       const perms = JSON.parse(permsRaw);
       const targetAddons = ALL_DOC_PRINT_ADDON_KEYS;
@@ -373,21 +418,37 @@ export const recordEpsonPrintSuccess = (job = {}) => {
 };
 
 /**
- * Sync lock state to backend PHP endpoint or local bridge
+ * Sync lock state & permissions to cloud backend
  */
-const syncLockStateToBackend = async (locked, actor, until = null) => {
+export const syncLockStateToBackend = async (locked, actor, until = null) => {
   try {
+    let perms = {};
+    let reqPerm = true;
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY_PERMS);
+        if (raw) perms = JSON.parse(raw);
+        const rawReq = window.localStorage.getItem(STORAGE_KEY_REQUIRE_PERM);
+        if (rawReq !== null) reqPerm = JSON.parse(rawReq);
+      } catch (e) {}
+    }
+
     const payload = {
       locked,
       actor,
       until,
       model: 'EPSON EcoTank L3250',
+      requirePermission: reqPerm,
+      permissions: perms,
       timestamp: new Date().toISOString(),
     };
 
-    // Attempt to update backend API if online
+    const targetUrl = typeof window !== 'undefined' && window.location.origin
+      ? `${window.location.origin}/api/printer/epson_lock.php`
+      : '/api/printer/epson_lock.php';
+
     if (typeof fetch === 'function') {
-      fetch('/api/printer/epson_lock.php', {
+      fetch(targetUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -395,6 +456,105 @@ const syncLockStateToBackend = async (locked, actor, until = null) => {
     }
   } catch (e) {}
 };
+
+/**
+ * REAL-TIME CLOUD POLLER:
+ * Periodically pulls the true lock state and permissions from the server.
+ * Ensures the counter staff's PC is updated within 2.5 seconds when manager locks/unlocks.
+ */
+let pollerInterval = null;
+
+export const startCloudLockPoller = () => {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+  if (pollerInterval) return; // Already running
+
+  const poll = async () => {
+    try {
+      const targetUrl = window.location.origin
+        ? `${window.location.origin}/api/printer/epson_lock.php`
+        : '/api/printer/epson_lock.php';
+
+      const res = await fetch(targetUrl, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store',
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.ok && data.state) {
+          const st = data.state;
+          const currentLocalLocked = window.localStorage.getItem(STORAGE_KEY_LOCKED) === 'true';
+
+          // Update lock if different
+          if (st.locked !== currentLocalLocked) {
+            window.localStorage.setItem(STORAGE_KEY_LOCKED, st.locked ? 'true' : 'false');
+            updatePrintShieldCss(st.locked);
+            notifySubscribers(st.locked, getEpsonConfig());
+          }
+
+          // Update temp unlock window
+          if (st.tempUnlockUntil) {
+            window.localStorage.setItem(STORAGE_KEY_TEMP_UNLOCK, st.tempUnlockUntil.toString());
+          } else if (st.locked) {
+            window.localStorage.removeItem(STORAGE_KEY_TEMP_UNLOCK);
+          }
+
+          // Sync cloud permissions if any
+          if (st.permissions && typeof st.permissions === 'object') {
+            const localRaw = window.localStorage.getItem(STORAGE_KEY_PERMS);
+            const localPerms = localRaw ? JSON.parse(localRaw) : {};
+            const merged = { ...localPerms, ...st.permissions };
+            window.localStorage.setItem(STORAGE_KEY_PERMS, JSON.stringify(merged));
+          }
+
+          if (st.requirePermission !== undefined) {
+            window.localStorage.setItem(STORAGE_KEY_REQUIRE_PERM, JSON.stringify(st.requirePermission));
+          }
+        }
+      }
+    } catch (e) {}
+  };
+
+  // Immediate poll once, then every 2500ms
+  poll();
+  pollerInterval = setInterval(poll, 2500);
+};
+
+// Auto-start on load in web browser
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  startCloudLockPoller();
+
+  // Listen to cross-tab storage changes
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEY_LOCKED) {
+      const locked = e.newValue === 'true';
+      updatePrintShieldCss(locked);
+      notifySubscribers(locked, getEpsonConfig());
+    }
+  });
+
+  // Global Ctrl+P & Cmd+P keyboard interceptor
+  window.addEventListener(
+    'keydown',
+    (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+        if (isEpsonL3250Locked()) {
+          e.preventDefault();
+          e.stopPropagation();
+          alert(
+            '🔒 EPSON EcoTank L3250 প্রিন্টার লক করা আছে!\n\nফ্লাইট কেয়ার ওয়েবসাইট ড্যাশবোর্ড থেকে প্রিন্টারটি লক অবস্থায় রয়েছে।\nম্যানেজার অনুমোদন বা ৬-সংখ্যার সিকিউরিটি পিন ছাড়া কাউন্টার প্রিন্টারে কোনো প্রিন্ট পাঠানো যাবে না।'
+          );
+          return false;
+        }
+      }
+    },
+    true
+  );
+
+  // Initialize CSS shield state
+  updatePrintShieldCss(isEpsonL3250Locked());
+}
 
 /**
  * Generates an official Epson L3250 authorized footer snippet for HTML print documents
@@ -469,7 +629,7 @@ export const getEpsonTestPrintHtml = () => {
 
     <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 14px; border-radius: 8px; font-size: 12px; color: #475569; line-height: 1.6;">
       <strong>সতর্কবার্তা ও নিরাপত্তা নীতিমালা:</strong><br>
-      এই প্রিন্টারটি ফ্লাইট কেয়ার ক্লাউড ড্যাশবোর্ডের সাথে স্মার্ট লক সিস্টেমে যুক্ত। ড্যাশবোর্ড থেকে ম্যানেজার পারমিশন ব্যতিরেকে কোনো বোর্ডিং পাস, ভিসা কিংবা ট্রাভেল ডকুমেন্টস প্রিন্ট নেওয়া নিষিদ্ধ ও সংরক্ষিত।
+      এই প্রিন্টারটি ফ্লাইট কেয়ার ক্লাউড ড্যাশবোর্ডের সাথে স্মার্ট লক সিস্টেমে যুক্ত। ড্যাশবোর্ড থেকে ম্যানেজার পারমিশন ব্যতিরেকে কোনো বোর্ডিং পাস, এয়ার সুবিধা, ভিসা কিংবা ট্রাভেল ডকুমেন্টস প্রিন্ট নেওয়া নিষিদ্ধ ও সংরক্ষিত।
     </div>
 
     <div style="margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px; color: #64748B;">
@@ -483,4 +643,3 @@ export const getEpsonTestPrintHtml = () => {
 </body>
 </html>`;
 };
-
