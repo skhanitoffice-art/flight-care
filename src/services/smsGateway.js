@@ -414,6 +414,19 @@ export async function sendPaymentConfirmationSms({
       }).catch(err => console.warn('[Payment SMS] Booker SMS notice:', err));
     }
 
+    // Instant Automated Front Desk Alert to BOTH 01347570001 & 01347570002
+    const frontDeskPhones = ['01347570001', '01347570002'];
+    const statusNote = isPayAfter ? 'Pay Later' : `Paid (${methodLabelEn || 'Online'})`;
+    const frontDeskMsg = `Flight Care Alert: [NEW BOOKING] #${bookingId} | Pax: ${passengerName} (${passengerPhone}) | Flt: ${flightNo}${flightDate ? `, ${flightDate}` : ''} | BDT ${formattedAmount} [${statusNote}] | https://flightcaresbd.com/?trackBooking=${bookingId}`;
+
+    frontDeskPhones.forEach((fdPhone) => {
+      sendLiveSms({
+        to: fdPhone,
+        message: frontDeskMsg,
+        title: `Front Desk Alert #${bookingId}`,
+      }).catch(err => console.warn(`[Front Desk SMS] Error notifying ${fdPhone}:`, err));
+    });
+
     return result;
   } catch (err) {
     console.error('[Payment SMS] Error sending payment confirmation SMS:', err);

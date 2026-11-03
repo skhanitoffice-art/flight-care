@@ -544,6 +544,87 @@ https://flightcare.app/track/${bookingCode}
           </TouchableOpacity>
         </View>
 
+        {/* Front Desk WhatsApp 1-Click Action Card (01347570001 & 01347570002) */}
+        <View
+          style={{
+            width: '100%',
+            backgroundColor: '#F0FDF4',
+            borderRadius: 14,
+            padding: 14,
+            borderWidth: 1.5,
+            borderColor: '#86EFAC',
+            marginBottom: 18,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <Text style={{ fontSize: 22 }}>📲</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#166534' }}>
+                {isBn ? 'ফন্টডেস্কে বুকিং নিশ্চিতকরণ পাঠান (WhatsApp)' : 'Send Confirmation to Front Desk WhatsApp'}
+              </Text>
+              <Text style={{ fontSize: 11.5, color: '#15803D', marginTop: 1 }}>
+                {isBn ? 'নিচের যেকোনো একটি নম্বরে ক্লিক করে ১-ট্যাপে ভাউচার পাঠান:' : 'Tap either number to send full voucher in 1-tap:'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
+            {/* Front Desk WhatsApp 01 */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => openSupportOfficeWhatsApp({ ...currentBooking, id: bookingCode, amount: totalAmount }, isBn, '8801347570001')}
+              style={{
+                flex: 1,
+                backgroundColor: '#16A34A',
+                paddingVertical: 10,
+                paddingHorizontal: 6,
+                borderRadius: 10,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 5,
+                shadowColor: '#16A34A',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.2,
+                shadowRadius: 2,
+                elevation: 2,
+              }}
+            >
+              <Text style={{ fontSize: 15, color: '#FFFFFF' }}>💬</Text>
+              <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF', textAlign: 'center' }}>
+                {isBn ? 'WhatsApp ০১\n01347-570001' : 'WhatsApp 01\n01347-570001'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Front Desk WhatsApp 02 */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => openSupportOfficeWhatsApp({ ...currentBooking, id: bookingCode, amount: totalAmount }, isBn, '8801347570002')}
+              style={{
+                flex: 1,
+                backgroundColor: '#059669',
+                paddingVertical: 10,
+                paddingHorizontal: 6,
+                borderRadius: 10,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 5,
+                shadowColor: '#059669',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.2,
+                shadowRadius: 2,
+                elevation: 2,
+              }}
+            >
+              <Text style={{ fontSize: 15, color: '#FFFFFF' }}>💬</Text>
+              <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF', textAlign: 'center' }}>
+                {isBn ? 'WhatsApp ০২\n01347-570002' : 'WhatsApp 02\n01347-570002'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Booking Summary Box */}
         <View
           style={{
@@ -839,32 +920,58 @@ https://flightcare.app/track/${bookingCode}
           </Text>
         </TouchableOpacity>
 
-                {/* Direct Send to Support Office WhatsApp (+8801347570001) */}
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => openSupportOfficeWhatsApp({ ...currentBooking, id: bookingCode, amount: totalAmount }, isBn)}
-          style={{
-            width: '100%',
-            backgroundColor: '#059669',
-            height: 48,
-            borderRadius: 12,
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'row',
-            gap: 8,
-            marginBottom: 10,
-            shadowColor: '#059669',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.15,
-            shadowRadius: 4,
-            elevation: 3,
-          }}
-        >
-          <Text style={{ fontSize: 18 }}>📱</Text>
-          <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
-            {lang ? 'সাপোর্ট অফিসে বুকিং পাঠান (০১৩৪৭-৫৭০০০১)' : 'Send to Support Office (01347-570001)'}
-          </Text>
-        </TouchableOpacity>
+        {/* Direct Send to Support Office WhatsApp (Both 01347570001 & 01347570002) */}
+        <View style={{ flexDirection: 'row', gap: 8, width: '100%', marginBottom: 10 }}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => openSupportOfficeWhatsApp({ ...currentBooking, id: bookingCode, amount: totalAmount }, isBn, '8801347570001')}
+            style={{
+              flex: 1,
+              backgroundColor: '#16A34A',
+              height: 48,
+              borderRadius: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              gap: 6,
+              shadowColor: '#16A34A',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+          >
+            <Text style={{ fontSize: 16 }}>💬</Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 12.5, fontWeight: '800' }}>
+              {lang ? 'WhatsApp ০১ (৫৭০০০১)' : 'WhatsApp 01 (570001)'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => openSupportOfficeWhatsApp({ ...currentBooking, id: bookingCode, amount: totalAmount }, isBn, '8801347570002')}
+            style={{
+              flex: 1,
+              backgroundColor: '#059669',
+              height: 48,
+              borderRadius: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              gap: 6,
+              shadowColor: '#059669',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
+              elevation: 3,
+            }}
+          >
+            <Text style={{ fontSize: 16 }}>💬</Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 12.5, fontWeight: '800' }}>
+              {lang ? 'WhatsApp ০২ (৫৭০০০২)' : 'WhatsApp 02 (570002)'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Feature 3: Share on WhatsApp Button (Safe Encoding) */}
         <TouchableOpacity

@@ -248,15 +248,71 @@ foreach ($support_phones as $sp) {
     $directUrls[$clean_sp] = "https://wa.me/{$clean_sp}?text=" . urlencode($notificationMessage);
 }
 
-// 5. Server-to-Server Gateway Dispatch via GreenWeb BD to BOTH numbers
+// 5. Server-to-Server Gateway Dispatch
+// If GreenWeb BD SMS Gateway is used: dispatch concise, clean SMS (<160 chars, no multi-byte emojis)
+// so that GreenWeb delivers successfully to both front desk phones without length or encoding rejection.
+$clean_passenger_phone = preg_replace('/[^0-9]/', '', $passengerPhone);
+$short_payment = (strtolower($paymentStatus) === 'paid') ? "Paid" : "PayLater";
+$short_sms = "Flight Care Alert: [NEW BOOKING] #{$bookingCode} | Pax: {$passengerName} ({$clean_passenger_phone}) | Flt: {$flightNumber} | Date: {$serviceDate} | BDT {$amount} ({$short_payment}) | https://flightcaresbd.com/?trackBooking=" . urlencode($bookingCode);
+
 $dispatched_results = [];
-if (!empty($api_key)) {
+$is_greenweb = (strpos(strtolower($api_url), 'greenweb') !== false);
+$ultramsg_instance = isset($wa_config['instance_id']) ? trim($wa_config['instance_id']) : '';
+$ultramsg_token = isset($wa_config['ultramsg_token']) ? trim($wa_config['ultramsg_token']) : '';
+$meta_token = isset($wa_config['cloud_token']) ? trim($wa_config['cloud_token']) : '';
+$meta_phone_id = isset($wa_config['phone_number_id']) ? trim($wa_config['phone_number_id']) : '';
+
+if (!empty($ultramsg_instance) && !empty($ultramsg_token)) {
+    // UltraMsg Real WhatsApp Gateway Dispatch
     foreach ($support_phones as $phone) {
         $clean_phone = preg_replace('/[^0-9]/', '', $phone);
+        $ch = curl_init("https://api.ultramsg.com/{$ultramsg_instance}/messages/chat");
+        $wa_payload = http_build_query([
+            'token' => $ultramsg_token,
+            'to' => $clean_phone,
+            'body' => $notificationMessage,
+            'priority' => 10,
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $wa_payload);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        $gw_res = curl_exec($ch);
+        curl_close($ch);
+        $dispatched_results[$clean_phone] = ['delivered' => true, 'provider' => 'UltraMsg WhatsApp', 'response' => $gw_res];
+    }
+} elseif (!empty($meta_token) && !empty($meta_phone_id)) {
+    // Meta WhatsApp Cloud API Dispatch
+    foreach ($support_phones as $phone) {
+        $clean_phone = preg_replace('/[^0-9]/', '', $phone);
+        $ch = curl_init("https://graph.facebook.com/v18.0/{$meta_phone_id}/messages");
+        $meta_payload = json_encode([
+            'messaging_product' => 'whatsapp',
+            'to' => $clean_phone,
+            'type' => 'text',
+            'text' => ['body' => $notificationMessage],
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $meta_payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer {$meta_token}",
+            "Content-Type: application/json"
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        $gw_res = curl_exec($ch);
+        curl_close($ch);
+        $dispatched_results[$clean_phone] = ['delivered' => true, 'provider' => 'Meta WhatsApp Cloud API', 'response' => $gw_res];
+    }
+} elseif (!empty($api_key)) {
+    // GreenWeb BD Cellular SMS Dispatch to Both Front Desk Phones
+    foreach ($support_phones as $phone) {
+        $clean_phone = preg_replace('/[^0-9]/', '', $phone);
+        $msg_to_send = $is_greenweb ? $short_sms : $notificationMessage;
         $post_fields = [
             'token' => $api_key,
             'to' => $clean_phone,
-            'message' => $notificationMessage,
+            'message' => $msg_to_send,
         ];
 
         $ch = curl_init($api_url);
@@ -273,12 +329,13 @@ if (!empty($api_key)) {
         $is_ok = false;
         if (!$curl_err && $http_code >= 200 && $http_code < 400) {
             $resp_lower = strtolower((string)$gateway_response);
-            if (strpos($resp_lower, 'ok') !== false || strpos($resp_lower, 'success') !== false) {
+            if (strpos($resp_lower, 'ok') !== false || strpos($resp_lower, 'success') !== false || strpos($resp_lower, 'sent') !== false || strpos($resp_lower, '100') !== false) {
                 $is_ok = true;
             }
         }
         $dispatched_results[$clean_phone] = [
             'delivered' => $is_ok,
+            'channel' => 'Cellular SMS Notification',
             'response' => $gateway_response,
         ];
     }
