@@ -38,6 +38,11 @@ import {
   COMMUNICATION_EVENTS,
   dispatchBookingLifecycleNotifications,
 } from '../services/communication';
+import {
+  isNotificationSoundEnabled,
+  setNotificationSoundEnabled,
+  playTestNotificationSound,
+} from '../services/notificationSoundService';
 import { sendPaymentConfirmationSms } from '../services/smsGateway.js';
 import {
   generateDailyReconciliation,
@@ -602,6 +607,7 @@ export default function ManagerPanel({
   onDeleteStaff,
 }) {
   const [showManagerPassword, setShowManagerPassword] = useState(false);
+  const [soundAlertsEnabled, setSoundAlertsEnabled] = useState(() => isNotificationSoundEnabled());
 
   const isAdmin = managerSession?.user?.role === 'admin';
   const isManager = managerSession?.user?.role === 'manager';
@@ -6007,6 +6013,40 @@ export default function ManagerPanel({
                     </Text>
                   </View>
                 ) : null}
+              </TouchableOpacity>
+              {/* Top Notification Sound Alert Toggle Button */}
+              <TouchableOpacity
+                onPress={() => {
+                  const nextState = !soundAlertsEnabled;
+                  setSoundAlertsEnabled(nextState);
+                  setNotificationSoundEnabled(nextState);
+                  if (nextState) {
+                    playTestNotificationSound();
+                  }
+                }}
+                style={{
+                  paddingHorizontal: 11,
+                  paddingVertical: 6,
+                  borderRadius: 20,
+                  backgroundColor: soundAlertsEnabled ? '#F0FDF4' : '#F8FAFC',
+                  borderWidth: 1.5,
+                  borderColor: soundAlertsEnabled ? '#86EFAC' : '#CBD5E1',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  cursor: 'pointer',
+                  shadowColor: '#0F172A',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={soundAlertsEnabled ? (lang ? 'শব্দ নোটিফিকেশন সক্রিয়' : 'Sound ON') : (lang ? 'শব্দ নোটিফিকেশন বন্ধ' : 'Sound OFF')}
+              >
+                <Text style={{ fontSize: 13 }}>{soundAlertsEnabled ? '🔊' : '🔇'}</Text>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: soundAlertsEnabled ? '#15803D' : '#64748B' }}>
+                  {soundAlertsEnabled ? (lang ? 'সাউন্ড চালু' : 'Sound ON') : (lang ? 'সাউন্ড বন্ধ' : 'Sound OFF')}
+                </Text>
               </TouchableOpacity>
               <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: '#E0F2FE', borderWidth: 1, borderColor: '#BAE6FD' }}>
                 <Text style={{ fontSize: 12, fontWeight: '800', color: '#0369A1' }}>
@@ -13169,6 +13209,41 @@ export default function ManagerPanel({
                 );
               })()}
 
+                            {/* Notification Sound Toggle (Mobile Header) */}
+              <TouchableOpacity
+                onPress={() => {
+                  const nextState = !soundAlertsEnabled;
+                  setSoundAlertsEnabled(nextState);
+                  setNotificationSoundEnabled(nextState);
+                  if (nextState) {
+                    playTestNotificationSound();
+                  }
+                }}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel={soundAlertsEnabled ? (lang ? 'শব্দ নোটিফিকেশন চালু' : 'Sound ON') : (lang ? 'শব্দ নোটিফিকেশন বন্ধ' : 'Sound OFF')}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  paddingHorizontal: 10,
+                  paddingVertical: 7,
+                  borderRadius: 10,
+                  backgroundColor: soundAlertsEnabled ? '#F0FDF4' : '#F8FAFC',
+                  borderWidth: 1.5,
+                  borderColor: soundAlertsEnabled ? '#86EFAC' : '#CBD5E1',
+                  shadowColor: '#0F172A',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                }}
+              >
+                <Text style={{ fontSize: 13 }}>{soundAlertsEnabled ? '🔊' : '🔇'}</Text>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: soundAlertsEnabled ? '#15803D' : '#64748B' }}>
+                  {soundAlertsEnabled ? (lang ? 'সাউন্ড' : 'Sound') : (lang ? 'মিউট' : 'Mute')}
+                </Text>
+              </TouchableOpacity>
+
               {/* Mobile Arrival Cards Button */}
               <TouchableOpacity
                 onPress={() => setShowArrivalCardsModal(true)}
@@ -13474,6 +13549,42 @@ export default function ManagerPanel({
                 </TouchableOpacity>
               );
             })()}
+
+                        {/* Notification Sound Toggle (Desktop Header) */}
+            <TouchableOpacity
+              onPress={() => {
+                const nextState = !soundAlertsEnabled;
+                setSoundAlertsEnabled(nextState);
+                setNotificationSoundEnabled(nextState);
+                if (nextState) {
+                  playTestNotificationSound();
+                }
+              }}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={soundAlertsEnabled ? (lang ? 'শব্দ নোটিফিকেশন চালু' : 'Sound ON') : (lang ? 'শব্দ নোটিফিকেশন বন্ধ' : 'Sound OFF')}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 9,
+                backgroundColor: soundAlertsEnabled ? '#F0FDF4' : '#F8FAFC',
+                borderWidth: 1.5,
+                borderColor: soundAlertsEnabled ? '#86EFAC' : '#CBD5E1',
+                cursor: 'pointer',
+                shadowColor: '#0F172A',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.05,
+                shadowRadius: 2,
+              }}
+            >
+              <Text style={{ fontSize: 14 }}>{soundAlertsEnabled ? '🔊' : '🔇'}</Text>
+              <Text style={{ fontSize: 12, fontWeight: '800', color: soundAlertsEnabled ? '#15803D' : '#64748B' }}>
+                {soundAlertsEnabled ? (lang ? 'সাউন্ড চালু' : 'Sound ON') : (lang ? 'সাউন্ড বন্ধ' : 'Sound OFF')}
+              </Text>
+            </TouchableOpacity>
 
             {/* Desktop Arrival Cards Button */}
             <TouchableOpacity

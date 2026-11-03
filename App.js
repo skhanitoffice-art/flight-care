@@ -177,6 +177,11 @@ import {
   dispatchBookingLifecycleNotifications,
   filterNotificationsForRole,
 } from './src/services/notificationService.js';
+import {
+  playNotificationSound,
+  playTestNotificationSound,
+  isNotificationSoundEnabled,
+} from './src/services/notificationSoundService';
 import { initAntiTheftProtection } from './src/services/antiTheftProtection';
 
 // Inject 3D Web Styles & Anti-Theft Shield when running in web browser
@@ -551,6 +556,60 @@ export default function App() {
     }
     return null;
   });
+
+  // Real-Time Mobile Notification Audio Alert System for Manager & Super Admin
+  const seenBookingIdsRef = useRef(new Set());
+  const hasInitialBookingsLoadedRef = useRef(false);
+  const seenNotifIdsRef = useRef(new Set());
+  const hasInitialNotifsLoadedRef = useRef(false);
+  const lastNotificationSoundTimeRef = useRef(0);
+  const activeRoleContextRef = useRef({ tab, managerSession, customerSession });
+
+  useEffect(() => {
+    activeRoleContextRef.current = { tab, managerSession, customerSession };
+  }, [tab, managerSession, customerSession]);
+
+  const triggerBookingNotificationSound = useCallback((source = 'booking') => {
+    const now = Date.now();
+    if (now - lastNotificationSoundTimeRef.current < 2200) {
+      return; // Debounce 2.2s to prevent multiple triggers for the same booking event
+    }
+
+    // Role check: Active user must be Manager or Super Admin
+    const ctx = activeRoleContextRef.current;
+    let isManagerOrAdmin = false;
+    if (ctx) {
+      const { tab: curTab, managerSession: curMgr, customerSession: curCust } = ctx;
+      if (
+        curTab === 'manager' ||
+        curTab === 'admin' ||
+        curMgr?.user?.role === 'manager' ||
+        curMgr?.user?.role === 'admin' ||
+        curCust?.user?.role === 'manager' ||
+        curCust?.user?.role === 'admin'
+      ) {
+        isManagerOrAdmin = true;
+      }
+    }
+
+    // Also check localStorage session on web for maximum resilience
+    if (!isManagerOrAdmin && Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const mgrRaw = window.localStorage.getItem('@flightcare_manager_session');
+        if (mgrRaw) {
+          const parsed = JSON.parse(mgrRaw);
+          if (parsed?.user?.role === 'manager' || parsed?.user?.role === 'admin') {
+            isManagerOrAdmin = true;
+          }
+        }
+      } catch {}
+    }
+
+    if (isManagerOrAdmin) {
+      lastNotificationSoundTimeRef.current = now;
+      playNotificationSound({ volume: 0.95 });
+    }
+  }, []);
 
   // Effect to resolve Guest Universal Tracking Link (?trackBooking=FC-XXXXX)
   useEffect(() => {
@@ -1747,6 +1806,30 @@ export default function App() {
     const unsubBookings = listenToCloudBookings(
       cloudBookings => {
         if (!Array.isArray(cloudBookings)) return;
+
+        // Real-Time Mobile Chime Sound Dispatch for Manager & Admin Panels
+        if (!hasInitialBookingsLoadedRef.current) {
+          // Record initial historical booking IDs on boot without ringing
+          cloudBookings.forEach(cb => {
+            const bId = String(cb?.id || cb?.bookingId || '');
+            if (bId) seenBookingIdsRef.current.add(bId);
+          });
+          hasInitialBookingsLoadedRef.current = true;
+        } else {
+          // Detect completely new customer booking arrival
+          let hasNewBooking = false;
+          cloudBookings.forEach(cb => {
+            const bId = String(cb?.id || cb?.bookingId || '');
+            if (bId && !seenBookingIdsRef.current.has(bId) && !isFalseBooking(cb)) {
+              seenBookingIdsRef.current.add(bId);
+              hasNewBooking = true;
+            }
+          });
+          if (hasNewBooking) {
+            triggerBookingNotificationSound('cloud_booking');
+          }
+        }
+
         setBookings(current => {
           const cloudMap = new Map();
           cloudBookings.forEach(cb => {
@@ -1816,6 +1899,35 @@ export default function App() {
     const unsubNotifs = listenToCloudNotifications(
       cloudNotifs => {
         if (Array.isArray(cloudNotifs) && cloudNotifs.length > 0) {
+          // Real-time mobile chime sound on new broadcast / booking alert
+          if (!hasInitialNotifsLoadedRef.current) {
+            cloudNotifs.forEach(n => {
+              if (n?.id) seenNotifIdsRef.current.add(String(n.id));
+            });
+            hasInitialNotifsLoadedRef.current = true;
+          } else {
+            let hasNewAlert = false;
+            cloudNotifs.forEach(n => {
+              const nId = String(n?.id || '');
+              if (nId && !seenNotifIdsRef.current.has(nId)) {
+                seenNotifIdsRef.current.add(nId);
+                const titleText = `${n?.title || ''} ${n?.body || ''}`;
+                const target = String(n?.targetRole || n?.targetAudience || '').toLowerCase();
+                if (
+                  target.includes('manager') ||
+                  target.includes('admin') ||
+                  target === 'all' ||
+                  /নতুন বুকিং|New Booking|Payment|পেমেন্ট|কনফার্ম|বুকিং কনফার্ম/i.test(titleText)
+                ) {
+                  hasNewAlert = true;
+                }
+              }
+            });
+            if (hasNewAlert) {
+              triggerBookingNotificationSound('cloud_notification');
+            }
+          }
+
           setNotifications(curr => {
             const map = new Map();
             curr.forEach(n => map.set(n.id, n));
@@ -5043,6 +5155,9 @@ export default function App() {
           res.notifications.superAdmin,
           ...curr,
         ]);
+        if (booking.id) seenBookingIdsRef.current.add(String(booking.id));
+        if (booking.bookingId) seenBookingIdsRef.current.add(String(booking.bookingId));
+        triggerBookingNotificationSound('local_confirm');
       }
     } catch (notifErr) {
       console.warn('Booking lifecycle notification dispatch notice:', notifErr);

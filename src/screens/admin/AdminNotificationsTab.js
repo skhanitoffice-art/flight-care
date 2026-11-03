@@ -9,6 +9,11 @@ import {
   Platform,
 } from 'react-native';
 import { triggerFileDownload, BACKUP_STORAGE_KEYS } from '../../services/dataBackupService';
+import {
+  isNotificationSoundEnabled,
+  setNotificationSoundEnabled,
+  playTestNotificationSound,
+} from '../../services/notificationSoundService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   SMS_PROVIDERS,
@@ -31,6 +36,8 @@ export default function AdminNotificationsTab({
   const [targetAudience, setTargetAudience] = useState('all'); // 'all' | 'staff' | 'vip'
   const [notice, setNotice] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [soundEnabled, setSoundEnabled] = useState(() => isNotificationSoundEnabled());
+  const [soundFeedbackNotice, setSoundFeedbackNotice] = useState('');
 
   // SMS Gateway Configuration State
   const [smsProvider, setSmsProvider] = useState(SMS_PROVIDERS.SIMULATED);
@@ -201,6 +208,115 @@ export default function AdminNotificationsTab({
             {lang ? 'লগ CSV ডাউনলোড' : 'Export Logs (CSV)'}
           </Text>
         </TouchableOpacity>
+      </View>
+
+            {/* 0. Real-Time Mobile Notification Audio Settings Card */}
+      <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, borderWidth: 1.5, borderColor: soundEnabled ? '#86EFAC' : '#CBD5E1', marginBottom: 20, shadowColor: '#0F172A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 240 }}>
+            <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: soundEnabled ? '#DCFCE7' : '#F1F5F9', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: soundEnabled ? '#BBF7D0' : '#E2E8F0' }}>
+              <Text style={{ fontSize: 22 }}>{soundEnabled ? '🔊' : '🔇'}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A' }}>
+                {lang ? 'রিয়েল-টাইম অডিও নোটিফিকেশন অ্যালার্ট (Mobile Chime Sound)' : 'Real-Time Audio Notification Alert'}
+              </Text>
+              <Text style={{ fontSize: 12.5, color: '#64748B', marginTop: 2 }}>
+                {lang
+                  ? 'কাষ্টমার নতুন বুকিং বা পেমেন্ট সম্পন্ন করলে ম্যানেজার এবং এডমিন প্যানেলে তাৎক্ষণিক মোবাইলের মতো রিংটোন/নোটিফিকেশন শব্দ হবে।'
+                  : 'Audible smartphone notification chime plays instantly when a customer confirms a booking or completes payment.'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Sound Controls */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <TouchableOpacity
+              onPress={() => {
+                const nextState = !soundEnabled;
+                setSoundEnabled(nextState);
+                setNotificationSoundEnabled(nextState);
+                if (nextState) {
+                  playTestNotificationSound();
+                  setSoundFeedbackNotice(lang ? 'সাউন্ড অ্যালার্ট চালু করা হয়েছে!' : 'Notification sound enabled!');
+                } else {
+                  setSoundFeedbackNotice(lang ? 'সাউন্ড অ্যালার্ট মিউট করা হয়েছে!' : 'Notification sound muted!');
+                }
+                setTimeout(() => setSoundFeedbackNotice(''), 3500);
+              }}
+              style={{
+                backgroundColor: soundEnabled ? '#F0FDF4' : '#F8FAFC',
+                borderWidth: 1.5,
+                borderColor: soundEnabled ? '#22C55E' : '#94A3B8',
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                cursor: 'pointer',
+              }}
+              accessibilityRole="button"
+            >
+              <Text style={{ fontSize: 14 }}>{soundEnabled ? '🔊' : '🔇'}</Text>
+              <Text style={{ fontSize: 12.5, fontWeight: '800', color: soundEnabled ? '#15803D' : '#475569' }}>
+                {soundEnabled ? (lang ? 'সাউন্ড চালু আছে' : 'Sound ON') : (lang ? 'সাউন্ড বন্ধ (মিউট)' : 'Sound Muted')}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                playTestNotificationSound();
+                setSoundFeedbackNotice(lang ? 'টেস্ট সাউন্ড বাজানো হচ্ছে...' : 'Playing test notification sound...');
+                setTimeout(() => setSoundFeedbackNotice(''), 3000);
+              }}
+              style={{
+                backgroundColor: '#0284C7',
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                cursor: 'pointer',
+              }}
+              accessibilityRole="button"
+            >
+              <Text style={{ fontSize: 13, color: '#FFFFFF' }}>▶</Text>
+              <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#FFFFFF' }}>
+                {lang ? 'টেস্ট সাউন্ড শুনুন' : 'Test Sound'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {soundFeedbackNotice ? (
+          <View style={{ backgroundColor: '#ECFDF5', padding: 8, borderRadius: 8, marginTop: 4, borderWidth: 1, borderColor: '#A7F3D0', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ fontSize: 13 }}>✅</Text>
+            <Text style={{ color: '#065F46', fontSize: 12, fontWeight: '700' }}>{soundFeedbackNotice}</Text>
+          </View>
+        ) : null}
+
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F1F5F9' }}>
+          <View style={{ backgroundColor: '#F8FAFC', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ fontSize: 12 }}>🎵</Text>
+            <Text style={{ fontSize: 11.5, color: '#334155', fontWeight: '600' }}>
+              {lang ? 'টোন: হারমোনিক মেজর ট্রাই-টোন (G5 ➔ C6 ➔ E6 Chime)' : 'Tone: Major Harmonic Tri-tone (G5 ➔ C6 ➔ E6)'}
+            </Text>
+          </View>
+          <View style={{ backgroundColor: '#F8FAFC', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ fontSize: 12 }}>⚡</Text>
+            <Text style={{ fontSize: 11.5, color: '#334155', fontWeight: '600' }}>
+              {lang ? 'প্রযুক্তি: ওয়েব অডিও এপিআই সিন্থেসিস (০ মিলিসেকেন্ড ল্যাটেন্সি)' : 'Engine: Web Audio API (0ms Instant Synthesis)'}
+            </Text>
+          </View>
+          <View style={{ backgroundColor: '#F8FAFC', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ fontSize: 12 }}>🔄</Text>
+            <Text style={{ fontSize: 11.5, color: '#334155', fontWeight: '600' }}>
+              {lang ? 'লাইভ সিঙ্ক: ক্লাউড ফায়ারস্টোর রিয়েল-টাইম লিসেনার সংযুক্ত' : 'Sync: Live Cloud Firestore Booking Listener'}
+            </Text>
+          </View>
+        </View>
       </View>
 
       {/* 1. Broadcast Composer Card */}
