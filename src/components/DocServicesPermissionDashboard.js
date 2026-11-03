@@ -13,6 +13,19 @@ import {
 } from 'react-native';
 import { getAddonAsset } from '../constants/data';
 import { openCustomerWhatsApp } from '../services/whatsappService';
+import {
+  isEpsonL3250Locked,
+  setEpsonL3250Lock,
+  grantTemporaryUnlock,
+  getTemporaryUnlockRemainingSecs,
+  generateEpsonOneTimeOtp,
+  getEpsonConfig,
+  saveEpsonConfig,
+  getEpsonAuditLogs,
+  recordEpsonPrintSuccess,
+  getEpsonTestPrintHtml,
+  subscribeEpsonLock,
+} from '../services/epsonL3250Service';
 
 export const FOUR_DOC_SERVICES = [
   {
@@ -35,14 +48,14 @@ export const FOUR_DOC_SERVICES = [
     matchKeys: ['print', 'printer', 'print_docs'],
     nameBn: 'প্রিন্ট সেবা (Print)',
     nameEn: 'Print',
-    descBn: 'বোর্ডিং পাস, ভিসা, টিকিট ও ভ্রমণ ডকুমেন্টস প্রিন্টিং সেবা।',
-    descEn: 'Printing boarding passes, visas, tickets, and travel documents.',
+    descBn: 'বোর্ডিং পাস, ভিসা, টিকিট ও ভ্রমণ ডকুমেন্টস প্রিন্টিং সেবা। কাউন্টার প্রিন্টার: EPSON EcoTank L3250।',
+    descEn: 'Printing boarding passes, visas, tickets, and travel documents via EPSON EcoTank L3250.',
     price: 100,
     priceUnit: 'request',
     priceDisplayBn: '৳১০০ / অনুরোধ',
     priceDisplayEn: '৳100 / request',
-    extraBadgeBn: 'বোর্ডিং পাস ও ভিসা',
-    extraBadgeEn: 'Boarding Pass & Visa',
+    extraBadgeBn: 'বোর্ডিং পাস ও ভিসা • EPSON L3250',
+    extraBadgeEn: 'Boarding Pass & Visa • EPSON L3250',
     icon: '🖨️',
   },
   {
@@ -50,14 +63,14 @@ export const FOUR_DOC_SERVICES = [
     matchKeys: ['photocopy'],
     nameBn: 'ফটোকপি সেবা (PhotoCopy)',
     nameEn: 'PhotoCopy',
-    descBn: 'পাসপোর্ট, ভিসা, টিকিট ও ভ্রমণ ডকুমেন্টস ফটোকপি সেবা।',
-    descEn: 'Photocopying boarding passes, visas, tickets, and travel documents.',
+    descBn: 'পাসপোর্ট, ভিসা, টিকিট ও ভ্রমণ ডকুমেন্টস ফটোকপি সেবা। কাউন্টার মাল্টিফাংশন: EPSON EcoTank L3250।',
+    descEn: 'Photocopying boarding passes, visas, tickets, and travel documents via EPSON EcoTank L3250.',
     price: 50,
     priceUnit: 'request',
     priceDisplayBn: '৳৫০ / অনুরোধ',
     priceDisplayEn: '৳50 / request',
-    extraBadgeBn: 'ডকুমেন্টস কপি',
-    extraBadgeEn: 'Documents Copy',
+    extraBadgeBn: 'ডকুমেন্টস কপি • EPSON L3250',
+    extraBadgeEn: 'Documents Copy • EPSON L3250',
     icon: '📄',
   },
   {
@@ -69,7 +82,7 @@ export const FOUR_DOC_SERVICES = [
     descEn: 'Assistance with embarkation, disembarkation, customs declaration, and airport travel forms.',
     price: 0,
     priceUnit: 'quote',
-    priceDisplayBn: 'অন রিকোয়েস্ট / কোটেশন',
+    priceDisplayBn: 'অনুরোধ সাপেক্ষে / উদ্ধৃতি',
     priceDisplayEn: 'On Request / Quote',
     extraBadgeBn: 'কাস্টমস ও ইমিগ্রেশন',
     extraBadgeEn: 'Customs & Immigration',
@@ -88,6 +101,7 @@ export default function DocServicesPermissionDashboard({
   embedded = false,
 }) {
   const isBn = Boolean(lang);
+  const managerName = managerSession?.name || (isAdmin ? 'Super Admin' : 'Duty Manager');
 
   // 1. Stored Permissions State
   const [permissions, setPermissions] = useState(() => {
@@ -111,7 +125,20 @@ export default function DocServicesPermissionDashboard({
     return true;
   });
 
-  // 3. Walk-in Counter Requests State
+  // 3. Epson EcoTank L3250 Smart Lock State
+  const [epsonLocked, setEpsonLocked] = useState(() => isEpsonL3250Locked());
+  const [epsonConfig, setEpsonConfig] = useState(() => getEpsonConfig());
+  const [unlockRemainingSecs, setUnlockRemainingSecs] = useState(() => getTemporaryUnlockRemainingSecs());
+
+  // Modals for Epson L3250
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState(null);
+  const [showAuditModal, setShowAuditModal] = useState(false);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [configForm, setConfigForm] = useState(() => ({ ...getEpsonConfig() }));
+
+  // 4. Walk-in Counter Requests State
   const [walkinRequests, setWalkinRequests] = useState(() => {
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
@@ -139,9 +166,29 @@ export default function DocServicesPermissionDashboard({
     notes: '',
   });
 
+  // Subscribe to Epson lock state updates & live countdown
+  useEffect(() => {
+    const unsubscribe = subscribeEpsonLock(({ locked, config }) => {
+      setEpsonLocked(locked);
+      if (config) setEpsonConfig(config);
+    });
+
+    const interval = setInterval(() => {
+      const remaining = getTemporaryUnlockRemainingSecs();
+      setUnlockRemainingSecs(remaining);
+      const isCurrentlyLocked = isEpsonL3250Locked();
+      setEpsonLocked(isCurrentlyLocked);
+    }, 1000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
+  }, []);
+
   const showToast = (msg) => {
     setNotice(msg);
-    setTimeout(() => setNotice(''), 3500);
+    setTimeout(() => setNotice(''), 4000);
   };
 
   // Toggle master permission switch
@@ -159,7 +206,99 @@ export default function DocServicesPermissionDashboard({
     );
   };
 
-  // Grant or Revoke Permission
+  // Epson L3250 Lock / Unlock Actions
+  const handleToggleEpsonLock = (lockState) => {
+    setEpsonL3250Lock(lockState, managerName);
+    setEpsonLocked(lockState);
+    if (lockState) {
+      setUnlockRemainingSecs(0);
+      showToast(isBn ? '🔒 EPSON EcoTank L3250 প্রিন্টার ওয়েবসাইট থেকে সফলভাবে লক করা হয়েছে!' : '🔒 EPSON L3250 has been locked from the website dashboard.');
+    } else {
+      showToast(isBn ? '🟢 EPSON EcoTank L3250 প্রিন্টার আনলক করা হয়েছে। কাউন্টারে প্রিন্ট অনুমোদিত।' : '🟢 EPSON L3250 unlocked. Printing authorized at counter.');
+    }
+  };
+
+  const handleGrantTempUnlock = (minutes = 5) => {
+    grantTemporaryUnlock(minutes, managerName);
+    setEpsonLocked(false);
+    setUnlockRemainingSecs(minutes * 60);
+    showToast(isBn ? `⏱️ EPSON L3250 প্রিন্টার আগামী ${minutes} মিনিটের জন্য অস্থায়ীভাবে আনলক করা হয়েছে!` : `⏱️ EPSON L3250 temporarily unlocked for ${minutes} minutes.`);
+  };
+
+  const handleGenerateOtp = () => {
+    const token = generateEpsonOneTimeOtp('Counter Walk-in / Document Print', managerName);
+    setGeneratedOtp(token);
+    setShowOtpModal(true);
+  };
+
+  const handleOpenAuditLogs = () => {
+    const logs = getEpsonAuditLogs();
+    setAuditLogs(logs);
+    setShowAuditModal(true);
+  };
+
+  const handleSaveConfig = () => {
+    saveEpsonConfig(configForm);
+    setEpsonConfig(configForm);
+    setShowConfigModal(false);
+    showToast(isBn ? 'প্রিন্টার কনফিগারেশন সফলভাবে আপডেট হয়েছে!' : 'Printer configuration saved successfully!');
+  };
+
+  const handleRunTestPrint = () => {
+    if (epsonLocked) {
+      Alert.alert(
+        isBn ? '🔒 টেস্ট প্রিন্ট লকড' : '🔒 Test Print Locked',
+        isBn
+          ? 'EPSON L3250 প্রিন্টারটি বর্তমানে লক করা আছে। টেস্ট প্রিন্ট পাঠাতে অনুগ্রহ করে প্রথমে প্রিন্টার আনলক করুন অথবা ৫ মিনিটের জন্য সাময়িক আনলক করুন।'
+          : 'EPSON L3250 is currently locked. Please unlock or grant a temporary window before sending a test print.'
+      );
+      return;
+    }
+
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      try {
+        const existing = document.getElementById('flightcare-epson-test-frame');
+        if (existing && existing.parentNode) {
+          existing.parentNode.removeChild(existing);
+        }
+        const iframe = document.createElement('iframe');
+        iframe.id = 'flightcare-epson-test-frame';
+        iframe.style.position = 'fixed';
+        iframe.style.left = '-9999px';
+        iframe.style.top = '-9999px';
+        iframe.style.width = '794px';
+        iframe.style.height = '1123px';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(getEpsonTestPrintHtml());
+        doc.close();
+
+        recordEpsonPrintSuccess({
+          title: 'EPSON L3250 Calibration Test Page',
+          bookingId: 'TEST-PAGE',
+          passengerName: 'Epson Calibration & Alignment',
+          actor: managerName,
+        });
+
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 5000);
+
+        showToast(isBn ? 'EPSON L3250 টেস্ট প্রিন্ট সফলভাবে পাঠানো হয়েছে।' : 'Test print dispatched to EPSON L3250.');
+      } catch (e) {
+        window.print();
+      }
+    } else {
+      Alert.alert('EPSON L3250', isBn ? 'টেস্ট প্রিন্ট চালু করা হয়েছে।' : 'Test print initiated.');
+    }
+  };
+
+  // Grant or Revoke Individual Permission
   const handleTogglePermission = (bookingId, serviceId = 'print', grant = true) => {
     setPermissions(prev => {
       const key = `${bookingId}_${serviceId}`;
@@ -169,34 +308,36 @@ export default function DocServicesPermissionDashboard({
         [key]: {
           granted: grant,
           grantedAt: new Date().toISOString(),
-          grantedBy: managerSession?.name || (isAdmin ? 'Super Admin' : 'Duty Manager'),
+          grantedBy: managerName,
           serviceId,
           bookingId,
         },
         [generalKey]: {
           granted: grant,
           grantedAt: new Date().toISOString(),
-          grantedBy: managerSession?.name || (isAdmin ? 'Super Admin' : 'Duty Manager'),
+          grantedBy: managerName,
           serviceId,
           bookingId,
         },
       };
+
       try {
         if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.setItem('flightcare_doc_service_permissions', JSON.stringify(updated));
         }
       } catch (e) {}
+
       return updated;
     });
 
     showToast(
       grant
-        ? (isBn ? `বুকিং #${bookingId}-এর প্রিন্ট অনুমতি সফলভাবে অনুমোদন করা হয়েছে!` : `Print permission granted for #${bookingId}!`)
-        : (isBn ? `বুকিং #${bookingId}-এর প্রিন্ট অনুমতি স্থগিত করা হয়েছে!` : `Print permission revoked for #${bookingId}!`)
+        ? (isBn ? `বুকিং #${bookingId}-এর প্রিন্ট অনুমতি অনুমোদন করা হয়েছে!` : `Print permission approved for #${bookingId}`)
+        : (isBn ? `বুকিং #${bookingId}-এর অনুমতি প্রত্যাহার করা হয়েছে!` : `Permission revoked for #${bookingId}`)
     );
   };
 
-  // Save new walk-in request
+  // Add Walk-in Counter Request
   const handleSaveWalkin = () => {
     if (!walkinForm.name.trim()) {
       Alert.alert(isBn ? 'যাত্রীর নাম আবশ্যক' : 'Passenger Name Required');
@@ -306,12 +447,10 @@ export default function DocServicesPermissionDashboard({
   // Filtered Queue
   const filteredQueue = useMemo(() => {
     return queue.filter(item => {
-      // 1. Category / Status filter
       if (filter === 'pending' && item.isGranted) return false;
       if (filter === 'approved' && !item.isGranted) return false;
       if (['print', 'photocopy', 'visa', 'form_fillup'].includes(filter) && item.serviceId !== filter) return false;
 
-      // 2. Search filter
       if (search.trim()) {
         const q = search.toLowerCase().trim();
         const str = `${item.customer} ${item.phone} ${item.flight} ${item.bookingId} ${item.serviceObj.nameEn} ${item.serviceObj.nameBn}`.toLowerCase();
@@ -333,6 +472,18 @@ export default function DocServicesPermissionDashboard({
   }, [queue]);
 
   const handleExecutePrint = (item) => {
+    // 1. Check Epson L3250 Hardware Lock
+    if (epsonLocked && !item.isGranted) {
+      Alert.alert(
+        isBn ? '🔒 EPSON L3250 প্রিন্টার লকড!' : '🔒 EPSON L3250 Printer Locked!',
+        isBn
+          ? 'EPSON EcoTank L3250 প্রিন্টারটি ওয়েবসাইট ড্যাশবোর্ড থেকে লক অবস্থায় রাখা আছে। প্রিন্ট করতে অনুগ্রহ করে প্রথমে "অনুমতি দিন" বাটনে চাপুন অথবা ৫ মিনিটের জন্য প্রিন্টার আনলক করুন।'
+          : 'EPSON L3250 is locked from the website dashboard. Please grant permission or temporarily unlock the printer first.'
+      );
+      return;
+    }
+
+    // 2. Check general permission requirement
     if (requirePermission && !item.isGranted) {
       Alert.alert(
         isBn ? '🔒 প্রিন্ট লকড!' : '🔒 Print Locked!',
@@ -343,23 +494,360 @@ export default function DocServicesPermissionDashboard({
       return;
     }
 
+    // Record print in Epson audit log
+    recordEpsonPrintSuccess({
+      title: `${item.serviceObj?.nameEn || 'Document'} Print`,
+      bookingId: item.bookingId,
+      passengerName: item.customer,
+      actor: managerName,
+    });
+
     if (onOpenBookingInvoice && item.booking) {
       onOpenBookingInvoice(item.booking);
     } else if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.print();
     } else {
-      Alert.alert(isBn ? 'প্রিন্ট' : 'Print', isBn ? 'ডকুমেন্ট প্রিন্টিং শুরু হয়েছে...' : 'Printing document...');
+      Alert.alert('Print', isBn ? 'প্রিন্ট প্রক্রিয়া চালু করা হয়েছে।' : 'Printing document...');
     }
   };
 
+  const formatCountdown = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
   return (
-    <View style={{ width: '100%', marginBottom: embedded ? 20 : 0 }}>
-      {/* Toast Notice */}
+    <View style={{ width: '100%' }}>
+      {/* Toast Alert Notification */}
       {notice ? (
-        <View style={{ backgroundColor: '#ECFDF5', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#A7F3D0', marginBottom: 14 }}>
-          <Text style={{ color: '#065F46', fontSize: 13, fontWeight: '700' }}>✓ {notice}</Text>
+        <View
+          style={{
+            backgroundColor: '#0F172A',
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+            borderRadius: 10,
+            marginBottom: 12,
+            borderLeftWidth: 4,
+            borderLeftColor: '#38BDF8',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Text style={{ color: '#F8FAFC', fontSize: 13, fontWeight: '700' }}>{notice}</Text>
+          <TouchableOpacity onPress={() => setNotice('')}>
+            <Text style={{ color: '#94A3B8', fontSize: 13, fontWeight: 'bold' }}>✕</Text>
+          </TouchableOpacity>
         </View>
       ) : null}
+
+      {/* ============================================================== */}
+      {/* 🖨️ EPSON EcoTank L3250 SMART HARDWARE & CLOUD LOCK CONTROL CENTER */}
+      {/* ============================================================== */}
+      <View
+        style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: 16,
+          borderWidth: 2,
+          borderColor: epsonLocked ? '#EF4444' : '#10B981',
+          padding: 18,
+          marginBottom: 18,
+          shadowColor: epsonLocked ? '#EF4444' : '#10B981',
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.12,
+          shadowRadius: 10,
+          elevation: 3,
+        }}
+      >
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 14 }}>
+          {/* Left: Printer Identity & Status */}
+          <View style={{ flex: 1, minWidth: 280 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  backgroundColor: epsonLocked ? '#FEE2E2' : '#DCFCE7',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 24 }}>🖨️</Text>
+              </View>
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <Text style={{ fontSize: 17, fontWeight: '900', color: '#0F172A' }}>
+                    EPSON EcoTank L3250
+                  </Text>
+                  {/* Status Badge */}
+                  <View
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 3,
+                      borderRadius: 12,
+                      backgroundColor: epsonLocked ? '#FEF2F2' : '#F0FDF4',
+                      borderWidth: 1.5,
+                      borderColor: epsonLocked ? '#EF4444' : '#22C55E',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 5,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: epsonLocked ? '#DC2626' : '#16A34A',
+                      }}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 11.5,
+                        fontWeight: '900',
+                        color: epsonLocked ? '#B91C1C' : '#15803D',
+                      }}
+                    >
+                      {epsonLocked
+                        ? (isBn ? '🔒 ওয়েবসাইট থেকে লক করা' : '🔒 LOCKED BY WEBSITE')
+                        : (unlockRemainingSecs > 0
+                            ? (isBn ? `🟢 আনলক (বাকি: ${formatCountdown(unlockRemainingSecs)})` : `🟢 UNLOCKED (${formatCountdown(unlockRemainingSecs)})`)
+                            : (isBn ? '🟢 আনলক ও সক্রিয়' : '🟢 UNLOCKED & READY'))}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 12, color: '#475569', marginTop: 3 }}>
+                  {isBn
+                    ? 'হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দর (HSIA) কাউন্টার মাল্টিফাংশন প্রিন্টার'
+                    : 'HSIA Airport Terminal 1 & 2 Counter All-in-One Ink Tank Printer'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Technical Hardware Specs Strip */}
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                gap: 8,
+                marginTop: 12,
+                paddingTop: 10,
+                borderTopWidth: 1,
+                borderTopColor: '#F1F5F9',
+              }}
+            >
+              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }}>
+                <Text style={{ fontSize: 10.5, color: '#64748B' }}>
+                  স্পুলার: <strong style={{ color: '#0F172A' }}>{epsonConfig.spoolerName || 'EPSON L3250 Series'}</strong>
+                </Text>
+              </View>
+              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }}>
+                <Text style={{ fontSize: 10.5, color: '#64748B' }}>
+                  কানেকশন: <strong style={{ color: '#0F172A' }}>{epsonConfig.connectionType || 'Wi-Fi & USB'}</strong>
+                </Text>
+              </View>
+              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }}>
+                <Text style={{ fontSize: 10.5, color: '#64748B' }}>
+                  কাউন্টার নেটওয়ার্ক: <strong style={{ color: '#0F172A' }}>{epsonConfig.ipAddress || '192.168.1.150'}</strong>
+                </Text>
+              </View>
+              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }}>
+                <Text style={{ fontSize: 10.5, color: '#64748B' }}>
+                  লক মোড: <strong style={{ color: epsonLocked ? '#DC2626' : '#16A34A' }}>{epsonConfig.lockMode === 'strict' ? 'Strict (সম্পূর্ণ লক)' : 'Addons Only'}</strong>
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Right: Quick Action Controls */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            {/* Primary Toggle: Lock / Unlock */}
+            {epsonLocked ? (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => handleToggleEpsonLock(false)}
+                style={{
+                  backgroundColor: '#16A34A',
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 10,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  shadowColor: '#16A34A',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+              >
+                <Text style={{ fontSize: 14, color: '#FFFFFF' }}>🟢</Text>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>
+                  {isBn ? 'Epson L3250 আনলক করুন' : 'Unlock Epson L3250'}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => handleToggleEpsonLock(true)}
+                style={{
+                  backgroundColor: '#DC2626',
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 10,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  shadowColor: '#DC2626',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+              >
+                <Text style={{ fontSize: 14, color: '#FFFFFF' }}>🔒</Text>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>
+                  {isBn ? 'Epson L3250 লক করুন' : 'Lock Epson L3250'}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* 5-Min Temporary Unlock Button */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => handleGrantTempUnlock(5)}
+              style={{
+                backgroundColor: '#F59E0B',
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                borderRadius: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 5,
+              }}
+            >
+              <Text style={{ fontSize: 13 }}>⏱️</Text>
+              <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#FFFFFF' }}>
+                {isBn ? '৫ মিনিট আনলক' : '5-Min Temp Unlock'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* OTP Generator Button */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleGenerateOtp}
+              style={{
+                backgroundColor: '#0284C7',
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                borderRadius: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 5,
+              }}
+            >
+              <Text style={{ fontSize: 13 }}>🔑</Text>
+              <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#FFFFFF' }}>
+                {isBn ? 'ওটিপি পিন' : 'Generate PIN'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Test Print Button */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleRunTestPrint}
+              style={{
+                backgroundColor: '#F1F5F9',
+                borderWidth: 1.5,
+                borderColor: '#CBD5E1',
+                paddingHorizontal: 12,
+                paddingVertical: 9,
+                borderRadius: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 5,
+              }}
+            >
+              <Text style={{ fontSize: 13 }}>📄</Text>
+              <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#334155' }}>
+                {isBn ? 'টেস্ট প্রিন্ট' : 'Test Print'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Audit Logs Button */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleOpenAuditLogs}
+              style={{
+                backgroundColor: '#F8FAFC',
+                borderWidth: 1.5,
+                borderColor: '#CBD5E1',
+                paddingHorizontal: 10,
+                paddingVertical: 9,
+                borderRadius: 10,
+              }}
+            >
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#475569' }}>
+                📋 {isBn ? 'লগ' : 'Logs'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Settings Button */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => setShowConfigModal(true)}
+              style={{
+                backgroundColor: '#F8FAFC',
+                borderWidth: 1.5,
+                borderColor: '#CBD5E1',
+                paddingHorizontal: 10,
+                paddingVertical: 9,
+                borderRadius: 10,
+              }}
+            >
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#475569' }}>
+                ⚙️ {isBn ? 'সেটিংস' : 'Config'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Lock Security Notice Banner */}
+        <View
+          style={{
+            marginTop: 14,
+            padding: 10,
+            borderRadius: 8,
+            backgroundColor: epsonLocked ? '#FEF2F2' : '#F0FDF4',
+            borderWidth: 1,
+            borderColor: epsonLocked ? '#FECACA' : '#BBF7D0',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <Text style={{ fontSize: 14 }}>{epsonLocked ? '🛡️' : '✓'}</Text>
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: '700',
+              color: epsonLocked ? '#991B1B' : '#166534',
+              flex: 1,
+              lineHeight: 17,
+            }}
+          >
+            {epsonLocked
+              ? (isBn
+                  ? 'কাউন্টার সুরক্ষা নীতি: ওয়েবসাইট থেকে লক সক্রিয় থাকায় কাউন্টার স্টাফ ম্যানেজার অনুমোদন বা ভেরিফাইড ওটিপি পিন ছাড়া কোনো বোর্ডিং পাস, ভিসা কিংবা ডকুমেন্টস প্রিন্ট করতে পারবে না।'
+                  : 'Counter Security Active: The Epson L3250 printer is locked from the website. Staff cannot print boarding passes, visas, or travel documents without manager approval.')
+              : (isBn
+                  ? 'কাউন্টার প্রিন্টার সক্রিয়: অনুমোদিত প্রিন্ট জবে স্বয়ংক্রিয় ডিজিটাল সিকিউরিটি ওয়াটারমার্ক ও অথরাইজেশন কিউআর কোড যুক্ত হবে।'
+                  : 'Counter printer is active. Authorized print jobs will include digital security verification watermarks.')}
+          </Text>
+        </View>
+      </View>
 
       {/* Main Header & Master Permission Toggle Card */}
       <View
@@ -380,14 +868,14 @@ export default function DocServicesPermissionDashboard({
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
           <View style={{ flex: 1, minWidth: 260 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontSize: 24 }}>🖨️</Text>
+              <Text style={{ fontSize: 24 }}>📑</Text>
               <Text style={{ fontSize: 18, fontWeight: '900', color: '#0F172A' }}>
-                {isBn ? 'ডকুমেন্ট ও কাউন্টার সেবা নিয়ন্ত্রণ ড্যাশবোর্ড' : 'Document & Additional Services Control Gate'}
+                {isBn ? 'ডকুমেন্ট ও কাউন্টার সেবা নিয়ন্ত্রণ গেট' : 'Document & Additional Services Control Gate'}
               </Text>
             </View>
             <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4, lineHeight: 18 }}>
               {isBn
-                ? 'অন-অ্যারাইভাল ভিসা, প্রিন্ট, ফটোকপি ও ফর্ম পূরণ সেবার ড্যাশবোর্ড অনুমোদন ও প্রিন্ট পারমিশন গেট।'
+                ? 'অন-অ্যারাইভাল ভিসা, প্রিন্ট, ফটোকপি ও ফর্ম পূরণ সেবার ড্যাশবোর্ড অনুমোদন ও পারমিশন কন্ট্রোল।'
                 : 'Centralized control for Visa On Arrival, Print, PhotoCopy, and Form Fillup. Unapproved prints are strictly locked.'}
             </Text>
           </View>
@@ -480,366 +968,542 @@ export default function DocServicesPermissionDashboard({
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   {asset ? (
-                    <Image source={asset} style={{ width: 26, height: 26, borderRadius: 5 }} resizeMode="contain" />
+                    <Image source={asset} style={{ width: 32, height: 32, resizeMode: 'contain' }} />
                   ) : (
-                    <Text style={{ fontSize: 22 }}>{svc.icon}</Text>
+                    <Text style={{ fontSize: 24 }}>{svc.icon}</Text>
                   )}
                   <View>
-                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#0F172A' }}>
+                    <Text style={{ fontSize: 14, fontWeight: '900', color: '#0F172A' }}>
                       {isBn ? svc.nameBn : svc.nameEn}
                     </Text>
                     <Text style={{ fontSize: 11, fontWeight: '800', color: '#0284C7' }}>
-                      {isBn ? svc.priceDisplayBn : svc.priceDisplayEn}
+                      {isBn ? svc.extraBadgeBn : svc.extraBadgeEn}
                     </Text>
                   </View>
                 </View>
 
                 {pendingCount > 0 ? (
-                  <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FDE68A' }}>
-                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#B45309' }}>
-                      {pendingCount} {isBn ? 'পেন্ডিং' : 'Pending'}
+                  <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, borderWidth: 1, borderColor: '#F59E0B' }}>
+                    <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#B45309' }}>
+                      {pendingCount} {isBn ? 'অননুমোদিত' : 'Pending'}
                     </Text>
                   </View>
                 ) : (
-                  <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: '#DCFCE7' }}>
-                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#15803D' }}>
-                      ✓ {isBn ? 'সক্রিয়' : 'Active'}
+                  <View style={{ backgroundColor: '#F0FDF4', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, borderWidth: 1, borderColor: '#86EFAC' }}>
+                    <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#166534' }}>
+                      ✓ {isBn ? 'অনুমোদিত' : 'OK'}
                     </Text>
                   </View>
                 )}
               </View>
 
-              <Text style={{ fontSize: 12, color: '#64748B', lineHeight: 16, marginBottom: 10, minHeight: 48 }} numberOfLines={3}>
+              <Text style={{ fontSize: 11.5, color: '#475569', lineHeight: 16, marginBottom: 8 }}>
                 {isBn ? svc.descBn : svc.descEn}
               </Text>
 
-              <View style={{ paddingTop: 8, borderTopWidth: 1, borderTopColor: '#F1F5F9', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 11.5, color: '#64748B' }}>
-                  {isBn ? 'মোট রিকোয়েস্ট:' : 'Total requests:'} <Text style={{ fontWeight: '800', color: '#0F172A' }}>{reqCount}</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTopWidth: 1, borderTopColor: '#F1F5F9' }}>
+                <Text style={{ fontSize: 13, fontWeight: '900', color: '#0B3B60' }}>
+                  {isBn ? svc.priceDisplayBn : svc.priceDisplayEn}
                 </Text>
-                <TouchableOpacity
-                  onPress={() => setFilter(svc.id)}
-                  style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: filter === svc.id ? '#0284C7' : '#F1F5F9' }}
-                >
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: filter === svc.id ? '#FFFFFF' : '#0284C7' }}>
-                    {filter === svc.id ? (isBn ? 'ফিল্টারড' : 'Filtered') : (isBn ? 'দেখুন →' : 'View →')}
-                  </Text>
-                </TouchableOpacity>
+                <Text style={{ fontSize: 11, color: '#64748B' }}>
+                  {reqCount} {isBn ? 'টি বুকিং' : 'requests'}
+                </Text>
               </View>
             </View>
           );
         })}
       </View>
 
-      {/* Queue Filter Tabs & Search Bar */}
+      {/* Filter Tabs & Real-time Search */}
       <View
         style={{
           backgroundColor: '#FFFFFF',
           borderRadius: 14,
-          padding: 14,
-          borderWidth: 1.5,
+          padding: 12,
+          borderWidth: 1,
           borderColor: '#E2E8F0',
           marginBottom: 14,
+          flexDirection: 'row',
+          flexWrap: 'wrap',
           gap: 10,
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-          {/* Filter Chips */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', gap: 6 }}>
-            {[
-              ['all', isBn ? `সকল (${counts.total})` : `All (${counts.total})`],
-              ['pending', isBn ? `⏳ অনুমতি অপেক্ষমাণ (${counts.pending})` : `⏳ Pending Approval (${counts.pending})`],
-              ['approved', isBn ? `✓ অনুমোদিত (${counts.approved})` : `✓ Approved (${counts.approved})`],
-              ['print', isBn ? `🖨️ প্রিন্ট (${counts.print})` : `🖨️ Print (${counts.print})`],
-              ['photocopy', isBn ? `📄 ফটোকপি (${counts.photocopy})` : `📄 PhotoCopy (${counts.photocopy})`],
-              ['visa', isBn ? `🛂 ভিসা (${counts.visa})` : `🛂 Visa (${counts.visa})`],
-              ['form_fillup', isBn ? `📝 ফর্ম (${counts.form})` : `📝 Form (${counts.form})`],
-            ].map(([fKey, fLabel]) => {
-              const active = filter === fKey;
-              return (
-                <TouchableOpacity
-                  key={fKey}
-                  onPress={() => setFilter(fKey)}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+          {[
+            { key: 'all', label: isBn ? `সব রিকোয়েস্ট (${counts.total})` : `All (${counts.total})` },
+            { key: 'pending', label: isBn ? `অনুমোদন বাকি (${counts.pending})` : `Pending (${counts.pending})`, alert: counts.pending > 0 },
+            { key: 'approved', label: isBn ? `অনুমোদিত (${counts.approved})` : `Approved (${counts.approved})` },
+            { key: 'print', label: isBn ? `🖨️ প্রিন্ট (${counts.print})` : `Print (${counts.print})` },
+            { key: 'photocopy', label: isBn ? `📄 ফটোকপি (${counts.photocopy})` : `PhotoCopy (${counts.photocopy})` },
+            { key: 'visa', label: isBn ? `🛂 ভিসা (${counts.visa})` : `Visa (${counts.visa})` },
+            { key: 'form_fillup', label: isBn ? `📝 ফর্ম (${counts.form})` : `Form (${counts.form})` },
+          ].map(tab => {
+            const active = filter === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                activeOpacity={0.8}
+                onPress={() => setFilter(tab.key)}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 7,
+                  borderRadius: 8,
+                  backgroundColor: active ? '#0B3B60' : (tab.alert ? '#FEF2F2' : '#F1F5F9'),
+                  borderWidth: 1,
+                  borderColor: active ? '#0B3B60' : (tab.alert ? '#FCA5A5' : '#E2E8F0'),
+                }}
+              >
+                <Text
                   style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 8,
-                    backgroundColor: active ? '#0284C7' : '#F1F5F9',
-                    borderWidth: 1,
-                    borderColor: active ? '#0284C7' : '#E2E8F0',
+                    fontSize: 12,
+                    fontWeight: active ? '800' : '700',
+                    color: active ? '#FFFFFF' : (tab.alert ? '#DC2626' : '#475569'),
                   }}
                 >
-                  <Text style={{ fontSize: 12, fontWeight: '800', color: active ? '#FFFFFF' : '#475569' }}>
-                    {fLabel}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          {/* Reset filter */}
-          {filter !== 'all' && (
-            <TouchableOpacity onPress={() => setFilter('all')}>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#EF4444' }}>
-                ✕ {isBn ? 'ফিল্টার মুছুন' : 'Reset'}
-              </Text>
-            </TouchableOpacity>
-          )}
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
-        {/* Search input */}
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder={isBn ? 'যাত্রীর নাম, মোবাইল নম্বর, ফ্লাইট বা বুকিং আইডি দিয়ে সার্চ করুন...' : 'Search by passenger name, phone, flight, or booking ID...'}
-          placeholderTextColor="#94A3B8"
-          style={{
-            backgroundColor: '#F8FAFC',
-            borderWidth: 1,
-            borderColor: '#CBD5E1',
-            borderRadius: 8,
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            fontSize: 13,
-            color: '#0F172A',
-          }}
-        />
+        {/* Search Input */}
+        <View style={{ minWidth: 200, flex: 1, maxWidth: 300 }}>
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder={isBn ? 'নাম, ফ্লাইট, ফোন বা আইডি দিয়ে খুঁজুন...' : 'Search passenger, flight, phone...'}
+            placeholderTextColor="#94A3B8"
+            style={{
+              backgroundColor: '#F8FAFC',
+              borderWidth: 1,
+              borderColor: '#CBD5E1',
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              fontSize: 12.5,
+              color: '#0F172A',
+            }}
+          />
+        </View>
       </View>
 
-      {/* Permission Requests Queue Table / Cards */}
-      <View style={{ gap: 10 }}>
-        {filteredQueue.length === 0 ? (
-          <View
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: 14,
-              padding: 24,
-              borderWidth: 1,
-              borderColor: '#E2E8F0',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 32, marginBottom: 8 }}>🖨️</Text>
-            <Text style={{ fontSize: 15, fontWeight: '800', color: '#1E293B', marginBottom: 4 }}>
-              {isBn ? 'কোনো সার্ভিস রিকোয়েস্ট মেলেনি' : 'No document service requests found'}
-            </Text>
-            <Text style={{ fontSize: 12.5, color: '#64748B', textAlign: 'center', maxWidth: 450, marginBottom: 14 }}>
-              {isBn
-                ? 'যাত্রী যখন বুকিং করার সময় প্রিন্ট, ফটোকপি, ফর্ম পূরণ বা অন-অ্যারাইভাল ভিসা যুক্ত করবে, তখন এখানে অনুমতি অনুমোদনের জন্য দেখা যাবে।'
-                : 'When passengers select Print, PhotoCopy, Form Fillup, or Visa On Arrival during booking, they will appear here for permission approval.'}
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowWalkinModal(true)}
-              style={{ backgroundColor: '#0284C7', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 }}
-            >
-              <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12.5 }}>
-                {isBn ? '➕ নতুন কাউন্টার রিকোয়েস্ট যুক্ত করুন' : '+ Add Counter Request'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          filteredQueue.map(item => {
+      {/* Permission Control List / Table */}
+      {filteredQueue.length === 0 ? (
+        <View
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: 14,
+            padding: 30,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 1,
+            borderColor: '#E2E8F0',
+          }}
+        >
+          <Text style={{ fontSize: 32, marginBottom: 8 }}>📭</Text>
+          <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A', marginBottom: 4 }}>
+            {isBn ? 'কোনো রিকোয়েস্ট পাওয়া যায়নি' : 'No document service requests found'}
+          </Text>
+          <Text style={{ fontSize: 12, color: '#64748B', textAlign: 'center' }}>
+            {isBn
+              ? 'বর্তমানে এই ফিল্টারে কোনো পেন্ডিং অথবা অনুমোদিত ডকুমেন্ট সার্ভিস নেই।'
+              : 'There are no matching document or print service requests at the moment.'}
+          </Text>
+        </View>
+      ) : (
+        <View style={{ gap: 10 }}>
+          {filteredQueue.map(item => {
             const isApproved = item.isGranted;
-            const asset = getAddonAsset(item.serviceId);
-
             return (
               <View
                 key={item.id}
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: 14,
+                  borderRadius: 12,
                   padding: 14,
                   borderWidth: 1.5,
-                  borderColor: isApproved ? '#86EFAC' : '#FDE68A',
+                  borderColor: isApproved ? '#86EFAC' : '#FCA5A5',
                   shadowColor: '#0F172A',
                   shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.05,
+                  shadowOpacity: 0.04,
                   shadowRadius: 3,
                   elevation: 1,
                 }}
               >
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
-                  <View style={{ flex: 1, minWidth: 220 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  {/* Left: Passenger and Service Details */}
+                  <View style={{ flex: 1, minWidth: 240 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <Text style={{ fontSize: 18 }}>{item.serviceObj?.icon || '📄'}</Text>
                       <Text style={{ fontSize: 14, fontWeight: '900', color: '#0F172A' }}>
-                        #{item.bookingId}
+                        {item.customer}
                       </Text>
                       {item.isWalkin && (
-                        <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, backgroundColor: '#E0E7FF' }}>
-                          <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#4338CA' }}>
-                            {isBn ? 'কাউন্টার ওয়াক-ইন' : 'Counter Walk-in'}
+                        <View style={{ backgroundColor: '#E0E7FF', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 }}>
+                          <Text style={{ fontSize: 10, fontWeight: '800', color: '#3730A3' }}>
+                            {isBn ? 'কাউন্টার ওয়াক-ইন' : 'Walk-in'}
                           </Text>
                         </View>
                       )}
-                      <View
-                        style={{
-                          paddingHorizontal: 8,
-                          paddingVertical: 2,
-                          borderRadius: 6,
-                          backgroundColor: isApproved ? '#DCFCE7' : '#FEF3C7',
-                          borderWidth: 1,
-                          borderColor: isApproved ? '#86EFAC' : '#FDE68A',
-                        }}
-                      >
-                        <Text style={{ fontSize: 11, fontWeight: '800', color: isApproved ? '#15803D' : '#B45309' }}>
-                          {isApproved
-                            ? (isBn ? '✓ প্রিন্ট অনুমোদিত' : '✓ Print Permitted')
-                            : (isBn ? '⏳ অনুমতি অপেক্ষমাণ (লকড)' : '⏳ Approval Pending (Locked)')}
+                      <View style={{ backgroundColor: isApproved ? '#DCFCE7' : '#FEE2E2', paddingHorizontal: 7, paddingVertical: 1, borderRadius: 6 }}>
+                        <Text style={{ fontSize: 10.5, fontWeight: '800', color: isApproved ? '#166534' : '#991B1B' }}>
+                          {isApproved ? (isBn ? '✓ অনুমোদিত' : 'Approved') : (isBn ? '⏳ অনুমতি বাকি' : 'Pending')}
                         </Text>
                       </View>
                     </View>
 
-                    <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#1E293B', marginTop: 4 }}>
-                      👤 {item.customer} {item.phone ? `(${item.phone})` : ''}
+                    <Text style={{ fontSize: 12, color: '#475569', marginBottom: 2 }}>
+                      <strong>{isBn ? item.serviceObj?.nameBn : item.serviceObj?.nameEn}</strong> • {item.flight} ({item.flightDate})
+                    </Text>
+                    <Text style={{ fontSize: 11, color: '#64748B' }}>
+                      আইডি: <strong style={{ color: '#0F172A' }}>#{item.bookingId}</strong> • ফোন: {item.phone}
                     </Text>
 
-                    <Text style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                      ✈️ {item.flight} • 📅 {item.flightDate}
-                    </Text>
-                  </View>
-
-                  {/* Requested Service Badge */}
-                  <View style={{ backgroundColor: '#F8FAFC', padding: 8, borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    {asset ? (
-                      <Image source={asset} style={{ width: 22, height: 22, borderRadius: 4 }} resizeMode="contain" />
-                    ) : (
-                      <Text style={{ fontSize: 18 }}>{item.serviceObj.icon}</Text>
+                    {item.grantedAt && isApproved && (
+                      <Text style={{ fontSize: 10, color: '#16A34A', marginTop: 4 }}>
+                        ✓ {item.grantedBy} দ্বারা অনুমোদিত ({new Date(item.grantedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+                      </Text>
                     )}
-                    <View>
-                      <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#0F172A' }}>
-                        {isBn ? item.serviceObj.nameBn : item.serviceObj.nameEn}
-                      </Text>
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#0284C7' }}>
-                        {isBn ? item.serviceObj.priceDisplayBn : item.serviceObj.priceDisplayEn}
-                      </Text>
-                    </View>
                   </View>
-                </View>
 
-                {/* Approver Details */}
-                {isApproved && item.grantedAt && (
-                  <View style={{ marginTop: 8, paddingVertical: 4, paddingHorizontal: 8, backgroundColor: '#F0FDF4', borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ fontSize: 11, color: '#166534', fontWeight: '700' }}>
-                      ✓ {isBn ? 'অনুমোদন দিয়েছেন:' : 'Approved by:'} {item.grantedBy || 'Manager'} • {new Date(item.grantedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
-                    </Text>
-                  </View>
-                )}
+                  {/* Right: Actions (Permission Toggle, Print, WhatsApp) */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    {/* Grant / Revoke Toggle */}
+                    {isApproved ? (
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => handleTogglePermission(item.bookingId, item.serviceId, false)}
+                        style={{
+                          backgroundColor: '#FEE2E2',
+                          borderWidth: 1,
+                          borderColor: '#FCA5A5',
+                          paddingHorizontal: 10,
+                          paddingVertical: 7,
+                          borderRadius: 8,
+                        }}
+                      >
+                        <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#991B1B' }}>
+                          ✕ {isBn ? 'অনুমতি প্রত্যাহার' : 'Revoke'}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => handleTogglePermission(item.bookingId, item.serviceId, true)}
+                        style={{
+                          backgroundColor: '#16A34A',
+                          paddingHorizontal: 12,
+                          paddingVertical: 7,
+                          borderRadius: 8,
+                          shadowColor: '#16A34A',
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: 0.2,
+                          shadowRadius: 2,
+                          elevation: 1,
+                        }}
+                      >
+                        <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF' }}>
+                          ✓ {isBn ? 'অনুমতি দিন' : 'Grant Permission'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
 
-                {/* Action Buttons Bar */}
-                <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#F1F5F9', flexDirection: 'row', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 8 }}>
-                  {/* WhatsApp Notify */}
-                  {item.phone && item.phone !== 'Counter Walk-in' && (
+                    {/* Execute Print Action */}
                     <TouchableOpacity
-                      onPress={() => openCustomerWhatsApp(item.booking || item, lang)}
+                      activeOpacity={0.8}
+                      onPress={() => handleExecutePrint(item)}
                       style={{
-                        paddingHorizontal: 10,
-                        paddingVertical: 6,
-                        borderRadius: 8,
-                        backgroundColor: '#25D366',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 4,
-                      }}
-                    >
-                      <Text style={{ fontSize: 13, color: '#FFFFFF' }}>💬</Text>
-                      <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF' }}>
-                        {isBn ? 'WhatsApp' : 'WhatsApp'}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {/* Print Action */}
-                  <TouchableOpacity
-                    onPress={() => handleExecutePrint(item)}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderRadius: 8,
-                      backgroundColor: isApproved ? '#0284C7' : '#F1F5F9',
-                      borderWidth: 1,
-                      borderColor: isApproved ? '#0284C7' : '#CBD5E1',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                    }}
-                  >
-                    <Text style={{ fontSize: 13 }}>{isApproved ? '🖨️' : '🔒'}</Text>
-                    <Text style={{ fontSize: 11.5, fontWeight: '800', color: isApproved ? '#FFFFFF' : '#64748B' }}>
-                      {isApproved
-                        ? (isBn ? 'ডকুমেন্ট প্রিন্ট' : 'Print Document')
-                        : (isBn ? 'প্রিন্ট লকড (অনুমতি বাকি)' : 'Print Locked')}
-                    </Text>
-                  </TouchableOpacity>
-
-                  {/* Permission Toggle Action */}
-                  {isApproved ? (
-                    <TouchableOpacity
-                      onPress={() => handleTogglePermission(item.bookingId, item.serviceId, false)}
-                      style={{
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                        borderRadius: 8,
-                        backgroundColor: '#FEE2E2',
+                        backgroundColor: (requirePermission && !isApproved) ? '#F1F5F9' : '#0B3B60',
                         borderWidth: 1,
-                        borderColor: '#FCA5A5',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 4,
-                      }}
-                    >
-                      <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#DC2626' }}>
-                        ✕ {isBn ? 'অনুমতি প্রত্যাহার' : 'Revoke'}
-                      </Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity
-                      onPress={() => handleTogglePermission(item.bookingId, item.serviceId, true)}
-                      style={{
-                        paddingHorizontal: 14,
-                        paddingVertical: 6,
+                        borderColor: (requirePermission && !isApproved) ? '#CBD5E1' : '#0B3B60',
+                        paddingHorizontal: 12,
+                        paddingVertical: 7,
                         borderRadius: 8,
-                        backgroundColor: '#16A34A',
-                        shadowColor: '#16A34A',
-                        shadowOffset: { width: 0, height: 1 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 2,
-                        elevation: 2,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        gap: 4,
+                        gap: 5,
                       }}
                     >
-                      <Text style={{ fontSize: 12, color: '#FFFFFF' }}>✓</Text>
-                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#FFFFFF' }}>
-                        {isBn ? 'অনুমতি দিন (Approve)' : 'Grant Permission'}
+                      <Text style={{ fontSize: 12 }}>
+                        {requirePermission && !isApproved ? '🔒' : '🖨️'}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: '800',
+                          color: (requirePermission && !isApproved) ? '#94A3B8' : '#FFFFFF',
+                        }}
+                      >
+                        {isBn ? 'প্রিন্ট' : 'Print'}
                       </Text>
                     </TouchableOpacity>
-                  )}
+
+                    {/* WhatsApp Alert Button */}
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        const msg = isBn
+                          ? `আসসালামু আলাইকুম ${item.customer}, ফ্লাইট কেয়ার থেকে আপনার ${item.serviceObj.nameBn} সেবা সম্পর্কিত তথ্য। বুকিং #${item.bookingId}। কাউন্টার প্রিন্টার অনুমোদন স্ট্যাটাস: ${isApproved ? 'অনুমোদিত' : 'প্রক্রিয়াধীন'}।`
+                          : `Hello ${item.customer}, update regarding your Flight Care service ${item.serviceObj.nameEn} (Booking #${item.bookingId}).`;
+                        openCustomerWhatsApp(item.phone, msg);
+                      }}
+                      style={{
+                        backgroundColor: '#25D366',
+                        paddingHorizontal: 10,
+                        paddingVertical: 7,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF' }}>
+                        💬 WhatsApp
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             );
-          })
-        )}
-      </View>
+          })}
+        </View>
+      )}
 
-      {/* Walk-in Counter Document Modal */}
-      <Modal visible={showWalkinModal} transparent animationType="fade" onRequestClose={() => setShowWalkinModal(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.65)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
-          <View style={{ width: '100%', maxWidth: 480, backgroundColor: '#FFFFFF', borderRadius: 18, padding: 20, shadowColor: '#000000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 6 }}>
+      {/* ============================================================== */}
+      {/* MODAL 1: ONE-TIME OTP SECURITY PIN MODAL */}
+      {/* ============================================================== */}
+      <Modal visible={showOtpModal} transparent animationType="fade" onRequestClose={() => setShowOtpModal(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.7)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 22, width: '100%', maxWidth: 440, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text style={{ fontSize: 22 }}>➕</Text>
-                <Text style={{ fontSize: 16, fontWeight: '800', color: '#0F172A' }}>
-                  {isBn ? 'নতুন কাউন্টার ডকুমেন্ট রিকোয়েস্ট' : 'New Walk-in Document Service'}
+                <Text style={{ fontSize: 22 }}>🔑</Text>
+                <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>
+                  {isBn ? 'EPSON L3250 এককালীন প্রিন্ট ওটিপি' : 'One-Time Print Security PIN'}
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => setShowWalkinModal(false)} style={{ padding: 4 }}>
-                <Text style={{ fontSize: 18, fontWeight: '700', color: '#64748B' }}>✕</Text>
+              <TouchableOpacity onPress={() => setShowOtpModal(false)}>
+                <Text style={{ fontSize: 18, color: '#64748B', fontWeight: 'bold' }}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+            <Text style={{ fontSize: 12.5, color: '#475569', marginBottom: 14, lineHeight: 18 }}>
+              {isBn
+                ? 'কাউন্টার স্টাফের জরুরি অফলাইন প্রিন্টের জন্য এই ৬-ডিজিটের সিকিউরিটি পিনটি প্রদান করুন। এটি ১৫ মিনিট সক্রিয় থাকবে।'
+                : 'Provide this 6-digit security PIN to counter staff to authorize an offline or walk-in print. Valid for 15 minutes.'}
+            </Text>
+
+            <View style={{ backgroundColor: '#F0F9FF', borderWidth: 2, borderColor: '#0284C7', borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 12, color: '#0369A1', fontWeight: '700', marginBottom: 4 }}>
+                {isBn ? 'প্রিন্ট অথরাইজেশন পিন' : 'Print Authorization PIN'}
+              </Text>
+              <Text style={{ fontSize: 32, fontWeight: '900', color: '#0B3B60', letterSpacing: 4, fontFamily: 'monospace' }}>
+                {generatedOtp?.pin || '------'}
+              </Text>
+              <Text style={{ fontSize: 11, color: '#64748B', marginTop: 4 }}>
+                টোকেন কোড: {generatedOtp?.code}
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  const pinText = generatedOtp?.pin;
+                  if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+                    navigator.clipboard.writeText(pinText);
+                    showToast(isBn ? 'পিন ক্লিপবোর্ডে কপি করা হয়েছে!' : 'PIN copied to clipboard!');
+                  }
+                }}
+                style={{ flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: '#F1F5F9', alignItems: 'center' }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#334155' }}>
+                  📋 {isBn ? 'পিন কপি করুন' : 'Copy PIN'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  const msg = isBn
+                    ? `*Flight Care - EPSON L3250 প্রিন্ট ওটিপি:* ${generatedOtp?.pin} (কোড: ${generatedOtp?.code})। আগামী ১৫ মিনিট কার্যকর থাকবে।`
+                    : `Flight Care EPSON L3250 Print PIN: ${generatedOtp?.pin}`;
+                  openCustomerWhatsApp('01347570001', msg);
+                }}
+                style={{ flex: 1.5, paddingVertical: 10, borderRadius: 8, backgroundColor: '#25D366', alignItems: 'center' }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>
+                  💬 {isBn ? 'কাউন্টারে পাঠান' : 'Send via WhatsApp'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ============================================================== */}
+      {/* MODAL 2: PRINT AUDIT LOGS MODAL */}
+      {/* ============================================================== */}
+      <Modal visible={showAuditModal} transparent animationType="fade" onRequestClose={() => setShowAuditModal(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.7)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, width: '100%', maxWidth: 650, maxHeight: '80%', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ fontSize: 22 }}>📋</Text>
+                <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>
+                  {isBn ? 'EPSON L3250 প্রিন্ট ও লক অডিট লগ' : 'EPSON L3250 Print Audit Logs'}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowAuditModal(false)}>
+                <Text style={{ fontSize: 18, color: '#64748B', fontWeight: 'bold' }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 380 }}>
+              {auditLogs.length === 0 ? (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 13, color: '#94A3B8' }}>{isBn ? 'কোনো অডিট রেকর্ড নেই' : 'No audit records yet'}</Text>
+                </View>
+              ) : (
+                auditLogs.map((log, idx) => (
+                  <View
+                    key={log.id || idx}
+                    style={{
+                      padding: 10,
+                      borderRadius: 8,
+                      backgroundColor: '#F8FAFC',
+                      borderBottomWidth: 1,
+                      borderBottomColor: '#E2E8F0',
+                      marginBottom: 6,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F172A' }}>
+                        {log.type}
+                      </Text>
+                      <Text style={{ fontSize: 10.5, color: '#64748B' }}>
+                        {new Date(log.timestamp).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 11.5, color: '#475569' }}>{log.details}</Text>
+                    <Text style={{ fontSize: 10, color: '#0284C7', marginTop: 2 }}>
+                      অ্যাক্টর: {log.actor}
+                    </Text>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+
+            <TouchableOpacity
+              onPress={() => setShowAuditModal(false)}
+              style={{ marginTop: 12, paddingVertical: 10, borderRadius: 8, backgroundColor: '#F1F5F9', alignItems: 'center' }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#475569' }}>
+                {isBn ? 'বন্ধ করুন' : 'Close'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ============================================================== */}
+      {/* MODAL 3: PRINTER CONFIGURATION MODAL */}
+      {/* ============================================================== */}
+      <Modal visible={showConfigModal} transparent animationType="fade" onRequestClose={() => setShowConfigModal(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.7)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, width: '100%', maxWidth: 480, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ fontSize: 22 }}>⚙️</Text>
+                <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>
+                  {isBn ? 'EPSON L3250 প্রিন্টার সেটিংস' : 'EPSON L3250 Configuration'}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowConfigModal(false)}>
+                <Text style={{ fontSize: 18, color: '#64748B', fontWeight: 'bold' }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 380 }}>
+              <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155', marginBottom: 4 }}>
+                {isBn ? 'উইন্ডোজ স্পুলার প্রিন্টার নাম' : 'Windows Spooler Name'}
+              </Text>
+              <TextInput
+                value={configForm.spoolerName}
+                onChangeText={v => setConfigForm(p => ({ ...p, spoolerName: v }))}
+                style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#CBD5E1', borderRadius: 8, padding: 10, fontSize: 13, marginBottom: 12, color: '#0F172A' }}
+              />
+
+              <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155', marginBottom: 4 }}>
+                {isBn ? 'কাউন্টার ওয়াই-ফাই / নেটওয়ার্ক আইপি' : 'Counter IP / Network'}
+              </Text>
+              <TextInput
+                value={configForm.ipAddress}
+                onChangeText={v => setConfigForm(p => ({ ...p, ipAddress: v }))}
+                style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#CBD5E1', borderRadius: 8, padding: 10, fontSize: 13, marginBottom: 12, color: '#0F172A' }}
+              />
+
+              <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155', marginBottom: 4 }}>
+                {isBn ? 'জরুরি ম্যানেজার ওভাররাইড পিন' : 'Emergency Override PIN'}
+              </Text>
+              <TextInput
+                value={configForm.masterPin}
+                onChangeText={v => setConfigForm(p => ({ ...p, masterPin: v }))}
+                secureTextEntry
+                keyboardType="numeric"
+                maxLength={6}
+                style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#CBD5E1', borderRadius: 8, padding: 10, fontSize: 13, marginBottom: 12, color: '#0F172A' }}
+              />
+
+              <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155', marginBottom: 4 }}>
+                {isBn ? 'কাউন্টার লোকেশন' : 'Counter Location'}
+              </Text>
+              <TextInput
+                value={configForm.location}
+                onChangeText={v => setConfigForm(p => ({ ...p, location: v }))}
+                style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#CBD5E1', borderRadius: 8, padding: 10, fontSize: 13, marginBottom: 14, color: '#0F172A' }}
+              />
+            </ScrollView>
+
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+              <TouchableOpacity
+                onPress={() => setShowConfigModal(false)}
+                style={{ flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: '#F1F5F9', alignItems: 'center' }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>
+                  {isBn ? 'বাতিল' : 'Cancel'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleSaveConfig}
+                style={{ flex: 1.5, paddingVertical: 10, borderRadius: 8, backgroundColor: '#0B3B60', alignItems: 'center' }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>
+                  {isBn ? 'সংরক্ষণ করুন' : 'Save Settings'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ============================================================== */}
+      {/* MODAL 4: WALK-IN ENTRY MODAL */}
+      {/* ============================================================== */}
+      <Modal visible={showWalkinModal} transparent animationType="fade" onRequestClose={() => setShowWalkinModal(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 22, width: '100%', maxWidth: 480, maxHeight: '90%', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ fontSize: 22 }}>🖨️</Text>
+                <Text style={{ fontSize: 16, fontWeight: '900', color: '#0F172A' }}>
+                  {isBn ? 'নতুন কাউন্টার সেবা রিকোয়েস্ট' : 'New Counter Service Request'}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowWalkinModal(false)}>
+                <Text style={{ fontSize: 18, color: '#64748B', fontWeight: 'bold' }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 420 }}>
               {/* Passenger Name */}
               <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155', marginBottom: 4 }}>
                 {isBn ? 'যাত্রীর নাম *' : 'Passenger Name *'}
@@ -847,7 +1511,7 @@ export default function DocServicesPermissionDashboard({
               <TextInput
                 value={walkinForm.name}
                 onChangeText={v => setWalkinForm(p => ({ ...p, name: v }))}
-                placeholder={isBn ? 'যাত্রীর পুরো নাম লিখুন' : 'Enter passenger full name'}
+                placeholder={isBn ? 'যাত্রীর পুরো নাম' : 'Full Name'}
                 placeholderTextColor="#94A3B8"
                 style={{ backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#CBD5E1', borderRadius: 8, padding: 10, fontSize: 13, marginBottom: 12, color: '#0F172A' }}
               />

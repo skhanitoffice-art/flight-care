@@ -3,12 +3,21 @@ import {
   Modal,
   View,
   Text,
+  TextInput,
   ScrollView,
   TouchableOpacity,
   Platform,
   Alert,
   Image,
 } from 'react-native';
+import {
+  isEpsonL3250Locked,
+  canPrintOnEpsonL3250,
+  verifyEpsonUnlockPin,
+  getEpsonWatermarkHtml,
+  recordEpsonPrintSuccess,
+} from '../services/epsonL3250Service';
+import { openCustomerWhatsApp } from '../services/whatsappService';
 import { FLIGHTCARE_LOGO_DATA_URL } from '../constants/flightcareLogoBase64';
 import VipPlacardModal from './VipPlacardModal';
 import { calculateBookingPricing } from '../utils/helpers';
@@ -24,6 +33,9 @@ export default function BookingInvoiceModal({
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [showPlacardModal, setShowPlacardModal] = useState(false);
+  const [showEpsonLockModal, setShowEpsonLockModal] = useState(false);
+  const [epsonPinInput, setEpsonPinInput] = useState('');
+  const [epsonPinError, setEpsonPinError] = useState('');
 
   if (!visible || !booking) return null;
 
@@ -836,7 +848,15 @@ export default function BookingInvoiceModal({
 </html>`;
 
   // Dedicated Print Action (Clean 100% full-width A4 Voucher without edge clipping)
-  const handlePrint = () => {
+  const handlePrint = (overrideAuth = false) => {
+    // 1. Check Epson EcoTank L3250 Hardware & Web Lock
+    if (!overrideAuth) {
+      const authCheck = canPrintOnEpsonL3250(booking);
+      if (!authCheck.allowed) {
+        setShowEpsonLockModal(true);
+        return;
+      }
+    }
     // Check if document print permission is required
     const targetAddons = ['print', 'photocopy', 'form_fillup', 'visa', 'visa_on_arrival'];
     const bookingAddons = booking.addons || [];
@@ -888,7 +908,16 @@ export default function BookingInvoiceModal({
 
         const doc = printIframe.contentWindow.document;
         doc.open();
-        doc.write(getVoucherHtml());
+        const authCode = 'AUTH-' + Math.floor(100000 + Math.random() * 900000);
+        const watermarkHtml = getEpsonWatermarkHtml(authCode, isBn ? 'ফ্লাইট কেয়ার ডিউটি ম্যানেজার' : 'Flight Care Duty Manager');
+        const finalVoucherHtml = getVoucherHtml().replace('</body>', `${watermarkHtml}</body>`);
+        doc.write(finalVoucherHtml);
+        recordEpsonPrintSuccess({
+          title: 'Invoice Voucher',
+          bookingId: booking.id || booking.bookingId,
+          passengerName,
+          actor: 'Counter Staff',
+        });
         doc.close();
 
         // Allow fonts, logo, and layout to render at full A4 resolution before print
@@ -1478,6 +1507,12 @@ export default function BookingInvoiceModal({
 
   // Direct PDF Download Handler
   const handleDownloadPdf = async () => {
+    // Check Epson EcoTank L3250 Hardware & Web Lock
+    const authCheck = canPrintOnEpsonL3250(booking);
+    if (!authCheck.allowed) {
+      setShowEpsonLockModal(true);
+      return;
+    }
     // Check if document print permission is required
     const targetAddons = ['print', 'photocopy', 'form_fillup', 'visa', 'visa_on_arrival'];
     const bookingAddons = booking.addons || [];
@@ -2080,6 +2115,123 @@ export default function BookingInvoiceModal({
           </ScrollView>
         </View>
       </View>
+
+      {/* 🔒 EPSON EcoTank L3250 Hardware Lock Authorization Modal */}
+      <Modal
+        visible={showEpsonLockModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setShowEpsonLockModal(false);
+          setEpsonPinInput('');
+          setEpsonPinError('');
+        }}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.75)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 22, width: '100%', maxWidth: 440, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 5 }}>
+            <View style={{ alignItems: 'center', marginBottom: 14 }}>
+              <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', marginBottom: 10, borderWidth: 2, borderColor: '#FCA5A5' }}>
+                <Text style={{ fontSize: 28 }}>🔒</Text>
+              </View>
+              <Text style={{ fontSize: 17, fontWeight: '900', color: '#0F172A', textAlign: 'center' }}>
+                {isBn ? 'EPSON L3250 প্রিন্টার লক করা আছে' : 'EPSON L3250 Printer is Locked'}
+              </Text>
+              <Text style={{ fontSize: 12, color: '#DC2626', fontWeight: '800', marginTop: 3 }}>
+                {isBn ? 'ওয়েবসাইট ড্যাশবোর্ড থেকে হার্ডওয়্যার লক সক্রিয়' : 'Hardware Lock Enforced via Website Dashboard'}
+              </Text>
+            </View>
+
+            <Text style={{ fontSize: 12.5, color: '#475569', lineHeight: 18, textAlign: 'center', marginBottom: 16 }}>
+              {isBn
+                ? 'কাউন্টার প্রিন্টার (EPSON EcoTank L3250) থেকে প্রিন্ট নেওয়ার অনুমতি ড্যাশবোর্ড থেকে বন্ধ রাখা হয়েছে। প্রিন্ট সম্পন্ন করতে ড্যাশবোর্ড থেকে অনুমোদন দিন অথবা ৬-ডিজিটের ম্যানেজার আনলক পিন / ওটিপি দিন।'
+                : 'The counter EPSON L3250 printer is locked from the website. Please obtain permission from the Management Dashboard or enter the 6-digit Manager Unlock PIN.'}
+            </Text>
+
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{ fontSize: 12, fontWeight: '800', color: '#334155', marginBottom: 6 }}>
+                {isBn ? 'ম্যানেজার আনলক পিন / ওটিপি কোড:' : 'Manager Unlock PIN / OTP Code:'}
+              </Text>
+              <TextInput
+                value={epsonPinInput}
+                onChangeText={v => {
+                  setEpsonPinInput(v);
+                  if (epsonPinError) setEpsonPinError('');
+                }}
+                placeholder="e.g. 2026 or OTP"
+                placeholderTextColor="#94A3B8"
+                keyboardType="numeric"
+                maxLength={8}
+                style={{
+                  backgroundColor: '#F8FAFC',
+                  borderWidth: 1.5,
+                  borderColor: epsonPinError ? '#EF4444' : '#CBD5E1',
+                  borderRadius: 10,
+                  padding: 12,
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  letterSpacing: 3,
+                  color: '#0F172A',
+                }}
+              />
+              {epsonPinError ? (
+                <Text style={{ color: '#DC2626', fontSize: 11, fontWeight: '700', marginTop: 4, textAlign: 'center' }}>
+                  {epsonPinError}
+                </Text>
+              ) : null}
+            </View>
+
+            <View style={{ gap: 8 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  const res = verifyEpsonUnlockPin(epsonPinInput);
+                  if (res.success) {
+                    setShowEpsonLockModal(false);
+                    setEpsonPinInput('');
+                    setEpsonPinError('');
+                    handlePrint(true);
+                  } else {
+                    setEpsonPinError(res.message);
+                  }
+                }}
+                style={{ backgroundColor: '#16A34A', paddingVertical: 12, borderRadius: 10, alignItems: 'center' }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: '900', color: '#FFFFFF' }}>
+                  ✓ {isBn ? 'পিন ভেরিফাই ও প্রিন্ট করুন' : 'Verify PIN & Print'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  const msg = isBn
+                    ? `*Flight Care - প্রিন্ট অনুমোদন রিকোয়েস্ট*\nবুকিং আইডি: #${bookingId}\nযাত্রী: ${passengerName}\nফ্লাইট: ${flightNumber}\nEPSON L3250 প্রিন্টারে প্রিন্ট নেওয়ার জন্য আপনার অনুমোদন প্রয়োজন।`
+                    : `Flight Care Print Approval Request for #${bookingId}`;
+                  openCustomerWhatsApp('01347570001', msg);
+                }}
+                style={{ backgroundColor: '#25D366', paddingVertical: 10, borderRadius: 10, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 }}
+              >
+                <Text style={{ fontSize: 14 }}>💬</Text>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>
+                  {isBn ? 'ম্যানেজারকে হোয়াটসঅ্যাপ করুন' : 'Request via WhatsApp'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setShowEpsonLockModal(false);
+                  setEpsonPinInput('');
+                  setEpsonPinError('');
+                }}
+                style={{ paddingVertical: 10, borderRadius: 10, backgroundColor: '#F1F5F9', alignItems: 'center' }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#64748B' }}>
+                  {isBn ? 'বাতিল' : 'Cancel'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <VipPlacardModal
         visible={showPlacardModal}
