@@ -341,6 +341,10 @@ export default function DesktopWizardScreen({
     trxId: wiz.trxId,
     paidMethod: paymentMethod,
     paymentStatus: isPayAfter ? 'pay_after_service' : 'paid',
+    createdAt: wiz.createdAt || new Date().toISOString(),
+    bookedAt: wiz.bookedAt || wiz.createdAt || new Date().toISOString(),
+    paidAt: isPayAfter ? null : (wiz.paidAt || new Date().toISOString()),
+    paymentTimestamp: isPayAfter ? null : (wiz.paymentTimestamp || new Date().toISOString()),
     bookingForSomeoneElse,
     handoverOtp,
   };
@@ -364,6 +368,10 @@ export default function DesktopWizardScreen({
         date: wiz.date,
         paidMethod: paymentMethod,
         paymentStatus: isPayAfter ? 'pay_after_service' : 'paid',
+        createdAt: currentBooking.createdAt || wiz.createdAt || new Date().toISOString(),
+        bookedAt: currentBooking.bookedAt || wiz.bookedAt || wiz.createdAt || new Date().toISOString(),
+        paidAt: isPayAfter ? null : (currentBooking.paidAt || wiz.paidAt || new Date().toISOString()),
+        paymentTimestamp: isPayAfter ? null : (currentBooking.paymentTimestamp || wiz.paymentTimestamp || new Date().toISOString()),
         trxId: wiz.trxId || '',
       };
 

@@ -87,6 +87,10 @@ export default function WizardStep3Confirmation({
       airport,
       paymentStatus: isPayAfter ? 'pay_after_service' : 'paid',
       paidMethod: wiz.paidMethod || wiz.method || (isPayAfter ? 'pay_after_service' : 'sslcommerz'),
+      createdAt: wiz.createdAt || new Date().toISOString(),
+      bookedAt: wiz.bookedAt || wiz.createdAt || new Date().toISOString(),
+      paidAt: isPayAfter ? null : (wiz.paidAt || new Date().toISOString()),
+      paymentTimestamp: isPayAfter ? null : (wiz.paymentTimestamp || new Date().toISOString()),
       trxId: wiz.trxId || '',
     };
 
@@ -215,24 +219,45 @@ https://flightcare.app/track/${bookingCode}
   };
 
   // Calendar Integration Helpers
-  // Exact Order & Payment Confirmation Timestamp (BST)
-  const confirmationTimestamp = wiz.paidAt || wiz.confirmedAt || wiz.createdAt || currentBooking.paidAt || currentBooking.timestamp || new Date().toISOString();
-  const confirmDateObj = new Date(confirmationTimestamp);
-  const isValidDate = !isNaN(confirmDateObj.getTime());
-  const finalDateObj = isValidDate ? confirmDateObj : new Date();
-
-  const formattedConfirmDate = finalDateObj.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
+  // 1. Exact Booking Time (BST)
+  const rawBookedAt = wiz.bookedAt || wiz.createdAt || currentBooking.bookedAt || currentBooking.createdAt || currentBooking.timestamp || new Date().toISOString();
+  const bookedDateObj = new Date(rawBookedAt);
+  const finalBookedDateObj = !isNaN(bookedDateObj.getTime()) ? bookedDateObj : new Date();
+  const formattedBookedDate = finalBookedDateObj.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
     day: 'numeric',
     month: isBn ? 'long' : 'short',
     year: 'numeric',
   });
-  const formattedConfirmTime = finalDateObj.toLocaleTimeString(isBn ? 'bn-BD' : 'en-US', {
+  const formattedBookedTime = finalBookedDateObj.toLocaleTimeString(isBn ? 'bn-BD' : 'en-US', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: true,
   });
-  const confirmationDateTimeString = `${formattedConfirmDate}, ${formattedConfirmTime} BST`;
+  const bookingDateTimeString = `${formattedBookedDate}, ${formattedBookedTime} BST`;
+
+  // 2. Exact Payment Confirmation Time (BST)
+  let paymentDateTimeString = '';
+  if (isPayAfter) {
+    paymentDateTimeString = isBn ? 'সার্ভিস সমাপ্তির পর প্রদেয় (On-Arrival)' : 'Payable After Service (On-Arrival)';
+  } else {
+    const rawPaidAt = wiz.paidAt || wiz.paymentTimestamp || wiz.confirmedAt || currentBooking.paidAt || currentBooking.paymentTimestamp || new Date().toISOString();
+    const paidDateObj = new Date(rawPaidAt);
+    const finalPaidDateObj = !isNaN(paidDateObj.getTime()) ? paidDateObj : new Date();
+    const formattedPaidDate = finalPaidDateObj.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
+      day: 'numeric',
+      month: isBn ? 'long' : 'short',
+      year: 'numeric',
+    });
+    const formattedPaidTime = finalPaidDateObj.toLocaleTimeString(isBn ? 'bn-BD' : 'en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    });
+    paymentDateTimeString = `${formattedPaidDate}, ${formattedPaidTime} BST`;
+  }
+  const confirmationDateTimeString = paymentDateTimeString;
 
   // Itemized Pricing Calculation for Confirmation Screen
   const pricing = currentBooking.pricingBreakdown || calculateBookingPricing(currentBooking, ADDONS);
@@ -480,8 +505,11 @@ https://flightcare.app/track/${bookingCode}
             <Text style={{ fontSize: 18, fontWeight: '900', color: '#0284C7', marginTop: 2 }}>
               #{bookingCode}
             </Text>
-            <Text style={{ fontSize: 11, fontWeight: '800', color: '#059669', marginTop: 2 }}>
-              🕒 {confirmationDateTimeString}
+            <Text style={{ fontSize: 11, fontWeight: '800', color: '#0284C7', marginTop: 2 }}>
+              🕒 {isBn ? 'বুকিং সময়:' : 'Booked:'} {bookingDateTimeString}
+            </Text>
+            <Text style={{ fontSize: 11, fontWeight: '800', color: isPayAfter ? '#B45309' : '#059669', marginTop: 2 }}>
+              💳 {isBn ? 'পেমেন্ট সময়:' : 'Paid:'} {paymentDateTimeString}
             </Text>
           </View>
 

@@ -27,7 +27,7 @@ import {
   DEFAULT_STAFF_ROSTER,
   getAddonAsset,
 } from '../constants/data';
-import { calculateBookingPricing, normalizeManagerService } from '../utils/helpers';
+import { calculateBookingPricing, normalizeManagerService, formatManagerTimestamp } from '../utils/helpers';
 import VisaOnArrivalUploadSection from '../components/VisaOnArrivalUploadSection';
 import { managerLogout } from '../../api';
 import {
@@ -6606,6 +6606,51 @@ export default function ManagerPanel({
                     </Text>
                   </View>
 
+                  {/* Exact Booking & Payment Timestamps */}
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: '#F8FAFC',
+                      paddingHorizontal: 10,
+                      paddingVertical: 7,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: '#E2E8F0',
+                      marginBottom: 10,
+                      gap: 8,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#475569' }}>
+                        🕒 {lang ? 'বুকিংয়ের সময়:' : 'Booked At:'}
+                      </Text>
+                      <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#0F172A' }}>
+                        {formatManagerTimestamp(b.bookedAt || b.createdAt || b.bookingTime || b.timestamp, lang)}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#475569' }}>
+                        💳 {lang ? 'পেমেন্টের সময়:' : 'Paid At:'}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: '800',
+                          color: b.paymentStatus === 'paid' ? '#15803D' : b.paymentStatus === 'pay_after_service' ? '#0284C7' : '#D97706',
+                        }}
+                      >
+                        {b.paymentStatus === 'paid'
+                          ? formatManagerTimestamp(b.paidAt || b.paymentTimestamp || b.paymentDate || b.confirmedAt, lang)
+                          : (b.paymentStatus === 'pay_after_service'
+                              ? (lang ? 'সার্ভিস সমাপ্তির পর' : 'Pay After Service')
+                              : (lang ? 'অপেক্ষমাণ' : 'Pending'))}
+                      </Text>
+                    </View>
+                  </View>
+
                   {/* Customer & Passenger Meta Row */}
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14, paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#F1F5F9', borderBottomWidth: 1, borderBottomColor: '#F1F5F9', marginBottom: 10 }}>
                     <Text style={{ fontSize: 12.5, color: '#475569' }}>
@@ -6944,6 +6989,28 @@ export default function ManagerPanel({
                     {/* TAB: OVERVIEW & FLIGHT */}
                     {bookingDetailTab === 'overview' && (
                       <View style={{ gap: 14 }}>
+                        {/* Booking & Payment Exact Timestamps Card */}
+                        <View style={{ backgroundColor: '#F0F9FF', padding: 14, borderRadius: 12, borderWidth: 1.5, borderColor: '#BAE6FD' }}>
+                          <Text style={{ fontSize: 14, fontWeight: '800', color: '#0369A1', marginBottom: 10 }}>🕒 {lang ? 'বুকিং ও পেমেন্টের সঠিক সময় বিবরণী' : 'Booking & Payment Timestamps'}</Text>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+                            <View style={{ flex: 1, minWidth: 160 }}>
+                              <Text style={{ fontSize: 11, color: '#64748B' }}>{lang ? 'বুকিং সম্পন্ন হওয়ার সময়' : 'Booking Created Time'}</Text>
+                              <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#0284C7', marginTop: 2 }}>
+                                {formatManagerTimestamp(selectedBooking.bookedAt || selectedBooking.createdAt || selectedBooking.bookingTime || selectedBooking.timestamp, lang)}
+                              </Text>
+                            </View>
+                            <View style={{ flex: 1, minWidth: 160 }}>
+                              <Text style={{ fontSize: 11, color: '#64748B' }}>{lang ? 'পেমেন্ট নিশ্চিতকরণ সময়' : 'Payment Confirmation Time'}</Text>
+                              <Text style={{ fontSize: 13.5, fontWeight: '800', color: selectedBooking.paymentStatus === 'paid' ? '#059669' : selectedBooking.paymentStatus === 'pay_after_service' ? '#0284C7' : '#D97706', marginTop: 2 }}>
+                                {selectedBooking.paymentStatus === 'paid'
+                                  ? formatManagerTimestamp(selectedBooking.paidAt || selectedBooking.paymentTimestamp || selectedBooking.paymentDate || selectedBooking.confirmedAt, lang)
+                                  : (selectedBooking.paymentStatus === 'pay_after_service'
+                                      ? (lang ? 'সার্ভিস সমাপ্তির পর প্রদেয়' : 'Pay After Service')
+                                      : (lang ? 'অপেক্ষমাণ' : 'Pending'))}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
                         <View style={{ backgroundColor: '#F8FAFC', padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
                           <Text style={{ fontSize: 14, fontWeight: '800', color: '#0F172A', marginBottom: 10 }}>✈️ {lang ? 'ফ্লাইটের বিবরণ' : 'Flight Itinerary'}</Text>
                           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
@@ -7193,8 +7260,18 @@ export default function ManagerPanel({
                               <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#0F172A', marginTop: 2 }}>{selectedBooking.paymentRef || 'N/A'}</Text>
                             </View>
                             <View style={{ flex: 1, minWidth: 140 }}>
-                              <Text style={{ fontSize: 11, color: '#64748B' }}>{lang ? 'পেমেন্ট তারিখ' : 'Payment Date'}</Text>
-                              <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#0F172A', marginTop: 2 }}>{selectedBooking.paymentDate || 'Today'}</Text>
+                              <Text style={{ fontSize: 11, color: '#64748B' }}>{lang ? 'বুকিংয়ের সময়' : 'Booking Time'}</Text>
+                              <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#0284C7', marginTop: 2 }}>
+                                {formatManagerTimestamp(selectedBooking.bookedAt || selectedBooking.createdAt || selectedBooking.bookingTime || selectedBooking.timestamp, lang)}
+                              </Text>
+                            </View>
+                            <View style={{ flex: 1, minWidth: 140 }}>
+                              <Text style={{ fontSize: 11, color: '#64748B' }}>{lang ? 'পেমেন্টের সময়' : 'Payment Time'}</Text>
+                              <Text style={{ fontSize: 13.5, fontWeight: '800', color: selectedBooking.paymentStatus === 'paid' ? '#059669' : '#0F172A', marginTop: 2 }}>
+                                {selectedBooking.paymentStatus === 'paid'
+                                  ? formatManagerTimestamp(selectedBooking.paidAt || selectedBooking.paymentTimestamp || selectedBooking.paymentDate || selectedBooking.confirmedAt, lang)
+                                  : (selectedBooking.paymentStatus === 'pay_after_service' ? (lang ? 'সার্ভিস সমাপ্তির পর' : 'Pay After Service') : 'Pending')}
+                              </Text>
                             </View>
                           </View>
                         </View>
@@ -12518,9 +12595,14 @@ export default function ManagerPanel({
                             {item.customer} • {item.package || item.service}
                           </Text>
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-                            <Text style={{ fontSize: 11, color: '#64748B' }}>
-                              📅 {item.date} {item.time}
-                            </Text>
+                            <View>
+                              <Text style={{ fontSize: 11, color: '#64748B' }}>
+                                📅 {item.date} • {item.time}
+                              </Text>
+                              <Text style={{ fontSize: 10.5, color: '#0284C7', fontWeight: '700', marginTop: 2 }}>
+                                🕒 {lang ? 'বুকিং সময়:' : 'Booked:'} {formatManagerTimestamp(item.bookedAt || item.createdAt || item.timestamp, lang)}
+                              </Text>
+                            </View>
                             <TouchableOpacity
                               onPress={() => handleOpenAssignStaff(item)}
                               style={{

@@ -217,11 +217,11 @@ export default function MakePlacardModal({
   const nameFontSize = Math.max(16, baseNameSize);
   const flightFontSize = Math.max(11, Math.min(18, Math.round(previewWidth * 0.029)));
 
-  // Handle Quick Prefix
+  // Handle Quick Prefix (Add or Strip Mr./Ms./Dr. cleanly)
   const applyPrefix = (prefix) => {
     const raw = (passengerName || '').trim();
-    const cleaned = raw.replace(/^(mr\.|mrs\.|ms\.|dr\.|engr\.|prof\.|begum|barrister)\s+/i, '');
-    if (prefix === 'CLEAR') {
+    const cleaned = raw.replace(/^(mr\.|mrs\.|ms\.|dr\.|engr\.|prof\.|professor|begum|barrister|md\.|md)\s+/i, '').trim();
+    if (prefix === 'CLEAR' || prefix === 'NO_TITLE') {
       setPassengerName(cleaned);
     } else {
       setPassengerName(`${prefix} ${cleaned}`.trim());
@@ -263,9 +263,9 @@ export default function MakePlacardModal({
 
   // Handle Download HD Placard (Synchronous trigger to prevent browser blockers)
   const handleDownload = () => {
-    const effectiveName = (passengerName && passengerName.trim()) ? passengerName.trim() : 'MR. ISHAUJHYAODS';
+    const effectiveName = (passengerName && passengerName.trim()) ? passengerName.trim() : (isBn ? 'সম্মানিত অতিথি' : 'VALUED GUEST');
     if (!passengerName || !passengerName.trim()) {
-      setPassengerName('MR. ISHAUJHYAODS');
+      setPassengerName(isBn ? 'সম্মানিত অতিথি' : 'VALUED GUEST');
     }
 
     // Save to history asynchronously in background
@@ -295,9 +295,9 @@ export default function MakePlacardModal({
 
   // Handle Direct Print A4 Placard (Synchronous trigger with iframe print)
   const handlePrint = () => {
-    const effectiveName = (passengerName && passengerName.trim()) ? passengerName.trim() : 'MR. ISHAUJHYAODS';
+    const effectiveName = (passengerName && passengerName.trim()) ? passengerName.trim() : (isBn ? 'সম্মানিত অতিথি' : 'VALUED GUEST');
     if (!passengerName || !passengerName.trim()) {
-      setPassengerName('MR. ISHAUJHYAODS');
+      setPassengerName(isBn ? 'সম্মানিত অতিথি' : 'VALUED GUEST');
     }
 
     // Save to history asynchronously in background
@@ -711,39 +711,49 @@ export default function MakePlacardModal({
                       </Text>
                     </View>
 
-                    {/* Quick Honorific Chips */}
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
-                      {['MR.', 'MRS.', 'MS.', 'DR.', 'ENGR.', 'BEGUM', 'CLEAR'].map(p => (
+                    {/* Quick Honorific Chips & No-Title Clear Button */}
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                      {['MR.', 'MRS.', 'MS.', 'DR.', 'ENGR.', 'BEGUM'].map(p => (
                         <TouchableOpacity
                           key={p}
                           onPress={() => applyPrefix(p)}
                           activeOpacity={0.7}
                           style={{
-                            paddingHorizontal: 8,
-                            paddingVertical: 3,
+                            paddingHorizontal: 9,
+                            paddingVertical: 3.5,
                             borderRadius: 6,
-                            backgroundColor: p === 'CLEAR' ? '#FEE2E2' : '#FFFFFF',
+                            backgroundColor: '#FFFFFF',
                             borderWidth: 1,
-                            borderColor: p === 'CLEAR' ? '#FCA5A5' : '#CBD5E1',
+                            borderColor: '#CBD5E1',
                           }}
                         >
-                          <Text
-                            style={{
-                              fontSize: 10.5,
-                              fontWeight: '700',
-                              color: p === 'CLEAR' ? '#B91C1C' : '#1E293B',
-                            }}
-                          >
+                          <Text style={{ fontSize: 11, fontWeight: '700', color: '#1E293B' }}>
                             {p}
                           </Text>
                         </TouchableOpacity>
                       ))}
+                      <TouchableOpacity
+                        onPress={() => applyPrefix('CLEAR')}
+                        activeOpacity={0.7}
+                        style={{
+                          paddingHorizontal: 10,
+                          paddingVertical: 3.5,
+                          borderRadius: 6,
+                          backgroundColor: '#FEE2E2',
+                          borderWidth: 1.5,
+                          borderColor: '#EF4444',
+                        }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#B91C1C' }}>
+                          {isBn ? '🚫 টাইটেল বাদ দিন' : '🚫 No Title / Clear'}
+                        </Text>
+                      </TouchableOpacity>
                     </View>
 
                     <TextInput
                       value={passengerName}
                       onChangeText={setPassengerName}
-                      placeholder={isBn ? 'যেমন: MR. ISHAUJHYAODS বা DR. RAHMAN' : 'e.g. MR. ISHAUJHYAODS or DR. RAHMAN'}
+                      placeholder={isBn ? 'যেমন: CJGHFJH বা MR. RAHMAN' : 'e.g. CJGHFJH or MR. RAHMAN'}
                       placeholderTextColor="#94A3B8"
                       autoCapitalize="characters"
                       style={{
@@ -758,8 +768,8 @@ export default function MakePlacardModal({
                         color: '#0F172A',
                       }}
                     />
-                    <Text style={{ fontSize: 10.5, color: '#64748B', marginTop: 4 }}>
-                      💡 {isBn ? 'কোনো টাইটেল না দিলে শুরুতে স্বয়ংক্রিয়ভাবে MR. যুক্ত হবে' : 'Auto prepends MR. if no title is present'}
+                    <Text style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>
+                      💡 {isBn ? 'Mr./Ms. বাদ দিতে "🚫 টাইটেল বাদ দিন" চাপুন। টাইটেল ছাড়া শুধুমাত্র নাম প্রদর্শিত ও প্রিন্ট হবে।' : 'Click "🚫 No Title" to remove Mr./Ms. Name will print cleanly without title.'}
                     </Text>
                   </View>
 

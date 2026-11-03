@@ -812,3 +812,26 @@ export const validateVisaOnArrivalDocs = (details = {}) => {
     missing,
   };
 };
+
+export const formatManagerTimestamp = (timestamp, lang = 0) => {
+  if (!timestamp) return '—';
+  try {
+    const d = new Date(timestamp);
+    if (isNaN(d.getTime())) return String(timestamp);
+    const isBn = Boolean(lang);
+    const dateStr = d.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
+      day: 'numeric',
+      month: isBn ? 'long' : 'short',
+      year: 'numeric',
+    });
+    const timeStr = d.toLocaleTimeString(isBn ? 'bn-BD' : 'en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    });
+    return `${dateStr}, ${timeStr} BST`;
+  } catch {
+    return String(timestamp);
+  }
+};

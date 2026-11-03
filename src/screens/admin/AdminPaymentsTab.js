@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Platform, Alert, ScrollView } from 'react-native';
+import { formatManagerTimestamp } from '../../utils/helpers';
 import {
   generateDailyReconciliation,
   SSLCOMMERZ_CONFIG,
@@ -62,7 +63,9 @@ export default function AdminPaymentsTab({
         status: b.paymentStatus || 'paid',
         method: b.paymentMethod || 'bKash',
         reference: b.paymentRef || `REF-${b.id || idx}`,
-        created_at: b.paymentDate?.includes('2026') ? '2026-10-09T10:00:00Z' : new Date().toISOString(),
+        booked_at: b.bookedAt || b.createdAt || b.bookingTime || b.timestamp,
+        created_at: b.paidAt || b.paymentTimestamp || b.created_at || (b.paymentDate?.includes('2026') ? '2026-10-09T10:00:00Z' : new Date().toISOString()),
+        paid_at: b.paidAt || b.paymentTimestamp || b.created_at,
         customer: { name: b.customer, phone: b.phone },
         customer_name: b.customer,
         refund_eligible: b.paymentStatus === 'paid',
@@ -351,8 +354,11 @@ export default function AdminPaymentsTab({
                       </Text>
                     </View>
                     <View style={s.staffDetailSection}>
-                      <Text style={s.staffInfoValue}>
-                        {t('paymentDate')}: {payment.created_at || payment.paid_at || '—'}
+                      <Text style={[s.staffInfoValue, { color: '#0284C7', fontWeight: '700' }]}>
+                        🕒 {lang ? 'বুকিংয়ের সময়' : 'Booked At'}: {payment.booked_at ? formatManagerTimestamp(payment.booked_at, lang) : (payment.booking?.created_at ? formatManagerTimestamp(payment.booking.created_at, lang) : '—')}
+                      </Text>
+                      <Text style={[s.staffInfoValue, { color: '#15803D', fontWeight: '700' }]}>
+                        💳 {lang ? 'পেমেন্টের সময়' : 'Paid At'}: {formatManagerTimestamp(payment.created_at || payment.paid_at, lang)}
                       </Text>
                       <Text style={s.staffInfoValue}>
                         {t('refundStatus')}: {payment.refund_status || t('notRefunded')}

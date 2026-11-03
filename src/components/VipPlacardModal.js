@@ -30,25 +30,9 @@ export default function VipPlacardModal({
 
   if (!visible || !booking) return null;
 
-  // 1. Extract and Format Passenger Name
+  // 1. Extract and Format Passenger Name (Respecting user/booking title or pure name without forced MR.)
   const rawName = (booking.passengerName || booking.name || (isBn ? 'সম্মানিত যাত্রী' : 'VALUED PASSENGER')).trim();
   let formattedName = rawName.toUpperCase();
-  const lowerName = rawName.toLowerCase();
-  if (
-    !lowerName.startsWith('mr.') &&
-    !lowerName.startsWith('mr ') &&
-    !lowerName.startsWith('mrs.') &&
-    !lowerName.startsWith('ms.') &&
-    !lowerName.startsWith('md.') &&
-    !lowerName.startsWith('md ') &&
-    !lowerName.startsWith('dr.') &&
-    !lowerName.startsWith('engr.') &&
-    !lowerName.startsWith('barrister') &&
-    !lowerName.startsWith('advocate') &&
-    !lowerName.startsWith('begum')
-  ) {
-    formattedName = `MR. ${formattedName}`;
-  }
 
   // 2. Extract and Format Flight Number
   const rawFlight = booking.flight?.number || booking.flightNumber || booking.fno || 'EK 582';

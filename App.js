@@ -1532,7 +1532,10 @@ export default function App() {
                 valId: verifyData.valId || paymentValId,
                 cardType: verifyData.cardType || paymentCardType || 'SSLCOMMERZ',
                 bankTranId: verifyData.bankTranId || paymentBankTranId,
+                createdAt: pendingBooking?.createdAt || new Date().toISOString(),
+                bookedAt: pendingBooking?.bookedAt || pendingBooking?.createdAt || new Date().toISOString(),
                 paidAt: verifyData.timestamp || new Date().toISOString(),
+                paymentTimestamp: verifyData.timestamp || new Date().toISOString(),
                 amount: verifiedAmount,
                 verificationNote: `Verified by SSLCommerz Server (${verifyData.verifiedVia || 'official'})`,
               };
@@ -4338,7 +4341,9 @@ export default function App() {
       paymentId,
       paymentRecordId: paymentId,
       bkashWallet: wallet || 'Bangla QR',
+      bookedAt: activeBkashBooking.bookedAt || activeBkashBooking.createdAt || new Date().toISOString(),
       paidAt: new Date().toISOString(),
+      paymentTimestamp: new Date().toISOString(),
       status: isTrulyVerified ? 'confirmed' : 'pending',
       verificationNote: isTrulyVerified ? 'Verified by Gateway' : 'Audit Pending by Accounts',
     };
@@ -4441,7 +4446,9 @@ export default function App() {
       cardBrand: isDirectBank ? 'Eastern Bank PLC' : (cardBrand || 'Visa'),
       cardLast4: isDirectBank ? '1371' : (cardLast4 || '4242'),
       authCode: authCode || (isDirectBank ? `EBL-${trxId}` : ''),
+      bookedAt: activeCardBooking.bookedAt || activeCardBooking.createdAt || new Date().toISOString(),
       paidAt: new Date().toISOString(),
+      paymentTimestamp: new Date().toISOString(),
       status: isDirectBank ? 'confirmed' : (isCardVerified ? 'confirmed' : 'pending'),
       verificationNote: isDirectBank
         ? `Direct Bank Transfer to SAIFULLAH KHAN ENTERPRISE (Eastern Bank PLC A/C: 1271350001371). TrxID: ${trxId}`

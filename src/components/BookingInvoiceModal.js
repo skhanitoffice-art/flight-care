@@ -89,24 +89,51 @@ export default function BookingInvoiceModal({
       : (isBn ? 'অ্যারাইভাল কনসিয়ার্জ ডেস্ক / বোর্ডিং গেট এক্সিট' : 'Arrival Concierge Desk / Boarding Gate Exit')
   );
 
-  // Exact Order Confirmation Date & Time (BST)
-  const confirmationTimestamp = booking.paidAt || booking.confirmedAt || booking.createdAt || booking.timestamp || new Date().toISOString();
-  const confirmDateObj = new Date(confirmationTimestamp);
-  const isValidDate = !isNaN(confirmDateObj.getTime());
-  const finalDateObj = isValidDate ? confirmDateObj : new Date();
+  // 1. Exact Booking Initiation Date & Time (BST)
+  const rawBookingTimestamp = booking.bookedAt || booking.createdAt || booking.bookingTime || booking.timestamp || booking.confirmedAt || new Date().toISOString();
+  const bookingDateObj = new Date(rawBookingTimestamp);
+  const isValidBookingDate = !isNaN(bookingDateObj.getTime());
+  const finalBookingDateObj = isValidBookingDate ? bookingDateObj : new Date();
 
-  const formattedConfirmDate = finalDateObj.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
+  const formattedBookingDate = finalBookingDateObj.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
     day: 'numeric',
     month: isBn ? 'long' : 'short',
     year: 'numeric',
   });
-  const formattedConfirmTime = finalDateObj.toLocaleTimeString(isBn ? 'bn-BD' : 'en-US', {
+  const formattedBookingTime = finalBookingDateObj.toLocaleTimeString(isBn ? 'bn-BD' : 'en-US', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: true,
   });
-  const confirmationDateTimeString = `${formattedConfirmDate}, ${formattedConfirmTime} BST`;
+  const bookingDateTimeString = `${formattedBookingDate}, ${formattedBookingTime} BST`;
+
+  // 2. Exact Payment Confirmation Date & Time (BST)
+  let paymentDateTimeString = '';
+  if (isPayAfter) {
+    paymentDateTimeString = isBn
+      ? 'সার্ভিস সমাপ্তির পর প্রদেয় (On-Arrival)'
+      : 'Payable After Service (On-Arrival)';
+  } else {
+    const rawPaymentTimestamp = booking.paidAt || booking.paymentTimestamp || booking.paymentDate || booking.confirmedAt || booking.createdAt || new Date().toISOString();
+    const paymentDateObj = new Date(rawPaymentTimestamp);
+    const isValidPaymentDate = !isNaN(paymentDateObj.getTime());
+    const finalPaymentDateObj = isValidPaymentDate ? paymentDateObj : new Date();
+
+    const formattedPaymentDate = finalPaymentDateObj.toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
+      day: 'numeric',
+      month: isBn ? 'long' : 'short',
+      year: 'numeric',
+    });
+    const formattedPaymentTime = finalPaymentDateObj.toLocaleTimeString(isBn ? 'bn-BD' : 'en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    });
+    paymentDateTimeString = `${formattedPaymentDate}, ${formattedPaymentTime} BST`;
+  }
+  const confirmationDateTimeString = paymentDateTimeString;
 
   // Passengers details
   const adults = Number(booking.a >= 0 ? booking.a : (booking.passengers?.adults ?? (typeof booking.passengers === 'number' ? booking.passengers : 1)));
@@ -616,9 +643,11 @@ export default function BookingInvoiceModal({
         <div class="ref-val">#${bookingId}</div>
       </div>
       <div>
-        <div class="ref-label" style="text-align: right;">${isBn ? 'অর্ডার ও পেমেন্ট নিশ্চিতকরণ সময়:' : 'CONFIRMED ON:'}</div>
-        <div class="date-val" style="color: #059669; font-weight: 800;">${confirmationDateTimeString}</div>
-        <div style="font-size: 10px; color: #64748b; text-align: right; margin-top: 2px;">${isBn ? 'ইস্যুর তারিখ:' : 'Issued:'} ${issuedDate}, ${issuedTime} BST</div>
+        <div class="ref-label" style="text-align: right;">${isBn ? 'বুকিংয়ের সময়:' : 'BOOKED AT:'}</div>
+        <div class="date-val" style="color: #0284c7; font-weight: 800;">${bookingDateTimeString}</div>
+        <div style="font-size: 11px; color: ${isPayAfter ? '#b45309' : '#059669'}; font-weight: 800; text-align: right; margin-top: 2px;">
+          ${isBn ? 'পেমেন্টের সময়:' : 'PAID AT:'} ${paymentDateTimeString}
+        </div>
       </div>
     </div>
 
@@ -741,8 +770,12 @@ export default function BookingInvoiceModal({
       <span class="value" style="color: #0284c7; font-family: monospace; font-size: 13.5px;">${trxId}</span>
     </div>
     <div class="row">
-      <span class="label">${isBn ? 'অর্ডার ও পেমেন্ট নিশ্চিতকরণ সময়:' : 'Payment Confirmation Time:'}</span>
-      <span class="value" style="color: #059669; font-weight: 800;">${confirmationDateTimeString}</span>
+      <span class="label">${isBn ? 'বুকিং সম্পন্ন হওয়ার সময়:' : 'Booking Created Time:'}</span>
+      <span class="value" style="color: #0284c7; font-weight: 700;">${bookingDateTimeString}</span>
+    </div>
+    <div class="row">
+      <span class="label">${isBn ? 'পেমেন্ট নিশ্চিতকরণ সময়:' : 'Payment Confirmation Time:'}</span>
+      <span class="value" style="color: ${isPayAfter ? '#b45309' : '#059669'}; font-weight: 800;">${paymentDateTimeString}</span>
     </div>
     <div class="row">
       <span class="label">${isBn ? 'ভেরিফিকেশন স্ট্যাটাস:' : 'Verification Status:'}</span>
@@ -985,13 +1018,17 @@ export default function BookingInvoiceModal({
     ctx.fillText(`#${bookingId}`, cardX + 100, refBarY + 115);
 
     ctx.fillStyle = '#64748B';
-    ctx.font = '800 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif';
+    ctx.font = '800 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(isBn ? 'অর্ডার ও পেমেন্ট সময়:' : 'CONFIRMED ON:', cardX + cardW - 100, refBarY + 55);
+    ctx.fillText(isBn ? 'বুকিংয়ের সময়:' : 'BOOKED AT:', cardX + cardW - 100, refBarY + 45);
 
-    ctx.fillStyle = '#059669';
-    ctx.font = '800 30px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif';
-    ctx.fillText(confirmationDateTimeString, cardX + cardW - 100, refBarY + 110);
+    ctx.fillStyle = '#0284C7';
+    ctx.font = '800 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif';
+    ctx.fillText(bookingDateTimeString, cardX + cardW - 100, refBarY + 80);
+
+    ctx.fillStyle = isPayAfter ? '#B45309' : '#059669';
+    ctx.font = '800 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif';
+    ctx.fillText(`${isBn ? 'পেমেন্ট:' : 'PAID:'} ${paymentDateTimeString}`, cardX + cardW - 100, refBarY + 118);
     ctx.textAlign = 'left';
 
     // 8. Section 1: Passenger & Travel Details
@@ -1113,7 +1150,9 @@ export default function BookingInvoiceModal({
     curY += 70;
     drawRowHighRes(isBn ? 'ট্রানজেকশন আইডি (TrxID):' : 'Transaction ID:', trxId, curY, '#0284C7', true);
     curY += 70;
-    drawRowHighRes(isBn ? 'পেমেন্ট নিশ্চিতকরণ সময়:' : 'Payment Confirmation Time:', confirmationDateTimeString, curY, '#059669', true);
+    drawRowHighRes(isBn ? 'বুকিং সম্পন্ন হওয়ার সময়:' : 'Booking Created Time:', bookingDateTimeString, curY, '#0284C7', true);
+    curY += 70;
+    drawRowHighRes(isBn ? 'পেমেন্ট নিশ্চিতকরণ সময়:' : 'Payment Confirmation Time:', paymentDateTimeString, curY, isPayAfter ? '#B45309' : '#059669', true);
 
     // 10. Total Amount Paid Box
     curY += 95;
@@ -1617,13 +1656,13 @@ export default function BookingInvoiceModal({
 
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '700' }}>
-                  {isBn ? 'অর্ডার ও পেমেন্ট সময়:' : 'CONFIRMED ON:'}
+                  {isBn ? 'বুকিংয়ের সময়:' : 'BOOKED AT:'}
                 </Text>
-                <Text style={{ fontSize: 12, fontWeight: '800', color: '#059669', marginTop: 1 }}>
-                  {confirmationDateTimeString}
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#0284C7', marginTop: 1 }}>
+                  {bookingDateTimeString}
                 </Text>
-                <Text style={{ fontSize: 10, color: '#94A3B8', marginTop: 1 }}>
-                  {isBn ? 'ইস্যুর তারিখ:' : 'Issued:'} {issuedDate}, {issuedTime} BST
+                <Text style={{ fontSize: 11, fontWeight: '800', color: isPayAfter ? '#B45309' : '#059669', marginTop: 2 }}>
+                  {isBn ? 'পেমেন্টের সময়:' : 'PAID AT:'} {paymentDateTimeString}
                 </Text>
               </View>
             </View>
@@ -1830,10 +1869,19 @@ export default function BookingInvoiceModal({
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <Text style={{ fontSize: 12, fontWeight: '700', color: '#1E40AF' }}>
-                  {isBn ? 'অর্ডার ও পেমেন্ট সময়:' : 'CONFIRMED ON:'}
+                  {isBn ? 'বুকিং সম্পন্ন হওয়ার সময়:' : 'BOOKING CREATED AT:'}
                 </Text>
-                <Text style={{ fontSize: 12, fontWeight: '800', color: '#059669' }}>
-                  {confirmationDateTimeString}
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#0284C7' }}>
+                  {bookingDateTimeString}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: '#1E40AF' }}>
+                  {isBn ? 'পেমেন্ট নিশ্চিতকরণ সময়:' : 'PAYMENT CONFIRMED AT:'}
+                </Text>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: isPayAfter ? '#B45309' : '#059669' }}>
+                  {paymentDateTimeString}
                 </Text>
               </View>
 

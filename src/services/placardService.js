@@ -71,25 +71,11 @@ const INITIAL_SAMPLE_PLACARDS = [
 ];
 
 /**
- * Standardize passenger name with proper honorific prefix
+ * Standardize passenger name without forcing honorific prefix (user can choose with or without Mr./Ms.)
  */
 export function formatPlacardName(rawName) {
-  if (!rawName || typeof rawName !== 'string') return 'MR. ISHAUJHYAODS';
-  const trimmed = rawName.trim();
-  let formatted = trimmed.toUpperCase();
-  const lower = trimmed.toLowerCase();
-
-  const honorifics = [
-    'mr.', 'mr ', 'mrs.', 'mrs ', 'ms.', 'ms ', 'md.', 'md ',
-    'dr.', 'dr ', 'engr.', 'engr ', 'barrister', 'advocate',
-    'prof.', 'professor', 'begum', 'alhaj', 'haji'
-  ];
-
-  const hasPrefix = honorifics.some(h => lower.startsWith(h));
-  if (!hasPrefix) {
-    formatted = `MR. ${formatted}`;
-  }
-  return formatted;
+  if (!rawName || typeof rawName !== 'string') return '';
+  return rawName.trim().toUpperCase();
 }
 
 /**
