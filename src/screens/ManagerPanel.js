@@ -129,6 +129,7 @@ import {
   registerVaultTriggerClick,
   setVaultRoleDirectly,
 } from '../services/dualVaultService';
+import ArrivalCardsModal, { OFFICIAL_ARRIVAL_CARDS } from '../components/ArrivalCardsModal';
 
 
 
@@ -1493,6 +1494,7 @@ export default function ManagerPanel({
 
   // Make Placard & Super Admin Audit History Modal State
   const [showMakePlacardModal, setShowMakePlacardModal] = useState(false);
+  const [showArrivalCardsModal, setShowArrivalCardsModal] = useState(false);
   const [selectedPlacardBooking, setSelectedPlacardBooking] = useState(null);
   const [placardHistoryList, setPlacardHistoryList] = useState([]);
 
@@ -3239,6 +3241,21 @@ export default function ManagerPanel({
             openManagerSection('incidents');
           },
         },
+        {
+          id: 'arrival-cards-ops',
+          icon: '🛂',
+          label: lang ? 'এ্যারাইভাল কার্ড (২০ দেশ)' : 'Arrival Cards (20 Countries)',
+          value: '20 Portals',
+          subtext: lang ? 'সিঙ্গাপুর, মালয়েশিয়া, ভারত, থাইল্যান্ড ইত্যাদি' : 'Singapore, Malaysia, India & 17 more',
+          badge: 'Official',
+          actionLabel: lang ? 'পোর্টাল খুলুন →' : 'Open Portals →',
+          color: '#0D9488',
+          bgColor: '#F0FDFA',
+          borderColor: '#99F6E4',
+          onPress: () => {
+            setShowArrivalCardsModal(true);
+          },
+        },
         ...(isAdmin ? [{
           id: 'allocation-ops',
           icon: '⚙️',
@@ -3265,6 +3282,7 @@ export default function ManagerPanel({
     { key: 'incidents', label: lang ? 'ইনসিডেন্ট ও হারানো লাগেজ' : 'Incidents & Baggage', icon: '🚨' },
     { key: 'bookings', label: lang ? 'বুকিং তালিকা' : 'Bookings', icon: '🎫' },
     { key: 'placards', label: lang ? 'প্লেকার্ড তৈরি ও হিস্টোরি' : 'VIP Placard Maker', icon: '🏷️' },
+    { key: 'arrival_cards', label: lang ? 'এ্যারাইভাল কার্ড' : 'Arrival Cards', icon: '🛂' },
     { key: 'payments', label: lang ? 'পেমেন্ট ও রিফান্ড' : 'Payments & Refunds', icon: '💳' },
     { key: 'allocation', label: lang ? 'স্টাফ বরাদ্দ' : 'Staff Allocation', icon: '⚙️', adminOnly: true },
     { key: 'customers', label: lang ? 'গ্রাহক' : 'Customers', icon: '👥', adminOnly: true },
@@ -11937,6 +11955,16 @@ export default function ManagerPanel({
             </View>
           </View>
         );
+      case 'arrival_cards':
+        return (
+          <View style={{ width: '100%', padding: 20 }}>
+            <ArrivalCardsModal
+              visible={true}
+              embedded={true}
+              lang={lang}
+            />
+          </View>
+        );
       case 'bookings':
         return renderBookingsManagement();
       case 'payments':
@@ -13059,6 +13087,30 @@ export default function ManagerPanel({
                 );
               })()}
 
+              {/* Mobile Arrival Cards Button */}
+              <TouchableOpacity
+                onPress={() => setShowArrivalCardsModal(true)}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel={lang ? 'এ্যারাইভাল কার্ড' : 'Arrival Cards'}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingHorizontal: 8,
+                  paddingVertical: 7,
+                  borderRadius: 10,
+                  backgroundColor: '#F0FDFA',
+                  borderWidth: 1.5,
+                  borderColor: '#99F6E4',
+                }}
+              >
+                <Text style={{ fontSize: 13 }}>🛂</Text>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: '#0F766E' }}>
+                  {lang ? 'এ্যারাইভাল কার্ড' : 'Arrival Cards'}
+                </Text>
+              </TouchableOpacity>
+
               {/* Mobile Live Refresh & Sync Button */}
               <TouchableOpacity
                 onPress={handleManualDataRefresh}
@@ -13340,6 +13392,30 @@ export default function ManagerPanel({
                 </TouchableOpacity>
               );
             })()}
+
+            {/* Desktop Arrival Cards Button */}
+            <TouchableOpacity
+              onPress={() => setShowArrivalCardsModal(true)}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={lang ? 'এ্যারাইভাল কার্ড' : 'Arrival Cards'}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 8,
+                backgroundColor: '#F0FDFA',
+                borderWidth: 1.5,
+                borderColor: '#99F6E4',
+              }}
+            >
+              <Text style={{ fontSize: 13 }}>🛂</Text>
+              <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F766E' }}>
+                {lang ? 'এ্যারাইভাল কার্ড' : 'Arrival Cards'}
+              </Text>
+            </TouchableOpacity>
 
             {/* Desktop Live Refresh & Sync Button */}
             <TouchableOpacity
@@ -13673,6 +13749,13 @@ export default function ManagerPanel({
           }
           setTimeout(() => setAdminNotice(''), 3500);
         }}
+        lang={lang}
+      />
+
+      {/* Official International Arrival Cards Directory Modal */}
+      <ArrivalCardsModal
+        visible={showArrivalCardsModal}
+        onClose={() => setShowArrivalCardsModal(false)}
         lang={lang}
       />
     </ScrollView>

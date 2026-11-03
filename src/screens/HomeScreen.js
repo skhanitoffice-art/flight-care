@@ -34,6 +34,7 @@ import DesktopHomeScreen from '../components/DesktopHomeScreen';
 import DesktopFooter from '../components/DesktopFooter';
 import DatePickerModal from '../components/DatePickerModal';
 import AdditionalServicesModal from '../components/AdditionalServicesModal';
+import ArrivalCardsModal from '../components/ArrivalCardsModal';
 import Parallax3DAtmosphere from '../components/Parallax3DAtmosphere';
 import { isValidFlightNumber, isValidFlightDate, createAddonDetails } from '../utils/helpers';
 import {
@@ -106,6 +107,7 @@ export default function HomeScreen({
   const [addonDetails, setAddonDetails] = useState(createAddonDetails());
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [showServicesModal, setShowServicesModal] = useState(false);
+  const [showArrivalCardsModal, setShowArrivalCardsModal] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
   const [errors, setErrors] = useState({});
   const [flightSuggestions, setFlightSuggestions] = useState([]);
@@ -1317,6 +1319,50 @@ export default function HomeScreen({
             <ChevronRight size={18} color="#0284C7" />
           </TouchableOpacity>
 
+          {/* International Arrival Cards Mobile Card */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setShowArrivalCardsModal(true)}
+            style={{
+              backgroundColor: '#F0FDFA',
+              borderRadius: 12,
+              borderWidth: 1.5,
+              borderColor: '#99F6E4',
+              padding: 12,
+              marginTop: 10,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+            }}
+          >
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: '#CCFBF1',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 20 }}>🛂</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: '#0F766E' }}>
+                  {lang === 1 ? 'এ্যারাইভাল কার্ড (২০ দেশ)' : 'Arrival Cards (20 Countries)'}
+                </Text>
+                <View style={{ backgroundColor: '#0D9488', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8 }}>
+                  <Text style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '800' }}>Official</Text>
+                </View>
+              </View>
+              <Text style={{ fontSize: 11.5, color: '#115E59', marginTop: 1 }}>
+                {lang === 1 ? 'সিঙ্গাপুর, মালয়েশিয়া, ভারত, থাইল্যান্ডসহ ২০ দেশের পোর্টাল ↗' : 'Official arrival cards for Singapore, Malaysia & 18 more ↗'}
+              </Text>
+            </View>
+            <ChevronRight size={16} color="#0D9488" />
+          </TouchableOpacity>
+
           {/* Validation Alert Banner if inputs incomplete */}
           {Boolean(Object.values(errors).some(msg => typeof msg === 'string' && msg.trim().length > 0)) && (
             <View
@@ -1939,6 +1985,13 @@ export default function HomeScreen({
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* Official International Arrival Cards Directory Modal */}
+      <ArrivalCardsModal
+        visible={showArrivalCardsModal}
+        onClose={() => setShowArrivalCardsModal(false)}
+        lang={lang}
+      />
     </ScrollView>
   </View>
   );
