@@ -398,7 +398,20 @@ export default function App() {
   const [openFaqId, setOpenFaqId] = useState('');
   const [profile, setProfile] = useState({ name: '', phone: '', email: '', profile_information: '' });
   const [notificationPreferences, setNotificationPreferences] = useState(DEFAULT_NOTIFICATION_PREFERENCES);
-  const [customerSession, setCustomerSession] = useState(null);
+  const [customerSession, setCustomerSession] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const rawCust = window.localStorage.getItem('@flightcare_customer_session');
+        if (rawCust) {
+          const parsedCust = JSON.parse(rawCust);
+          if (parsedCust && parsedCust.token && parsedCust.user) {
+            return parsedCust;
+          }
+        }
+      } catch {}
+    }
+    return null;
+  });
   const [authView, setAuthView] = useState('account');
   const [authForm, setAuthForm] = useState({
     name: '',
@@ -1868,8 +1881,18 @@ export default function App() {
     if (!settingsLoaded) return;
     if (customerSession) {
       AsyncStorage.setItem(SESSION_STORAGE, JSON.stringify(customerSession)).catch(() => {});
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+        try {
+          window.localStorage.setItem(SESSION_STORAGE, JSON.stringify(customerSession));
+        } catch {}
+      }
     } else {
       AsyncStorage.removeItem(SESSION_STORAGE).catch(() => {});
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+        try {
+          window.localStorage.removeItem(SESSION_STORAGE);
+        } catch {}
+      }
     }
   }, [customerSession, settingsLoaded]);
 

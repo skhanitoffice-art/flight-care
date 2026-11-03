@@ -89,5 +89,7 @@ Thumbs.db
 scripts/seedFirestore.js
 scripts/*.seed.js
 scripts/*.local.js
+NUL
+
 
 
