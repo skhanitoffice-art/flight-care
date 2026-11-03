@@ -1623,16 +1623,25 @@ export default function DocServicesPermissionDashboard({
 
             <ScrollView style={{ maxHeight: 320 }}>
               <Text style={{ fontSize: 13, fontWeight: '800', color: '#0B3B60', marginBottom: 6 }}>
-                📌 কাউন্টার পিসিতে ১-ক্লিকে সেটআপ করার নিয়ম:
+                📌 কাউন্টার কম্পিউটারে ১-ক্লিকে সেটআপ করার নিয়ম (Windows ও Mac):
               </Text>
 
               <View style={{ gap: 10, marginBottom: 14 }}>
-                <View style={{ backgroundColor: '#F8FAFC', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F172A', marginBottom: 2 }}>
-                    ১. স্ক্রিপ্ট রান করুন (Run as Administrator):
+                <View style={{ backgroundColor: '#F0F9FF', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#BAE6FD' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#0369A1', marginBottom: 2 }}>
+                    🖥️ উইন্ডোজ কম্পিউটারের জন্য (Windows):
                   </Text>
-                  <Text style={{ fontSize: 11.5, color: '#475569', lineHeight: 16 }}>
-                    কাউন্টার পিসির ফোল্ডার থেকে <strong style={{ color: '#0B3B60' }}>INSTALL_COUNTER_LOCK_GUARD.bat</strong> ফাইলটিতে রাইট ক্লিক করে <strong>"Run as Administrator"</strong> দিন।
+                  <Text style={{ fontSize: 11.5, color: '#334155', lineHeight: 16 }}>
+                    কাউন্টার পিসির ফোল্ডার থেকে <strong style={{ color: '#0B3B60' }}>INSTALL_COUNTER_LOCK_GUARD.bat</strong> ফাইলটিতে মাউসের রাইট ক্লিক করে <strong>"Run as Administrator"</strong> দিন।
+                  </Text>
+                </View>
+
+                <View style={{ backgroundColor: '#F5F3FF', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#DDD6FE' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#6D28D9', marginBottom: 2 }}>
+                    🍏 ম্যাক কম্পিউটারের জন্য (macOS Apple Silicon / Intel):
+                  </Text>
+                  <Text style={{ fontSize: 11.5, color: '#334155', lineHeight: 16 }}>
+                    ম্যাকের ফাইন্ডার থেকে সরাসরি <strong style={{ color: '#6D28D9' }}>INSTALL_COUNTER_LOCK_GUARD_MAC.command</strong> ফাইলটিতে ডাবল ক্লিক করুন। এটি নেটিভ CUPS প্রিন্টার লক হিসেবে স্বয়ংক্রিয়ভাবে ব্যাকগ্রাউন্ডে ইনস্টল হয়ে যাবে।
                   </Text>
                 </View>
 
