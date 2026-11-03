@@ -837,6 +837,38 @@ export default function BookingInvoiceModal({
 
   // Dedicated Print Action (Clean 100% full-width A4 Voucher without edge clipping)
   const handlePrint = () => {
+    // Check if document print permission is required
+    const targetAddons = ['print', 'photocopy', 'form_fillup', 'visa', 'visa_on_arrival'];
+    const bookingAddons = booking.addons || [];
+    const hasDocAddon = targetAddons.some(t => bookingAddons.includes(t));
+    
+    // Check stored dashboard permission
+    let isPermitted = true;
+    try {
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+        const requirePerm = window.localStorage.getItem('flightcare_require_print_perm');
+        if (requirePerm !== 'false' && hasDocAddon) {
+          const permsRaw = window.localStorage.getItem('flightcare_doc_service_permissions');
+          const perms = permsRaw ? JSON.parse(permsRaw) : {};
+          const bookingCode = booking.id || booking.bookingId;
+          const isApproved = targetAddons.some(t => perms[bookingCode + '_' + t]?.granted || perms[bookingCode + '_print']?.granted);
+          if (!isApproved) {
+            isPermitted = false;
+          }
+        }
+      }
+    } catch (e) {}
+
+    if (!isPermitted) {
+      Alert.alert(
+        isBn ? '🔒 প্রিন্ট অনুমতি প্রয়োজন' : '🔒 Print Permission Required',
+        isBn
+          ? 'এই সেবার জন্য ড্যাশবোর্ড থেকে ম্যানেজার বা অ্যাডমিনের অনুমতি অনুমোদন প্রয়োজন। অনুমতি অনুমোদন না করা পর্যন্ত প্রিন্ট করা সম্ভব নয়।'
+          : 'Permission approval from the Management Dashboard is required before printing documents. Please obtain permission from the Dashboard.'
+      );
+      return;
+    }
+
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       try {
         const existing = document.getElementById('flightcare-print-frame');
@@ -1446,6 +1478,38 @@ export default function BookingInvoiceModal({
 
   // Direct PDF Download Handler
   const handleDownloadPdf = async () => {
+    // Check if document print permission is required
+    const targetAddons = ['print', 'photocopy', 'form_fillup', 'visa', 'visa_on_arrival'];
+    const bookingAddons = booking.addons || [];
+    const hasDocAddon = targetAddons.some(t => bookingAddons.includes(t));
+    
+    // Check stored dashboard permission
+    let isPermitted = true;
+    try {
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+        const requirePerm = window.localStorage.getItem('flightcare_require_print_perm');
+        if (requirePerm !== 'false' && hasDocAddon) {
+          const permsRaw = window.localStorage.getItem('flightcare_doc_service_permissions');
+          const perms = permsRaw ? JSON.parse(permsRaw) : {};
+          const bookingCode = booking.id || booking.bookingId;
+          const isApproved = targetAddons.some(t => perms[bookingCode + '_' + t]?.granted || perms[bookingCode + '_print']?.granted);
+          if (!isApproved) {
+            isPermitted = false;
+          }
+        }
+      }
+    } catch (e) {}
+
+    if (!isPermitted) {
+      Alert.alert(
+        isBn ? '🔒 প্রিন্ট / ডাউনলোড অনুমতি প্রয়োজন' : '🔒 Print / Download Permission Required',
+        isBn
+          ? 'এই সেবার জন্য ড্যাশবোর্ড থেকে ম্যানেজার বা অ্যাডমিনের অনুমতি অনুমোদন প্রয়োজন। অনুমতি অনুমোদন না করা পর্যন্ত ফাইল ডাউনলোড বা প্রিন্ট করা সম্ভব নয়।'
+          : 'Permission approval from the Management Dashboard is required before printing or downloading documents. Please obtain permission from the Dashboard.'
+      );
+      return;
+    }
+
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       try {
         setDownloading(true);

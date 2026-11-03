@@ -29,6 +29,7 @@ import {
 } from '../constants/data';
 import { calculateBookingPricing, normalizeManagerService, formatManagerTimestamp } from '../utils/helpers';
 import VisaOnArrivalUploadSection from '../components/VisaOnArrivalUploadSection';
+import DocServicesPermissionDashboard from '../components/DocServicesPermissionDashboard';
 import { managerLogout } from '../../api';
 import {
   getBookingCommunicationLogs,
@@ -3282,6 +3283,7 @@ export default function ManagerPanel({
 
   const allPlatformSidebarItems = [
     { key: 'dashboard', label: lang ? 'ড্যাশবোর্ড' : 'Dashboard', icon: '🏠' },
+    { key: 'doc_services', label: lang ? 'ডকুমেন্ট ও প্রিন্ট পারমিশন' : 'Print & Doc Permissions', icon: '🖨️' },
     { key: 'family', label: lang ? 'ফ্লাইট কেয়ার ফ্যামিলি' : 'Flight Care Family', icon: '👨‍👩‍👧‍👦' },
     { key: 'staff', label: lang ? 'প্রোটোকল অফিসারবৃন্দ' : 'Protocol Officers', icon: '🧑‍✈️' },
     { key: 'contractual', label: lang ? 'কন্ট্রাকচুয়াল এমপ্লয়ি' : 'Contractual Staff', icon: '🤝' },
@@ -6752,6 +6754,26 @@ export default function ManagerPanel({
                       />
                     </View>
                   </View>
+
+                  {/* Document Services Badge */}
+                  {['visa', 'visa_on_arrival', 'print', 'photocopy', 'form_fillup'].some(k => (b.addons || []).includes(k)) && (
+                    <View style={{ marginTop: 8, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#86EFAC', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={{ fontSize: 13 }}>🖨️</Text>
+                        <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#166534' }}>
+                          {lang ? 'ডকুমেন্ট সেবা (প্রিন্ট/ভিসা/ফটোকপি/ফর্ম) সংযুক্ত' : 'Doc Service (Print/Visa/PhotoCopy/Form) Attached'}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => openManagerSection('doc_services')}
+                        style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, backgroundColor: '#16A34A' }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#FFFFFF' }}>
+                          {lang ? 'পারমিশন গেট খুলুন →' : 'Permission Gate →'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
 
                   {/* Operational Action Buttons Bar */}
                   <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 10 }}>
@@ -12118,6 +12140,20 @@ export default function ManagerPanel({
             />
           </View>
         );
+      case 'doc_services':
+        return (
+          <View style={{ width: '100%', padding: responsive.isPhone ? 10 : 20 }}>
+            <DocServicesPermissionDashboard
+              allPlatformBookings={allPlatformBookings}
+              bookings={bookings}
+              managerSession={managerSession}
+              isAdmin={isAdmin}
+              lang={lang}
+              onOpenBookingInvoice={setInvoiceModalBooking}
+              onOpenBookingDetails={handleOpenBookingDetails}
+            />
+          </View>
+        );
       case 'bookings':
         return renderBookingsManagement();
       case 'payments':
@@ -12770,6 +12806,18 @@ export default function ManagerPanel({
                 </View>
               </View>
             )}
+
+            {/* 🖨️ 4 Additional Services & Document Print Control Gate */}
+            <DocServicesPermissionDashboard
+              allPlatformBookings={allPlatformBookings}
+              bookings={bookings}
+              managerSession={managerSession}
+              isAdmin={isAdmin}
+              lang={lang}
+              onOpenBookingInvoice={setInvoiceModalBooking}
+              onOpenBookingDetails={handleOpenBookingDetails}
+              embedded={true}
+            />
 
             {/* Revenue Financial Breakdown - Admin Only */}
             {isAdmin && (
