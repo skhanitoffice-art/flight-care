@@ -3,6 +3,7 @@
 :: Flight Care - EPSON L3250 Tamper-Proof Counter Lock Installer
 :: Installs the permanent silent hardware lock guard on the Counter PC.
 :: Once installed, the printer is controlled ONLY by the website dashboard.
+:: Works on all Windows 10/11 machines natively (no Python required).
 :: ========================================================================
 
 title Flight Care - EPSON L3250 Hardware Guard Installer
@@ -24,7 +25,15 @@ if %errorLevel% neq 0 (
 )
 
 set SCRIPT_DIR=%~dp0
-set VBS_PATH=%SCRIPT_DIR%run_epson_guard_hidden.vbs
+if exist "%SCRIPT_DIR%run_epson_guard_hidden.vbs" (
+    set VBS_PATH=%SCRIPT_DIR%run_epson_guard_hidden.vbs
+) else if exist "%SCRIPT_DIR%scripts\run_epson_guard_hidden.vbs" (
+    set VBS_PATH=%SCRIPT_DIR%scripts\run_epson_guard_hidden.vbs
+) else (
+    echo [ERROR] run_epson_guard_hidden.vbs not found!
+    pause
+    exit /b
+)
 
 echo [*] Target Guard Script: %VBS_PATH%
 echo [*] Registering Windows Scheduled Task 'FlightCare_EpsonGuard'...
@@ -49,6 +58,8 @@ if %errorLevel% equ 0 (
     echo   3. ওয়েবসাইট থেকে ম্যানেজার লক করলে বাইরের কোনো ফাইলও প্রিন্ট হবে না!
     echo   4. কেউ উইন্ডোজ থেকে প্রিন্টার রিজিউম করতে চাইলেও সিস্টেম সাথে সাথে
     echo      তা ব্লক ও বাতিল করে দেবে।
+    echo   5. প্রিন্ট করার জন্য ওয়েবসাইটের ড্যাশবোর্ড থেকে অনুমোদিত টোকেন বা
+    echo      ম্যানেজারের অনুমোদন নেওয়া বাধ্যতামূলক।
     echo ========================================================================
 ) else (
     echo [ERROR] Failed to register task. Please run this .bat as Administrator.
