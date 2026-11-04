@@ -89,7 +89,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
   });
 
   // ---------------------------------------------------------
-  // CONTINUOUS ATMOSPHERIC CLOUD DRIFT (Clouds gently moving in the sky)
+  // CONTINUOUS ATMOSPHERIC CLOUD DRIFT (Clouds actively floating in the sky)
   // ---------------------------------------------------------
   const cloudDriftAnim = useRef(new Animated.Value(0)).current;
 
@@ -98,13 +98,13 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
       Animated.sequence([
         Animated.timing(cloudDriftAnim, {
           toValue: 1,
-          duration: 16000,
+          duration: 8500,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: false,
         }),
         Animated.timing(cloudDriftAnim, {
           toValue: 0,
-          duration: 16000,
+          duration: 8500,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: false,
         }),
@@ -114,28 +114,39 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
     return () => cloudLoop.stop();
   }, [cloudDriftAnim]);
 
-  // Gentle horizontal drift for background and foreground clouds
+  // Noticeable horizontal drift & vertical bob for clouds
   const bgCloudDrift1 = cloudDriftAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, phone ? -30 : -70],
+    outputRange: [0, phone ? -80 : -170],
+  });
+  const bgCloudBob1 = cloudDriftAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, phone ? -10 : -16],
   });
   const bgCloudDrift2 = cloudDriftAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, phone ? 35 : 80],
+    outputRange: [0, phone ? 90 : 190],
+  });
+  const bgCloudBob2 = cloudDriftAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, phone ? 10 : 18],
   });
   const fgHeroCloudDrift1 = cloudDriftAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, phone ? 25 : 50],
+    outputRange: [0, phone ? 90 : 180],
+  });
+  const fgHeroCloudBob1 = cloudDriftAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, phone ? -12 : -20],
   });
   const fgHeroCloudDrift2 = cloudDriftAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, phone ? -20 : -45],
+    outputRange: [0, phone ? -95 : -190],
   });
-
-  const combinedDistantCloud1X = Animated.add(distantCloud1X, bgCloudDrift1);
-  const combinedDistantCloud2X = Animated.add(distantCloud2X, bgCloudDrift2);
-  const combinedMidCloud1X = Animated.add(midCloud1X, bgCloudDrift2);
-  const combinedMidCloud2X = Animated.add(midCloud2X, bgCloudDrift1);
+  const fgHeroCloudBob2 = cloudDriftAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, phone ? 10 : 16],
+  });
 
   // ---------------------------------------------------------
   // 4. LAYER 3: HERO 3D AIRPLANE (Speed: ~0.81x - Dynamic 3D)
@@ -290,67 +301,103 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
       {/* 2. LAYER 1: DISTANT CIRRUS CLOUDS (~0.32x)                */}
       {/* ========================================================= */}
       {/* Distant Cloud Top-Right */}
-      <Animated.Image
-        source={Cloud1Asset}
-        resizeMode="contain"
-        className="fc-parallax-cloud-1"
+      <Animated.View
+        pointerEvents="none"
         style={[
           styles.distantCloud1,
           {
             width: phone ? 280 : 500,
             height: phone ? 150 : 270,
-            transform: [{ translateY: distantCloud1Y }, { translateX: combinedDistantCloud1X }],
+            transform: [{ translateY: distantCloud1Y }],
           },
         ]}
-      />
+      >
+        <Animated.Image
+          source={Cloud1Asset}
+          resizeMode="contain"
+          className="fc-cloud-drift-1"
+          style={{
+            width: '100%',
+            height: '100%',
+            transform: [{ translateX: bgCloudDrift1 }, { translateY: bgCloudBob1 }],
+          }}
+        />
+      </Animated.View>
 
       {/* Distant Cloud Mid-Left */}
-      <Animated.Image
-        source={Cloud2Asset}
-        resizeMode="contain"
-        className="fc-parallax-cloud-2"
+      <Animated.View
+        pointerEvents="none"
         style={[
           styles.distantCloud2,
           {
             width: phone ? 300 : 560,
             height: phone ? 160 : 300,
-            transform: [{ translateY: distantCloud2Y }, { translateX: combinedDistantCloud2X }],
+            transform: [{ translateY: distantCloud2Y }],
           },
         ]}
-      />
+      >
+        <Animated.Image
+          source={Cloud2Asset}
+          resizeMode="contain"
+          className="fc-cloud-drift-2"
+          style={{
+            width: '100%',
+            height: '100%',
+            transform: [{ translateX: bgCloudDrift2 }, { translateY: bgCloudBob2 }],
+          }}
+        />
+      </Animated.View>
 
       {/* ========================================================= */}
       {/* 3. LAYER 2: MIDGROUND CUMULUS CLOUDS (~0.50x)             */}
       {/* ========================================================= */}
       {/* Mid Cloud Upper Behind Hero / Booking Card */}
-      <Animated.Image
-        source={Cloud2Asset}
-        resizeMode="contain"
-        className="fc-parallax-cloud-1"
+      <Animated.View
+        pointerEvents="none"
         style={[
           styles.midCloud1,
           {
             width: phone ? 320 : 620,
             height: phone ? 170 : 330,
-            transform: [{ translateY: midCloud1Y }, { translateX: combinedMidCloud1X }],
+            transform: [{ translateY: midCloud1Y }],
           },
         ]}
-      />
+      >
+        <Animated.Image
+          source={Cloud2Asset}
+          resizeMode="contain"
+          className="fc-cloud-drift-3"
+          style={{
+            width: '100%',
+            height: '100%',
+            transform: [{ translateX: bgCloudDrift1 }, { translateY: bgCloudBob1 }],
+          }}
+        />
+      </Animated.View>
 
       {/* Mid Cloud Near Services Section */}
-      <Animated.Image
-        source={Cloud1Asset}
-        resizeMode="contain"
-        className="fc-parallax-cloud-2"
+      <Animated.View
+        pointerEvents="none"
         style={[
           styles.midCloud2,
           {
             width: phone ? 340 : 660,
             height: phone ? 180 : 350,
-            transform: [{ translateY: midCloud2Y }, { translateX: combinedMidCloud2X }],
+            transform: [{ translateY: midCloud2Y }],
           },
         ]}
-      />
+      >
+        <Animated.Image
+          source={Cloud1Asset}
+          resizeMode="contain"
+          className="fc-cloud-drift-4"
+          style={{
+            width: '100%',
+            height: '100%',
+            transform: [{ translateX: bgCloudDrift2 }, { translateY: bgCloudBob2 }],
+          }}
+        />
+      </Animated.View>
 
       {/* ========================================================= */}
       {/* 4. LAYER 3: HERO 3D AIRPLANE (Takeoff/Cruising ~0.81x)    */}
@@ -412,34 +459,50 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
       {/* 4.5 LAYER 3.5: FOREGROUND CLOUDS (Plane flies THROUGH these!) */}
       {/* ========================================================= */}
       {/* Upper flight corridor cloud puff (Plane cuts through on Left->Right) */}
-      <Animated.Image
-        source={Cloud1Asset}
-        resizeMode="contain"
-        className="fc-parallax-cloud-1"
+      <Animated.View
+        pointerEvents="none"
         style={[
           styles.fgHeroCloud1,
           {
             width: phone ? 220 : 360,
             height: phone ? 120 : 200,
-            transform: [{ translateX: fgHeroCloudDrift1 }],
           },
         ]}
-      />
+      >
+        <Animated.Image
+          source={Cloud1Asset}
+          resizeMode="contain"
+          className="fc-cloud-drift-fg1"
+          style={{
+            width: '100%',
+            height: '100%',
+            transform: [{ translateX: fgHeroCloudDrift1 }, { translateY: fgHeroCloudBob1 }],
+          }}
+        />
+      </Animated.View>
 
       {/* Lower flight corridor cloud puff (Plane cuts through on Right->Left) */}
-      <Animated.Image
-        source={Cloud2Asset}
-        resizeMode="contain"
-        className="fc-parallax-cloud-2"
+      <Animated.View
+        pointerEvents="none"
         style={[
           styles.fgHeroCloud2,
           {
             width: phone ? 240 : 400,
             height: phone ? 130 : 220,
-            transform: [{ translateX: fgHeroCloudDrift2 }],
           },
         ]}
-      />
+      >
+        <Animated.Image
+          source={Cloud2Asset}
+          resizeMode="contain"
+          className="fc-cloud-drift-fg2"
+          style={{
+            width: '100%',
+            height: '100%',
+            transform: [{ translateX: fgHeroCloudDrift2 }, { translateY: fgHeroCloudBob2 }],
+          }}
+        />
+      </Animated.View>
 
       {/* ========================================================= */}
       {/* 5. LAYER 4: SECOND 3D AIRPLANE (Services Section ~0.75x)  */}
@@ -477,10 +540,8 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
       {/* ========================================================= */}
       {/* 6. LAYER 5: PASSING FOREGROUND CLOUD PUFF (~0.95x)        */}
       {/* ========================================================= */}
-      <Animated.Image
-        source={Cloud1Asset}
-        resizeMode="contain"
-        className="fc-parallax-cloud-1"
+      <Animated.View
+        pointerEvents="none"
         style={[
           styles.foregroundCloudPuff,
           {
@@ -489,7 +550,18 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
             transform: [{ translateY: fgCloudY }, { translateX: fgCloudX }],
           },
         ]}
-      />
+      >
+        <Animated.Image
+          source={Cloud1Asset}
+          resizeMode="contain"
+          className="fc-cloud-drift-1"
+          style={{
+            width: '100%',
+            height: '100%',
+            transform: [{ translateX: bgCloudDrift1 }, { translateY: bgCloudBob1 }],
+          }}
+        />
+      </Animated.View>
     </View>
   );
 }

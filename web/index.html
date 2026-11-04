@@ -566,20 +566,70 @@
           transform: translateY(-8px) rotate(0.8deg);
         }
       }
-      @keyframes fcCloudDriftSlow {
-        0%, 100% {
-          transform: translateX(0px);
+      @keyframes fcCloudDrift1 {
+        0% {
+          transform: translate3d(0px, 0px, 0);
         }
         50% {
-          transform: translateX(18px);
+          transform: translate3d(-170px, -16px, 0);
+        }
+        100% {
+          transform: translate3d(0px, 0px, 0);
         }
       }
-      @keyframes fcCloudDriftReverse {
-        0%, 100% {
-          transform: translateX(0px);
+      @keyframes fcCloudDrift2 {
+        0% {
+          transform: translate3d(0px, 0px, 0);
         }
         50% {
-          transform: translateX(-20px);
+          transform: translate3d(190px, 18px, 0);
+        }
+        100% {
+          transform: translate3d(0px, 0px, 0);
+        }
+      }
+      @keyframes fcCloudDrift3 {
+        0% {
+          transform: translate3d(0px, 0px, 0);
+        }
+        50% {
+          transform: translate3d(-200px, 15px, 0);
+        }
+        100% {
+          transform: translate3d(0px, 0px, 0);
+        }
+      }
+      @keyframes fcCloudDrift4 {
+        0% {
+          transform: translate3d(0px, 0px, 0);
+        }
+        50% {
+          transform: translate3d(210px, -18px, 0);
+        }
+        100% {
+          transform: translate3d(0px, 0px, 0);
+        }
+      }
+      @keyframes fcCloudDriftFG1 {
+        0% {
+          transform: translate3d(0px, 0px, 0);
+        }
+        50% {
+          transform: translate3d(180px, -20px, 0);
+        }
+        100% {
+          transform: translate3d(0px, 0px, 0);
+        }
+      }
+      @keyframes fcCloudDriftFG2 {
+        0% {
+          transform: translate3d(0px, 0px, 0);
+        }
+        50% {
+          transform: translate3d(-190px, 16px, 0);
+        }
+        100% {
+          transform: translate3d(0px, 0px, 0);
         }
       }
       @keyframes fcContrailPulse {
@@ -595,11 +645,29 @@
       .fc-parallax-plane {
         animation: fcPlaneFloat 4.2s ease-in-out infinite !important;
       }
-      .fc-parallax-cloud-1 {
-        animation: fcCloudDriftSlow 12s ease-in-out infinite !important;
+      .fc-cloud-drift-1, .fc-parallax-cloud-1 {
+        animation: fcCloudDrift1 8.5s ease-in-out infinite !important;
+        will-change: transform;
       }
-      .fc-parallax-cloud-2 {
-        animation: fcCloudDriftReverse 14s ease-in-out infinite !important;
+      .fc-cloud-drift-2, .fc-parallax-cloud-2 {
+        animation: fcCloudDrift2 10s ease-in-out infinite !important;
+        will-change: transform;
+      }
+      .fc-cloud-drift-3 {
+        animation: fcCloudDrift3 9s ease-in-out infinite !important;
+        will-change: transform;
+      }
+      .fc-cloud-drift-4 {
+        animation: fcCloudDrift4 11s ease-in-out infinite !important;
+        will-change: transform;
+      }
+      .fc-cloud-drift-fg1 {
+        animation: fcCloudDriftFG1 7.5s ease-in-out infinite !important;
+        will-change: transform;
+      }
+      .fc-cloud-drift-fg2 {
+        animation: fcCloudDriftFG2 8.5s ease-in-out infinite !important;
+        will-change: transform;
       }
       .fc-parallax-contrail {
         animation: fcContrailPulse 2.8s ease-in-out infinite !important;
