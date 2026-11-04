@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Image,
   Animated,
+  Easing,
   StyleSheet,
   useWindowDimensions,
   Platform,
@@ -89,7 +90,45 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
 
   // ---------------------------------------------------------
   // 4. LAYER 3: HERO 3D AIRPLANE (Speed: ~0.81x - Dynamic 3D)
+  // Continuous idle cruise back & forth (Left to Right, Right to Left)
   // ---------------------------------------------------------
+  const idleFlightAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const flightLoop = Animated.loop(
+      Animated.sequence([
+        // 1. Smooth cruise forward across hero sky towards booking card (Left to Right)
+        Animated.timing(idleFlightAnim, {
+          toValue: 1,
+          duration: 5500,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: false,
+        }),
+        // 2. Smooth glide back across hero sky to home position (Right to Left)
+        Animated.timing(idleFlightAnim, {
+          toValue: 0,
+          duration: 5500,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    flightLoop.start();
+    return () => flightLoop.stop();
+  }, [idleFlightAnim]);
+
+  // Horizontal flight distance: Left to Right across hero header
+  const idleFlightX = idleFlightAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, phone ? 55 : 160],
+  });
+
+  // Vertical atmospheric buoyancy: gentle aerodynamic lift while cruising
+  const idleFlightY = idleFlightAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, phone ? -8 : -15, phone ? -3 : -7],
+  });
+
   const heroPlaneY = safeScrollY.interpolate({
     inputRange: [-400, 0, 2000],
     outputRange: [324, 0, -1620],
@@ -98,6 +137,11 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
     inputRange: [0, 2000],
     outputRange: [0, phone ? 0 : 240],
   });
+
+  // Combined horizontal and vertical trajectories (Scroll Parallax + Continuous Idle Cruise)
+  const combinedHeroPlaneX = Animated.add(heroPlaneX, idleFlightX);
+  const combinedHeroPlaneY = Animated.add(heroPlaneY, idleFlightY);
+
   const heroPlaneRotate = safeScrollY.interpolate({
     inputRange: [0, 500, 1200, 2000],
     outputRange: ['-14deg', '-8deg', '-3deg', '-1deg'],
@@ -230,14 +274,15 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
       {/* 4. LAYER 3: HERO 3D AIRPLANE (Takeoff/Cruising ~0.81x)    */}
       {/* ========================================================= */}
       <Animated.View
+        className="fc-hero-plane-wrapper"
         style={[
           styles.heroPlaneWrapper,
           {
             top: phone ? 75 : 85,
             left: phone ? -10 : 50,
             transform: [
-              { translateY: heroPlaneY },
-              { translateX: heroPlaneX },
+              { translateY: combinedHeroPlaneY },
+              { translateX: combinedHeroPlaneX },
               { rotate: heroPlaneRotate },
               { scale: heroPlaneScale },
             ],
