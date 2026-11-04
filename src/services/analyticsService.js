@@ -1,7 +1,7 @@
 /**
  * Flight Care - Privacy-Compliant Google Analytics 4 (GA4) Tracking Service
  * Follows SEO Audit Guidelines:
- * - Tracks Form Start, Booking Submit/Success, Call Click, WhatsApp Click
+ * - Tracks Form Start, Booking Submit, Booking Confirmed, Call Click, WhatsApp Click
  * - ZERO Sensitive PII: Strictly NO Passport, NO National ID, NO Plain Contact details sent to GA4.
  */
 
@@ -47,17 +47,31 @@ export const trackFormStart = (serviceType = 'meet_and_greet') => {
   });
 };
 
+export const trackBookingSubmit = (serviceType = 'meet_and_greet', step = 'payment') => {
+  trackEvent('booking_submit', {
+    service_type: serviceType,
+    booking_step: step
+  });
+};
+
 export const trackBookingSuccess = (bookingData = {}) => {
-  trackEvent('booking_submit_success', {
+  const safeData = {
     transaction_id: bookingData.id || bookingData.bookingCode || 'BOOKING',
     value: Number(bookingData.amount || bookingData.totalAmount || 0),
     currency: 'BDT',
     package_name: bookingData.packageChoice || bookingData.pkg?.id || 'standard',
     passenger_count: Number(bookingData.passengers || bookingData.passengerCount || 1)
-  });
+  };
+  // Trigger both GA4 canonical conversion events
+  trackEvent('booking_confirmed', safeData);
+  trackEvent('booking_submit_success', safeData);
 };
 
 export const trackCallClick = (phoneNumber = '+8801347570000') => {
+  trackEvent('phone_call_click', {
+    phone_number: phoneNumber,
+    source: 'web_cta'
+  });
   trackEvent('call_hotline_click', {
     phone_number: phoneNumber,
     source: 'web_cta'
@@ -70,4 +84,3 @@ export const trackWhatsAppClick = (targetNumber = '8801347570001', label = 'Fron
     contact_label: label
   });
 };
-

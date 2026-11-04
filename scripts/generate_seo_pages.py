@@ -7,6 +7,168 @@ DIST_DIR = os.path.join(BASE_DIR, 'dist')
 
 SERVICES = [
     {
+        'slug': 'arrival-assistance',
+        'title': 'Dhaka Airport Arrival Meet and Greet Service | Flight Care',
+        'meta_desc': 'Professional Dhaka Airport arrival assistance at HSIA. Aerobridge welcome, baggage collection, immigration guidance, and parking escort. Book 24/7.',
+        'h1': 'Dhaka Airport Arrival Meet and Greet Service',
+        'subtitle': 'হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দরে আগমনী যাত্রীদের পেশাদার মিট অ্যান্ড গ্রিট সহায়তা',
+        'service_type': 'Airport Arrival Assistance',
+        'price': '৳১,০০০ / যাত্রী (Standard ৳৫০০, VIP ৳১,৫০০)',
+        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Arrival Assistance', 'https://flightcaresbd.com/arrival-assistance/')],
+        'content': '''
+        <p>Arriving at Dhaka’s Hazrat Shahjalal International Airport (HSIA) after a long international flight can be stressful, with long immigration lines, crowded baggage carousels, and bustling terminals. Flight Care’s <strong>Dhaka Airport Arrival Meet and Greet Service</strong> is designed to provide arriving travelers, non-resident Bangladeshis (NRBs), and foreign visitors with a seamless, welcoming, and dignified arrival experience.</p>
+
+        <h3>How Arrival Meet and Greet Works</h3>
+        <p>From the moment your aircraft lands on the tarmac, our operations desk monitors your flight status in real time. Our assigned protocol officer is stationed at the terminal well before your aircraft arrives at the gate, ensuring zero wait time.</p>
+
+        <h3>Where Our Team Meets Passengers</h3>
+        <p>Our dedicated protocol officer welcomes you right at the <strong>aerobridge exit</strong> or arrival terminal gate holding a customized placard with your name or corporate logo. If arriving via remote bay, our team greets you at the entry concourse.</p>
+
+        <h3>Immigration and Customs Guidance</h3>
+        <p>Your officer guides you through designated fast-track immigration counters, assists with landing cards and visa formalities (including Visa on Arrival for eligible international visitors), and expedites administrative processing.</p>
+
+        <h3>Baggage Collection Assistance</h3>
+        <p>Our porter collects airport trolleys, monitors the baggage carousel, identifies your checked suitcases, and carefully loads them onto the trolley, sparing you physical strain.</p>
+
+        <h3>Who Needs Arrival Assistance?</h3>
+        <ul>
+            <li><strong>Non-Resident Bangladeshis (NRBs):</strong> Returning home to visit family with heavy multi-piece luggage.</li>
+            <li><strong>Elderly Parents & Relatives:</strong> Seniors travelling unaccompanied who need gentle navigation and wheelchair support.</li>
+            <li><strong>Foreign Buyers & Business Investors:</strong> Visiting Bangladesh for garment buying, corporate meetings, or diplomatic conferences.</li>
+            <li><strong>First-Time International Travelers:</strong> Travelers unfamiliar with HSIA terminal layouts.</li>
+        </ul>
+
+        <h3>Arrival Service Packages</h3>
+        <p>We offer transparent, fixed pricing with our <strong>Payment After Service</strong> guarantee:</p>
+        <ul>
+            <li><strong>Standard Arrival (৳৫০০):</strong> Basic luggage porter and terminal navigation.</li>
+            <li><strong>Premium Arrival (৳১,০০০ ⭐):</strong> Aerobridge placard welcome, fast-track immigration, baggage claim & vehicle escort.</li>
+            <li><strong>VIP Executive Arrival (৳১,৫০০):</strong> Comprehensive priority protocol, wheelchair option & vehicle linkup.</li>
+        </ul>
+        ''',
+        'faqs': [
+            ("Where will the officer meet me?", "Right at the aerobridge door as you exit the plane or at the arrival terminal entrance with a personalized name placard."),
+            ("Can you help if my flight is delayed?", "Yes, we track flights live on radar. Delays are monitored 24/7 without extra charge."),
+            ("How do I pay?", "With Flight Care, you can pay via Cash, bKash, Nagad, or Bank Card after your service is fully delivered.")
+        ]
+    },
+    {
+        'slug': 'departure-assistance',
+        'title': 'Dhaka Airport Departure Assistance | Fast-Track Flight Care',
+        'meta_desc': 'Stress-free departures from Dhaka Airport (HSIA). Curbside meet & greet, airline check-in support, luggage porter, and security escort. 24/7 support.',
+        'h1': 'Dhaka Airport Departure Assistance – Fast-Track Service',
+        'subtitle': 'ঢাকা বিমানবন্দর থেকে বিদেশগামী যাত্রীদের চেক-ইন, ইমিগ্রেশন ও নিরাপত্তা ছাড়পত্র সহায়তা',
+        'service_type': 'Airport Departure Assistance',
+        'price': '৳১,০০০ / যাত্রী',
+        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Departure Assistance', 'https://flightcaresbd.com/departure-assistance/')],
+        'content': '''
+        <p>Flying out from Hazrat Shahjalal International Airport? Flight Care provides courteous, fast-track <strong>Dhaka Airport Departure Assistance</strong> to ensure you clear airline counters, security, and immigration with complete peace of mind.</p>
+        <h3>Departure Services Included:</h3>
+        <ul>
+            <li><strong>Curbside Reception:</strong> Our officer meets you at Terminal 1 or 2 vehicle drop-off concourse with a dedicated luggage trolley.</li>
+            <li><strong>Check-in & Luggage Drop:</strong> Priority guidance through airline check-in counters and boarding pass collection.</li>
+            <li><strong>Luggage Wrapping:</strong> Guidance to official wrapping desks for bag protection.</li>
+            <li><strong>Outgoing Immigration:</strong> Smooth transit through immigration inspection and security screening.</li>
+            <li><strong>Lounge or Gate Escort:</strong> Escorting you comfortably to executive airline lounges or your flight boarding gate.</li>
+        </ul>
+        ''',
+        'faqs': [
+            ("When should I arrive at the airport for departure?", "We recommend arriving 3 hours before international departure."),
+            ("Where does the officer wait?", "Outside departure entrance canopies at Terminal 1 or Terminal 2.")
+        ]
+    },
+    {
+        'slug': 'vip-airport-assistance',
+        'title': 'VIP Airport Assistance Dhaka | Executive Airport Protocol HSIA',
+        'meta_desc': 'Exclusive VIP airport assistance at Dhaka Airport (HSIA). Fast-track immigration, private protocol escort, priority baggage, and vehicle coordination.',
+        'h1': 'VIP Airport Assistance Dhaka – Executive Protocol',
+        'subtitle': 'ভিআইপি, ব্যবসায়ী, সরকারি প্রতিনিধি ও বিদেশি ডেলিগেটদের জন্য প্রিমিয়াম প্রোটোকল সেবা',
+        'service_type': 'VIP Airport Protocol',
+        'price': '৳১,৫০০ / যাত্রী (VIP First Class)',
+        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('VIP Protocol', 'https://flightcaresbd.com/vip-airport-assistance/')],
+        'content': '''
+        <p>Flight Care's <strong>VIP Airport Assistance Dhaka</strong> is curated for business leaders, multinational garment buyers, foreign delegations, and dignitaries who require promptness, discretion, and premium comfort.</p>
+        <h3>VIP Privileges:</h3>
+        <ul>
+            <li>Exclusive dedicated protocol officer assigned to your booking.</li>
+            <li>Priority fast-track processing through terminal formalities.</li>
+            <li>Full baggage collection and trolley management.</li>
+            <li>Direct coordination with waiting chauffeurs or embassy vehicles.</li>
+        </ul>
+        ''',
+        'faqs': [
+            ("Do you handle corporate billing?", "Yes, we support corporate invoices and accounts for registered businesses.")
+        ]
+    },
+    {
+        'slug': 'wheelchair-assistance',
+        'title': 'Wheelchair Assistance Dhaka Airport | Elderly & Patient Concierge',
+        'meta_desc': 'Compassionate wheelchair assistance at Hazrat Shahjalal International Airport (HSIA). Dedicated escorts for senior citizens, patients, and mobility support.',
+        'h1': 'Wheelchair Assistance at Dhaka Airport – HSIA Senior Care',
+        'subtitle': 'বয়োজ্যেষ্ঠ পিতা-মাতা, অসুস্থ যাত্রী ও বিশেষ চাহিদাসম্পন্ন ভ্রমণকারীদের হুইলচেয়ার সেবা',
+        'service_type': 'Wheelchair Assistance',
+        'price': '৳১,৫০০ / যাত্রী (Full Escort Included)',
+        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Wheelchair Care', 'https://flightcaresbd.com/wheelchair-assistance/')],
+        'content': '''
+        <p>Ensure total comfort for your elderly parents or ailing family members with Flight Care’s <strong>Wheelchair Assistance at Dhaka Airport</strong>. Our trained officers provide gentle, respectful, and continuous mobility support.</p>
+        <h3>Wheelchair Service Features:</h3>
+        <ul>
+            <li>Clean, comfortable wheelchair waiting directly at the aircraft door or terminal entry.</li>
+            <li>Continuous escort through passport control, elevator transits, and baggage claims.</li>
+            <li>Safe vehicle seating and wheelchair transfer.</li>
+            <li>Real-time WhatsApp photo confirmation to family members.</li>
+        </ul>
+        ''',
+        'faqs': [
+            ("Can a family member stay with the wheelchair user?", "Yes, traveling companions can accompany the passenger.")
+        ]
+    },
+    {
+        'slug': 'airport-baggage-assistance',
+        'title': 'Airport Baggage Assistance Dhaka | HSIA Luggage Porter Service',
+        'meta_desc': 'Airport luggage assistance and porter service at Dhaka Airport. Luggage carousel claim, trolley handling, and vehicle loading. Transparent BDT pricing.',
+        'h1': 'Airport Baggage Assistance Dhaka – Luggage Porter Support',
+        'subtitle': 'ঢাকা বিমানবন্দরে ভারী লাগেজ বহন, ট্রলি পরিচালনা ও নিরাপদ পরিবহন সহায়তা',
+        'service_type': 'Luggage Porter Assistance',
+        'price': '৳৫০০ / ট্রলি',
+        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Baggage Assistance', 'https://flightcaresbd.com/airport-baggage-assistance/')],
+        'content': '''
+        <p>Avoid lifting heavy suitcases after a tiring flight. Flight Care’s <strong>Airport Baggage Assistance in Dhaka</strong> takes the weight off your shoulders.</p>
+        <h3>Porter Services:</h3>
+        <ul>
+            <li>Airport trolley collection and loading of up to 4 heavy suitcases.</li>
+            <li>Carousel identification and baggage tag verification.</li>
+            <li>Escort through customs and safe vehicle trunk loading.</li>
+        </ul>
+        ''',
+        'faqs': [
+            ("What if luggage is lost?", "We help you file a Property Irregularity Report (PIR) with the airline desk immediately.")
+        ]
+    },
+    {
+        'slug': 'airport-protocol-service',
+        'title': 'Airport Protocol Service Dhaka | Professional Concierge Flight Care',
+        'meta_desc': 'Official commercial airport protocol service at Hazrat Shahjalal International Airport (HSIA), Dhaka. Fast-track passenger care, arrival & departure escort.',
+        'h1': 'Airport Protocol Service Dhaka – HSIA Commercial Concierge',
+        'subtitle': 'হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দরে পেশাদার বাণিজ্যিক প্রোটোকল ও কনসিয়ার্জ সেবা',
+        'service_type': 'Airport Protocol Service',
+        'price': '৳১,০০০ - ৳১,৫০০ / যাত্রী',
+        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Airport Protocol', 'https://flightcaresbd.com/airport-protocol-service/')],
+        'content': '''
+        <p>Flight Care is Bangladesh’s premier registered commercial protocol facilitator at Hazrat Shahjalal International Airport (HSIA), Dhaka (Trade License: TRAD/DNCC/004721/2024).</p>
+        <h3>Comprehensive Protocol Features:</h3>
+        <ul>
+            <li>Full arrival and departure VIP protocol coverage at Terminal 1 and Terminal 2.</li>
+            <li>24/7 dedicated dispatch office and round-the-clock hotlines.</li>
+            <li>Pay after service guarantee with no advance risk.</li>
+        </ul>
+        ''',
+        'faqs': [
+            ("Are you operational 24/7?", "Yes, our airport teams work 24/7/365.")
+        ]
+    },
+
+    {
         'slug': 'meet-and-greet-dhaka-airport',
         'title': 'Dhaka Airport Meet and Greet Service | Flight Care HSIA',
         'meta_desc': 'Book premier 24/7 Dhaka Airport Meet and Greet Service at Hazrat Shahjalal International Airport (HSIA). Fast-track arrival, departure, luggage porter & VIP escort.',

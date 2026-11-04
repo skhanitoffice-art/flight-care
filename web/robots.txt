@@ -11,6 +11,12 @@ Allow: /?lang=bn
 Allow: /?lang=en
 Allow: /meet-and-greet-dhaka-airport/
 Allow: /arrival-assistance-dhaka-airport/
+Allow: /arrival-assistance/
+Allow: /departure-assistance/
+Allow: /vip-airport-assistance/
+Allow: /wheelchair-assistance/
+Allow: /airport-baggage-assistance/
+Allow: /airport-protocol-service/
 Allow: /departure-assistance-dhaka-airport/
 Allow: /baggage-assistance-dhaka-airport/
 Allow: /vip-airport-protocol-dhaka/
@@ -37,6 +43,12 @@ User-agent: Googlebot
 Allow: /
 Allow: /meet-and-greet-dhaka-airport/
 Allow: /arrival-assistance-dhaka-airport/
+Allow: /arrival-assistance/
+Allow: /departure-assistance/
+Allow: /vip-airport-assistance/
+Allow: /wheelchair-assistance/
+Allow: /airport-baggage-assistance/
+Allow: /airport-protocol-service/
 Allow: /departure-assistance-dhaka-airport/
 Allow: /baggage-assistance-dhaka-airport/
 Allow: /vip-airport-protocol-dhaka/

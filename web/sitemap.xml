@@ -51,6 +51,54 @@
   </url>
 
   <url>
+    <loc>https://flightcaresbd.com/arrival-assistance/</loc>
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/arrival-assistance/" />
+  </url>
+
+  <url>
+    <loc>https://flightcaresbd.com/departure-assistance/</loc>
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.92</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/departure-assistance/" />
+  </url>
+
+  <url>
+    <loc>https://flightcaresbd.com/vip-airport-assistance/</loc>
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/vip-airport-assistance/" />
+  </url>
+
+  <url>
+    <loc>https://flightcaresbd.com/wheelchair-assistance/</loc>
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/wheelchair-assistance/" />
+  </url>
+
+  <url>
+    <loc>https://flightcaresbd.com/airport-baggage-assistance/</loc>
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.88</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/airport-baggage-assistance/" />
+  </url>
+
+  <url>
+    <loc>https://flightcaresbd.com/airport-protocol-service/</loc>
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.88</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/airport-protocol-service/" />
+  </url>
+
+  <url>
     <loc>https://flightcaresbd.com/arrival-assistance-dhaka-airport/</loc>
     <lastmod>2026-11-04</lastmod>
     <changefreq>weekly</changefreq>
