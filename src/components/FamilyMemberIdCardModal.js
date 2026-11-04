@@ -771,7 +771,7 @@ export default function FamilyMemberIdCardModal({
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
                     <Text style={{ fontSize: 12, fontWeight: '800', color: '#FCD34D' }}>
-                      Approved by Hazrat Shahjalal International Airport (HSIA)
+                      Govt. Registered Commercial Protocol Facilitator at HSIA, Dhaka
                     </Text>
                     <Image
                       source={require('../../assets/verified_badge.png')}

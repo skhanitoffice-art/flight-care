@@ -545,7 +545,7 @@ export default function DesktopHomeScreen({
                   style={{ width: 32, height: 32, resizeMode: 'contain' }}
                 />
                 <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#0F2A4A' }}>
-                  Flight Care <Text style={{ color: '#0284C7', fontWeight: '700' }}>• Approved by Hazrat Shahjalal International Airport (HSIA)</Text>
+                  Flight Care <Text style={{ color: '#0284C7', fontWeight: '700' }}>• Registered Commercial Protocol Facilitator at HSIA, Dhaka</Text>
                 </Text>
               </View>
 

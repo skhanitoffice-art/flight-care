@@ -28,3 +28,4 @@ echo.
 echo [OK] EPSON L3250 Hardware Guard has been successfully uninstalled.
 echo.
 pause
+

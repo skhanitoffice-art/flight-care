@@ -28,3 +28,4 @@ ElseIf Not IsEmpty(pyScript) Then
     cmd = "python """ & pyScript & """"
     WshShell.Run cmd, 0, False
 End If
+

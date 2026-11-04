@@ -507,7 +507,7 @@ export default function ProtocolRanksScreen({
                 <Text style={{ fontSize: 11, fontWeight: '800', color: '#FCD34D' }}>
                   {isBn
                     ? 'হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দর অনুমোদিত'
-                    : 'Approved by Hazrat Shahjalal International Airport (HSIA)'}
+                    : 'Registered Commercial Protocol Facilitator at HSIA, Dhaka'}
                 </Text>
                 <Image
                   source={require('../../../assets/verified_badge.png')}

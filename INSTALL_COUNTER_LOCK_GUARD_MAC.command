@@ -94,3 +94,4 @@ echo ""
 echo "এই উইন্ডোটি এখন বন্ধ করতে পারেন।"
 echo "Press any key to close..."
 read -n 1
+

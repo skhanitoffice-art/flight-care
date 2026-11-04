@@ -1087,7 +1087,7 @@ export default function OfficerProfileModal({
                         <Text style={{ fontSize: 12, color: '#047857', marginTop: 2 }}>
                           {lang
                             ? 'এই অফিসার ফ্লাইট কেয়ার এবং বিমানবন্দর নিরাপত্তা কর্তৃপক্ষ কর্তৃক বৈধ পাসধারী ও দায়িত্বপ্রাপ্ত।'
-                            : 'This protocol escort is officially badged and approved by Civil Aviation & Flight Care management.'}
+                            : 'This protocol escort is officially badged and professionally badged and verified by Flight Care management for HSIA protocol assistance.'}
                         </Text>
                       </View>
                     </View>

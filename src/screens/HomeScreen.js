@@ -504,7 +504,7 @@ export default function HomeScreen({
                 />
               </View>
               <Text style={{ fontSize: 10.5, fontWeight: '700', color: '#0284C7', marginTop: 3.5, lineHeight: 15 }}>
-                Approved by Hazrat Shahjalal International Airport (HSIA)
+                Registered Commercial Protocol Facilitator at HSIA, Dhaka
               </Text>
             </View>
           </View>
