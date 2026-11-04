@@ -8,6 +8,30 @@ DIST_DIR = os.path.join(BASE_DIR, 'dist')
 
 SERVICES = [
     {
+        'slug': 'airport-meet-and-greet-bangladesh',
+        'title': 'Bangladesh Meet & Greet Service | Flight Care HSIA',
+        'meta_desc': 'Premier 24/7 Airport Meet and Greet Service in Bangladesh at Hazrat Shahjalal International Airport (HSIA), Dhaka. Fast-track VIP protocol, arrival & departure assistance.',
+        'h1': 'Bangladesh Meet & Greet Service – Flight Care HSIA',
+        'subtitle': 'বাংলাদেশে হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দরে প্রিমিয়াম মিট অ্যান্ড গ্রিট ও ভিআইপি প্রোটোকল সার্ভিস',
+        'service_type': 'Airport Meet and Greet Bangladesh',
+        'price': '৳১,০০০ / যাত্রী (Standard ৳৫০০, VIP ৳১,৫০০)',
+        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Bangladesh Meet & Greet Service', 'https://flightcaresbd.com/airport-meet-and-greet-bangladesh/')],
+        'content': '''
+        <p>Looking for the most reliable <strong>Bangladesh Meet & Greet Service</strong>? Flight Care provides comprehensive VIP protocol, arrival reception, departure assistance, luggage porterage, and wheelchair concierge at Hazrat Shahjalal International Airport (HSIA), Dhaka.</p>
+        <h3>Why Flight Care is Bangladesh\'s Top Meet & Greet Facilitator:</h3>
+        <ul>
+            <li><strong>Govt. Registered Commercial Entity:</strong> Fully compliant with Trade License TRAD/DNCC/004721/2024.</li>
+            <li><strong>100% Payment After Service Guarantee:</strong> Zero advance payment needed when booking online.</li>
+            <li><strong>24/7 Operations:</strong> Real-time flight radar tracking ensuring zero waiting time even during flight delays.</li>
+            <li><strong>Aerobridge & Curbside Reception:</strong> Dedicated officers with personalized placards receiving you directly at the gate.</li>
+        </ul>
+        ''',
+        'faqs': [
+            ("What airports in Bangladesh do you cover?", "We currently operate full 24/7 VIP meet and greet services at Hazrat Shahjalal International Airport (HSIA), Dhaka, Terminal 1 and Terminal 2."),
+            ("How do I book Bangladesh Meet and Greet service?", "You can book directly on flightcaresbd.com in under 2 minutes, or call 24/7 at +880 1347-570000 / WhatsApp +880 1347-570001.")
+        ]
+    },
+    {
         'slug': 'arrival-assistance',
         'title': 'Dhaka Airport Arrival Meet and Greet Service | Flight Care',
         'meta_desc': 'Meet & Greet service for arriving passengers at Hazrat Shahjalal International Airport (HSIA). Fast-track immigration, luggage collection, and parking escort.',
