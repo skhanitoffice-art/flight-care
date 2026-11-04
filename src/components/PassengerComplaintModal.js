@@ -258,8 +258,8 @@ export default function PassengerComplaintModal({
               </View>
               <Text style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>
                 {isBn
-                  ? 'সিভিল এভিয়েশন ও এয়ারপোর্ট ভিআইপি প্রোটোকল সার্ভিস সংক্রান্ত অভিযোগ কেন্দ্র'
-                  : 'Civil Aviation & Airport VIP Protocol Grievance Cell'}
+                  ? 'বিমানবন্দর বাণিজ্যিক ভিআইপি প্রোটোকল সার্ভিস সংক্রান্ত অভিযোগ কেন্দ্র'
+                  : 'Flight Care Airport VIP Protocol Grievance Cell'}
               </Text>
             </View>
 

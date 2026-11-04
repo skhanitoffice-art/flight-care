@@ -70,3 +70,4 @@ export const trackWhatsAppClick = (targetNumber = '8801347570001', label = 'Fron
     contact_label: label
   });
 };
+

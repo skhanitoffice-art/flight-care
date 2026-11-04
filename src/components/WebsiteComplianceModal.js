@@ -235,8 +235,8 @@ export default function WebsiteComplianceModal({
                     </Text>
                     <Text style={{ fontSize: 12.5, color: '#475569', lineHeight: 18 }}>
                       {isBn
-                        ? '“ফ্লাইট কেয়ার” বা “Flight Care Technologies Ltd.” বলতে হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দর (ঢাকা)-এ বেসামরিক বিমান চলাচল কর্তৃপক্ষ (CAAB) নিবন্ধিত প্রোটোকল ও প্যাসেঞ্জার অ্যাসিস্ট্যান্স সেবা প্রদানকারী সংস্থাকে বোঝায়।'
-                        : '"Flight Care" refers to Flight Care Technologies Ltd., an authorized airport protocol and VIP concierge service provider operating under CAAB guidelines at Hazrat Shahjalal International Airport (HSIA), Dhaka.'}
+                        ? '“ফ্লাইট কেয়ার” বা “Flight Care Technologies Ltd.” বলতে হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দর (ঢাকা)-এ সরকারি ট্রেড লাইসেন্সপ্রাপ্ত বাণিজ্যিক প্রোটোকল ও প্যাসেঞ্জার অ্যাসিস্ট্যান্স সেবা প্রদানকারী সংস্থাকে বোঝায় (ট্রেড লাইসেন্স: TRAD/DNCC/004721/2024)।'
+                        : '"Flight Care" refers to Flight Care Technologies Ltd., a Govt. registered commercial airport protocol and concierge facilitator at Hazrat Shahjalal International Airport (HSIA), Dhaka (Trade License: TRAD/DNCC/004721/2024).'}
                     </Text>
                   </View>
 
@@ -432,7 +432,7 @@ export default function WebsiteComplianceModal({
                     Flight Care Technologies Ltd.
                   </Text>
                   <Text style={{ fontSize: 12, color: '#0284C7', fontWeight: '800' }}>
-                    {isBn ? 'বেসামরিক বিমান চলাচল কর্তৃপক্ষ (CAAB) নিবন্ধিত গ্রাউন্ড প্রোটোকল পার্টনার' : 'CAAB Certified Airport Protocol & Ground Concierge Partner'}
+                    {isBn ? 'সরকারি রেজিস্টার্ড বাণিজ্যিক গ্রাউন্ড প্রোটোকল ও মিট অ্যান্ড গ্রিট ফ্যাসিলিটেটর' : 'Govt. Registered Commercial Ground Protocol & Concierge Facilitator'}
                   </Text>
                   <Text style={{ fontSize: 11.5, color: '#64748B', marginTop: 4 }}>
                     {isBn
@@ -457,7 +457,7 @@ export default function WebsiteComplianceModal({
                       • {isBn ? 'ভ্যাট/বিআইএন (BIN/VAT Reg):' : 'Business Identification Number (BIN):'} <Text style={{ fontWeight: '900' }}>005829146-0101</Text>
                     </Text>
                     <Text style={{ fontSize: 12, color: '#0C4A6E', fontWeight: '700' }}>
-                      • {isBn ? 'কর্তৃপক্ষ অনুমোদন:' : 'Airport Authority Authority:'} <Text style={{ fontWeight: '900' }}>Civil Aviation Authority of Bangladesh (CAAB)</Text>
+                      • {isBn ? 'সরকারি নিবন্ধন ও অনুমোদন:' : 'Govt. Registration & Authority:'} <Text style={{ fontWeight: '900' }}>Dhaka North City Corporation (DNCC Zone-03)</Text>
                     </Text>
                   </View>
                 </View>

@@ -637,7 +637,7 @@ export default function FamilyMemberIdCardModal({
                   ellipsizeMode="tail"
                   style={{ fontSize: 9.5, color: '#93C5FD', fontWeight: '700', marginTop: 1 }}
                 >
-                  CIVIL AVIATION AUTHORITY OF BANGLADESH (CAAB)
+                  COMMERCIAL PROTOCOL FACILITATOR · HSIA DHAKA
                 </Text>
               </View>
             </View>

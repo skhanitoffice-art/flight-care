@@ -187,7 +187,7 @@ export default function OfficerProfileModal({
                   {lang ? 'ফ্লাইট কেয়ার ভেরিফাইড প্রোটোকল অফিসার' : 'Verified Protocol Officer Profile'}
                 </Text>
                 <Text style={{ fontSize: 11, color: '#94A3B8' }}>
-                  {lang ? 'সিভিল এভিয়েশন সিকিউরিটি ও সার্ভিস রেজিস্ট্রি' : 'Civil Aviation Security & Service Registry'}
+                  {lang ? 'ফ্লাইট কেয়ার অফিশিয়াল সার্ভিস রেজিস্ট্রি' : 'Flight Care Official Service Registry'}
                 </Text>
               </View>
             </View>
@@ -1082,7 +1082,7 @@ export default function OfficerProfileModal({
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 14, fontWeight: '800', color: '#065F46' }}>
-                          {lang ? 'সিভিল এভিয়েশন অথরাইজেশন ও ভেরিফিকেশন সিল' : 'Civil Aviation Authority Official Verification Seal'}
+                          {lang ? 'ফ্লাইট কেয়ার অফিশিয়াল ভেরিফিকেশন সিল' : 'Flight Care Official Verification Seal'}
                         </Text>
                         <Text style={{ fontSize: 12, color: '#047857', marginTop: 2 }}>
                           {lang

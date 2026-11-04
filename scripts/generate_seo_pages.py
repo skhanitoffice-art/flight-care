@@ -515,6 +515,17 @@ def main():
     generated_count = 0
     for svc in SERVICES:
         slug = svc['slug']
+        if slug == 'meet-and-greet-dhaka-airport':
+            # Master landing page is handcrafted with conversion architecture in web/meet-and-greet-dhaka-airport/index.html
+            master_src = os.path.join(WEB_DIR, slug, 'index.html')
+            dist_dest_dir = os.path.join(DIST_DIR, slug)
+            os.makedirs(dist_dest_dir, exist_ok=True)
+            if os.path.exists(master_src):
+                shutil.copyfile(master_src, os.path.join(dist_dest_dir, 'index.html'))
+                generated_count += 1
+                print(f"Preserved & Deployed Master Landing Page: /{slug}/")
+                continue
+
         html = generate_page_html(svc, is_guide=False)
         for target_dir in [WEB_DIR, DIST_DIR]:
             dest_dir = os.path.join(target_dir, slug)

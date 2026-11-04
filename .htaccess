@@ -99,6 +99,7 @@ Options -Indexes +FollowSymLinks
   RewriteRule ^robots\.txt$ - [L]
   RewriteRule ^sitemap\.xml$ - [L]
   RewriteRule ^sitemap_.*\.xml$ - [L]
+  RewriteRule ^google[a-zA-Z0-9_-]+\.html$ - [L]
 
   # Single Page Application (SPA) Fallback Rewrite
   RewriteRule ^index\.html$ - [L]

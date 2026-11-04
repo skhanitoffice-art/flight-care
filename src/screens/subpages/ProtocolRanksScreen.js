@@ -519,8 +519,8 @@ export default function ProtocolRanksScreen({
               </Text>
               <Text style={{ fontSize: 12, color: '#93C5FD', marginTop: 3, lineHeight: 17 }}>
                 {isBn
-                  ? 'সিভিল এভিয়েশন অথরিটি (CAAB) সিকিউরিটি ক্লিয়ারেন্স প্রাপ্ত পেশাদার প্রোটোকল অফিসারবৃন্দ ২৪/৭ ভিআইপি ও সিআইপি যাত্রী সেবায় প্রস্তুত।'
-                  : 'Civil Aviation Authority (CAAB) clearance badge holders delivering 24/7 VIP, CIP and fast-track airport concierge services.'}
+                  ? 'হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দরে সরকারি নিবন্ধিত পেশাদার বাণিজ্যিক প্রোটোকল টিম ২৪/৭ ভিআইপি ও সিআইপি যাত্রী সেবায় প্রস্তুত।'
+                  : 'Govt. registered commercial protocol facilitators at HSIA delivering 24/7 VIP, CIP and fast-track airport concierge services.'}
               </Text>
             </View>
           </View>
