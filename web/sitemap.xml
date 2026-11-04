@@ -41,11 +41,11 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://flightcaresbd.com/?lang=en" />
   </url>
 
-  <!-- 4. Dedicated Service Pages (High SEO Priority) -->
+    <!-- 4. Top 5 Primary Meet & Greet Service Pages (Highest SEO Priority) -->
   <url>
     <loc>https://flightcaresbd.com/airport-meet-and-greet-bangladesh/</loc>
     <lastmod>2026-11-04</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>0.95</priority>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/airport-meet-and-greet-bangladesh/" />
   </url>
@@ -53,7 +53,7 @@
   <url>
     <loc>https://flightcaresbd.com/meet-and-greet-dhaka-airport/</loc>
     <lastmod>2026-11-04</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>0.95</priority>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/meet-and-greet-dhaka-airport/" />
   </url>
@@ -61,19 +61,28 @@
   <url>
     <loc>https://flightcaresbd.com/arrival-assistance/</loc>
     <lastmod>2026-11-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.92</priority>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/arrival-assistance/" />
   </url>
 
   <url>
     <loc>https://flightcaresbd.com/departure-assistance/</loc>
     <lastmod>2026-11-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.92</priority>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/departure-assistance/" />
   </url>
 
+  <url>
+    <loc>https://flightcaresbd.com/dhaka-airport-meet-greet-price/</loc>
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/dhaka-airport-meet-greet-price/" />
+  </url>
+
+  <!-- 5. Additional Service Pages -->
   <url>
     <loc>https://flightcaresbd.com/vip-airport-assistance/</loc>
     <lastmod>2026-11-04</lastmod>
@@ -146,13 +155,6 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/wheelchair-assistance-dhaka-airport/" />
   </url>
 
-  <url>
-    <loc>https://flightcaresbd.com/dhaka-airport-meet-greet-price/</loc>
-    <lastmod>2026-11-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://flightcaresbd.com/dhaka-airport-meet-greet-price/" />
-  </url>
 
   <url>
     <loc>https://flightcaresbd.com/corporate-airport-assistance/</loc>

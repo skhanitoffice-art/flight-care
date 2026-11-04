@@ -651,6 +651,7 @@ def generate_page_html(item, is_guide=False):
             <a href="https://flightcaresbd.com/" class="brand">✈️ Flight Care</a>
             <div class="nav-links">
                 <a href="https://flightcaresbd.com/">Home</a>
+                <a href="https://flightcaresbd.com/airport-meet-and-greet-bangladesh/">Bangladesh Meet &amp; Greet</a>
                 <a href="https://flightcaresbd.com/meet-and-greet-dhaka-airport/">Dhaka Airport Meet &amp; Greet</a>
                 <a href="https://flightcaresbd.com/arrival-assistance/">Arrival Meet &amp; Greet</a>
                 <a href="https://flightcaresbd.com/departure-assistance/">Departure Meet &amp; Greet</a>
@@ -697,6 +698,7 @@ def generate_page_html(item, is_guide=False):
         <p>Trade License: TRAD/DNCC/004721/2024 · 24/7 Hotlines: +880 1347-570000 | WhatsApp: +880 1347-570001 / +880 1347-570002</p>
         <div class="footer-links">
             <a href="https://flightcaresbd.com/">Home</a> |
+            <a href="https://flightcaresbd.com/airport-meet-and-greet-bangladesh/">Bangladesh Meet &amp; Greet</a> |
             <a href="https://flightcaresbd.com/meet-and-greet-dhaka-airport/">Dhaka Airport Meet &amp; Greet</a> |
             <a href="https://flightcaresbd.com/arrival-assistance/">Arrival Meet &amp; Greet</a> |
             <a href="https://flightcaresbd.com/departure-assistance/">Departure Meet &amp; Greet</a> |
