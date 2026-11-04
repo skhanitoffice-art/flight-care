@@ -343,8 +343,8 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
             style={[
               styles.airplaneImageShadow,
               {
-                width: phone ? 270 : 450,
-                height: phone ? 170 : 280,
+                width: phone ? 270 : 460,
+                height: phone ? 100 : 165,
               },
             ]}
           />
@@ -499,12 +499,12 @@ const styles = StyleSheet.create({
   contrailStreak: {
     position: 'absolute',
     height: 6,
-    left: -110,
-    bottom: '46%',
+    left: -80,
+    bottom: '42%',
     borderRadius: 3,
     background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(224,242,254,0.7) 60%, rgba(186,230,253,0.9) 100%)',
     filter: 'blur(3px)',
-    transform: [{ rotate: '-2deg' }],
+    transform: [{ rotate: '-1deg' }],
   },
   airplaneImageShadow: {
     shadowColor: '#0F172A',
