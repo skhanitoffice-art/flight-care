@@ -90,69 +90,76 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
 
   // ---------------------------------------------------------
   // 4. LAYER 3: HERO 3D AIRPLANE (Speed: ~0.81x - Dynamic 3D)
-  // Continuous 2-Lane Circuit Cruise (Top: Left->Right, Bottom: Right->Left)
+  // Continuous Full-Width Flight Across Screen (Left->Right & Right->Left)
   // ---------------------------------------------------------
   const idleFlightAnim = useRef(new Animated.Value(0)).current;
+
+  // Plane dimensions and screen boundary coordinates
+  const heroPlaneWidth = phone ? 270 : 460;
+  const leftOffscreen = -heroPlaneWidth - 30;
+  const rightOffscreen = winWidth + 30;
 
   useEffect(() => {
     const flightLoop = Animated.loop(
       Animated.sequence([
-        // Phase 1: Cruise Left to Right along upper lane (facing right)
+        // Phase 1: Cruise all the way across screen from Left to Right (Top Lane)
         Animated.timing(idleFlightAnim, {
           toValue: 1,
-          duration: 5200,
-          easing: Easing.inOut(Easing.cubic),
+          duration: phone ? 7000 : 9000,
+          easing: Easing.linear,
           useNativeDriver: false,
         }),
-        // Phase 2: Smooth 3D bank turn at right end to enter lower lane (facing left)
+        // Phase 2: Off-screen transition at right edge to lower lane (flips to face left)
         Animated.timing(idleFlightAnim, {
           toValue: 2,
-          duration: 1200,
-          easing: Easing.inOut(Easing.sin),
+          duration: 350,
+          easing: Easing.linear,
           useNativeDriver: false,
         }),
-        // Phase 3: Cruise Right to Left along lower lane (facing left)
+        // Phase 3: Cruise all the way across screen from Right to Left (Bottom Lane)
         Animated.timing(idleFlightAnim, {
           toValue: 3,
-          duration: 5200,
-          easing: Easing.inOut(Easing.cubic),
+          duration: phone ? 7000 : 9000,
+          easing: Easing.linear,
           useNativeDriver: false,
         }),
-        // Phase 4: Smooth 3D bank turn at left end to re-enter upper lane (facing right)
+        // Phase 4: Off-screen transition at left edge to upper lane (flips to face right)
         Animated.timing(idleFlightAnim, {
           toValue: 4,
-          duration: 1200,
-          easing: Easing.inOut(Easing.sin),
+          duration: 350,
+          easing: Easing.linear,
           useNativeDriver: false,
         }),
       ])
     );
     flightLoop.start();
     return () => flightLoop.stop();
-  }, [idleFlightAnim]);
+  }, [idleFlightAnim, winWidth, phone]);
 
-  // Horizontal flight distance: Left to Right across hero header
+  // Full-width horizontal traverse across the sky
   const idleFlightX = idleFlightAnim.interpolate({
     inputRange: [0, 1, 2, 3, 4],
-    outputRange: [0, phone ? 55 : 180, phone ? 55 : 180, 0, 0],
+    outputRange: [leftOffscreen, rightOffscreen, rightOffscreen, leftOffscreen, leftOffscreen],
   });
 
-  // Vertical 2-lane circuit: Top lane (-10px) for Left->Right, Lower lane (+14px) for Right->Left
+  // Vertical 2-lane coordinates matching user red arrows: Top lane (55px), Bottom lane (165px)
   const idleFlightY = idleFlightAnim.interpolate({
-    inputRange: [0, 1, 2, 3, 4],
+    inputRange: [0, 1, 1.05, 2, 3, 3.05, 4],
     outputRange: [
-      phone ? -6 : -10,
-      phone ? -6 : -10,
-      phone ? 8 : 14,
-      phone ? 8 : 14,
-      phone ? -6 : -10,
+      phone ? 35 : 55,
+      phone ? 35 : 55,
+      phone ? 130 : 165,
+      phone ? 130 : 165,
+      phone ? 130 : 165,
+      phone ? 35 : 55,
+      phone ? 35 : 55,
     ],
   });
 
   // Direction facing: 1 = facing Right (Left->Right), -1 = facing Left (Right->Left)
   const idleFlightScaleX = idleFlightAnim.interpolate({
-    inputRange: [0, 0.9, 1.1, 1.9, 2.1, 2.9, 3.1, 3.9, 4],
-    outputRange: [1, 1, 0.5, -0.5, -1, -1, -0.5, 0.5, 1],
+    inputRange: [0, 1, 1.05, 2, 3, 3.05, 4],
+    outputRange: [1, 1, -1, -1, -1, 1, 1],
   });
 
   const heroPlaneY = safeScrollY.interpolate({
@@ -304,8 +311,8 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
         style={[
           styles.heroPlaneWrapper,
           {
-            top: phone ? 75 : 85,
-            left: phone ? -10 : 50,
+            top: 0,
+            left: 0,
             transform: [
               { translateY: combinedHeroPlaneY },
               { translateX: combinedHeroPlaneX },
@@ -507,12 +514,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-1deg' }],
   },
   airplaneImageShadow: {
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.22,
-    shadowRadius: 28,
-    elevation: 10,
-    filter: 'drop-shadow(0px 16px 28px rgba(15, 23, 42, 0.22))',
+    // Pure clean aircraft rendering without dark/black shadow underneath
   },
 
   // 5. Second 3D Plane
