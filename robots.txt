@@ -1,14 +1,24 @@
 # ===============================================================
 # Flight Care - Robots Exclusion Standard
 # Website: https://flightcaresbd.com
-# Approved VIP Meet & Greet & Protocol Service at Dhaka Airport (HSIA)
-# 24/7 Hotline: +8801347570000 | +8801347570001
+# Govt. Registered Commercial Protocol Facilitator at Hazrat Shahjalal International Airport (HSIA), Dhaka
+# Trade License: TRAD/DNCC/004721/2024 | 24/7 Hotline: +8801347570000 | WhatsApp: +8801347570001
 # ===============================================================
 
 User-agent: *
 Allow: /
 Allow: /?lang=bn
 Allow: /?lang=en
+Allow: /meet-and-greet-dhaka-airport/
+Allow: /arrival-assistance-dhaka-airport/
+Allow: /departure-assistance-dhaka-airport/
+Allow: /baggage-assistance-dhaka-airport/
+Allow: /vip-airport-protocol-dhaka/
+Allow: /wheelchair-assistance-dhaka-airport/
+Allow: /dhaka-airport-meet-greet-price/
+Allow: /corporate-airport-assistance/
+Allow: /contact/
+Allow: /guides/
 Allow: /assets/
 Allow: /_expo/
 Allow: /favicon.ico
@@ -25,6 +35,16 @@ Disallow: /*?secret=*
 # High-Priority Search Engines explicit directives
 User-agent: Googlebot
 Allow: /
+Allow: /meet-and-greet-dhaka-airport/
+Allow: /arrival-assistance-dhaka-airport/
+Allow: /departure-assistance-dhaka-airport/
+Allow: /baggage-assistance-dhaka-airport/
+Allow: /vip-airport-protocol-dhaka/
+Allow: /wheelchair-assistance-dhaka-airport/
+Allow: /dhaka-airport-meet-greet-price/
+Allow: /corporate-airport-assistance/
+Allow: /contact/
+Allow: /guides/
 
 User-agent: Googlebot-Image
 Allow: /assets/
@@ -38,4 +58,3 @@ Allow: /
 
 # Canonical XML Sitemap
 Sitemap: https://flightcaresbd.com/sitemap.xml
-

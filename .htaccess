@@ -95,6 +95,11 @@ Options -Indexes +FollowSymLinks
   RewriteCond %{REQUEST_URI} ^/api/.*\.php$ [NC]
   RewriteRule ^ - [L]
 
+  # Explicit pass-through for robots.txt and sitemap.xml (Never rewrite to index.html)
+  RewriteRule ^robots\.txt$ - [L]
+  RewriteRule ^sitemap\.xml$ - [L]
+  RewriteRule ^sitemap_.*\.xml$ - [L]
+
   # Single Page Application (SPA) Fallback Rewrite
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
@@ -157,5 +162,22 @@ Options -Indexes +FollowSymLinks
     Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
     Header set Pragma "no-cache"
     Header set Expires "0"
+  </IfModule>
+</Files>
+
+# Strict Content-Type & Cache Headers for robots.txt and sitemap.xml (SEO Audit Fix)
+<Files "robots.txt">
+  <IfModule mod_headers.c>
+    Header set Content-Type "text/plain; charset=utf-8"
+    Header set Cache-Control "public, max-age=86400"
+    Header set X-Robots-Tag "all"
+  </IfModule>
+</Files>
+
+<Files "sitemap.xml">
+  <IfModule mod_headers.c>
+    Header set Content-Type "application/xml; charset=utf-8"
+    Header set Cache-Control "public, max-age=86400"
+    Header set X-Robots-Tag "noindex"
   </IfModule>
 </Files>

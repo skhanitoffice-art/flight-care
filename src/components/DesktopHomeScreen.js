@@ -1,3 +1,4 @@
+import { trackCallClick, trackWhatsAppClick } from '../services/analyticsService';
 import React, { useState, useRef } from 'react';
 import {
   View,
@@ -1943,7 +1944,7 @@ export default function DesktopHomeScreen({
                     accessibilityRole="link"
                     href="tel:+8801347570001"
                     onPress={() => {
-                      const telUrl = 'tel:+8801347570001';
+                      try { trackCallClick('+8801347570001'); } catch(e){} const telUrl = 'tel:+8801347570001';
                       if (typeof window !== 'undefined') {
                         window.location.href = telUrl;
                       }
@@ -1973,7 +1974,7 @@ export default function DesktopHomeScreen({
                     accessibilityRole="link"
                     href="tel:+8801347570002"
                     onPress={() => {
-                      const telUrl = 'tel:+8801347570002';
+                      try { trackCallClick('+8801347570002'); } catch(e){} const telUrl = 'tel:+8801347570002';
                       if (typeof window !== 'undefined') {
                         window.location.href = telUrl;
                       }

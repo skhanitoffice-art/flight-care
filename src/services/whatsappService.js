@@ -5,6 +5,7 @@
  */
 
 import { Linking, Platform, Alert } from 'react-native';
+import { trackWhatsAppClick } from './analyticsService';
 
 export const SUPPORT_OFFICE_WHATSAPP = '8801347570001';
 export const SUPPORT_OFFICE_WHATSAPP_2 = '8801347570002';
@@ -408,6 +409,7 @@ export async function dispatchSupportOfficeWhatsAppAlert(booking = {}) {
  * Defaults to primary (+8801347570001) or opens given number (+8801347570002)
  */
 export function openSupportOfficeWhatsApp(booking = {}, lang = 1, targetPhone = SUPPORT_OFFICE_WHATSAPP) {
+  try { trackWhatsAppClick(targetPhone, 'SupportOffice'); } catch (e) {}
   const url = getSupportWhatsAppUrl(booking, lang, targetPhone);
   Linking.openURL(url).catch(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {

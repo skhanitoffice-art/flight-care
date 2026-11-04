@@ -356,12 +356,6 @@ def generate_page_html(item, is_guide=False):
     content = item['content']
     url = f"https://flightcaresbd.com/{'guides/' if is_guide else ''}{slug}/"
 
-    # Schema JSON
-    breadcrumbs_schema = [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://flightcaresbd.com/"},
-        {"@type": "ListItem", "position": 2, "name": title.split('|')[0].strip(), "item": url}
-    ]
-
     faq_schema = []
     if 'faqs' in item and item['faqs']:
         for q, a in item['faqs']:
@@ -386,6 +380,15 @@ def generate_page_html(item, is_guide=False):
     <link rel="alternate" hreflang="en" href="{url}?lang=en" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
 
+    <!-- Google Analytics 4 (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FLIGHTCARE1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+      gtag('config', 'G-FLIGHTCARE1', {{ 'anonymize_ip': true }});
+    </script>
+
     <!-- Open Graph -->
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="Flight Care - Airport Protocol & Meet and Greet" />
@@ -408,8 +411,10 @@ def generate_page_html(item, is_guide=False):
         .hero h1 {{ font-size: 32px; font-weight: 900; margin-bottom: 12px; }}
         .hero p {{ font-size: 16px; color: #94A3B8; max-width: 760px; margin: 0 auto 24px; }}
         .cta-btns {{ display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }}
-        .btn-gold {{ background: #F59E0B; color: #0F172A; font-weight: 800; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 15px; }}
-        .btn-wa {{ background: #25D366; color: #FFF; font-weight: 800; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 15px; }}
+        .btn-gold {{ background: #F59E0B; color: #0F172A; font-weight: 800; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 15px; transition: transform 0.2s; }}
+        .btn-gold:hover {{ transform: translateY(-2px); }}
+        .btn-wa {{ background: #25D366; color: #FFF; font-weight: 800; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 15px; transition: transform 0.2s; }}
+        .btn-wa:hover {{ transform: translateY(-2px); }}
         .container {{ max-width: 980px; margin: -30px auto 50px; background: #FFF; border-radius: 16px; padding: 36px 32px; box-shadow: 0 10px 25px rgba(15,23,42,0.06); border: 1px solid #E2E8F0; }}
         .breadcrumbs {{ font-size: 13px; color: #64748B; margin-bottom: 20px; }}
         .breadcrumbs a {{ color: #0284C7; text-decoration: none; }}
@@ -458,8 +463,8 @@ def generate_page_html(item, is_guide=False):
         <h1>{h1}</h1>
         <p>{subtitle}</p>
         <div class="cta-btns">
-            <a href="https://flightcaresbd.com/?utm_source=seo_page&service={slug}" class="btn-gold">✈️ Book Service Online</a>
-            <a href="https://wa.me/8801347570001?text=Hello%20Flight%20Care,%20I%20am%20inquiring%20about%20{slug}" class="btn-wa">💬 WhatsApp Support (01347-570001)</a>
+            <a href="https://flightcaresbd.com/?utm_source=seo_page&service={slug}" onclick="if(typeof gtag==='function'){{gtag('event','booking_form_start',{{'service':'{slug}'}});}}" class="btn-gold">✈️ Book Service Online</a>
+            <a href="https://wa.me/8801347570001?text=Hello%20Flight%20Care,%20I%20am%20inquiring%20about%20{slug}" onclick="if(typeof gtag==='function'){{gtag('event','whatsapp_click',{{'target':'8801347570001'}});}}" class="btn-wa">💬 WhatsApp Support (01347-570001)</a>
         </div>
     </section>
 
@@ -479,8 +484,8 @@ def generate_page_html(item, is_guide=False):
             <h3 style="color: #166534; margin-bottom: 8px;">Ready to Book Your Dhaka Airport Protocol Service?</h3>
             <p style="color: #15803D; font-size: 15px; margin-bottom: 16px;">Zero advance deposit required. Pay securely after service completion at Hazrat Shahjalal International Airport.</p>
             <div class="cta-btns">
-                <a href="https://flightcaresbd.com/?utm_source=cta&service={slug}" class="btn-gold">Book Now in 2 Minutes</a>
-                <a href="tel:+8801347570000" class="btn-wa" style="background: #0284C7;">📞 Call Hotline: 01347-570000</a>
+                <a href="https://flightcaresbd.com/?utm_source=cta&service={slug}" onclick="if(typeof gtag==='function'){{gtag('event','booking_form_start',{{'service':'{slug}'}});}}" class="btn-gold">Book Now in 2 Minutes</a>
+                <a href="tel:+8801347570000" onclick="if(typeof gtag==='function'){{gtag('event','call_hotline_click',{{'phone':'+8801347570000'}});}}" class="btn-wa" style="background: #0284C7;">📞 Call Hotline: 01347-570000</a>
             </div>
         </div>
     </main>
@@ -508,7 +513,6 @@ def generate_page_html(item, is_guide=False):
 
 def main():
     generated_count = 0
-    # 1. Services
     for svc in SERVICES:
         slug = svc['slug']
         html = generate_page_html(svc, is_guide=False)
@@ -520,7 +524,6 @@ def main():
         generated_count += 1
         print(f"Generated Service Page: /{slug}/")
 
-    # 2. Guides
     for g in GUIDES:
         slug = g['slug']
         html = generate_page_html(g, is_guide=True)
@@ -532,7 +535,7 @@ def main():
         generated_count += 1
         print(f"Generated Guide Page: /guides/{slug}/")
 
-    print(f"Successfully generated {generated_count} dedicated SEO landing pages!")
+    print(f"Successfully generated {generated_count} dedicated SEO landing pages with GA4 and Event Tracking!")
 
 if __name__ == '__main__':
     main()

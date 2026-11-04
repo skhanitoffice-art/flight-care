@@ -80,6 +80,7 @@ import {
   SUPPORT_OFFICE_WHATSAPP_2,
 } from '../services/whatsappService';
 import { sendPaymentConfirmationSms } from '../services/smsGateway';
+import { trackBookingSuccess, trackFormStart } from '../services/analyticsService';
 
 
 export default function DesktopWizardScreen({
@@ -841,6 +842,9 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
     if (confirm) {
       await confirm(finalBooking);
     }
+    try {
+      trackBookingSuccess(finalBooking);
+    } catch (e) {}
 
     setWiz(curr => ({
       ...curr,
