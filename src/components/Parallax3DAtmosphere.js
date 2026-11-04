@@ -90,24 +90,38 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
 
   // ---------------------------------------------------------
   // 4. LAYER 3: HERO 3D AIRPLANE (Speed: ~0.81x - Dynamic 3D)
-  // Continuous idle cruise back & forth (Left to Right, Right to Left)
+  // Continuous 2-Lane Circuit Cruise (Top: Left->Right, Bottom: Right->Left)
   // ---------------------------------------------------------
   const idleFlightAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const flightLoop = Animated.loop(
       Animated.sequence([
-        // 1. Smooth cruise forward across hero sky towards booking card (Left to Right)
+        // Phase 1: Cruise Left to Right along upper lane (facing right)
         Animated.timing(idleFlightAnim, {
           toValue: 1,
-          duration: 5500,
+          duration: 5200,
+          easing: Easing.inOut(Easing.cubic),
+          useNativeDriver: false,
+        }),
+        // Phase 2: Smooth 3D bank turn at right end to enter lower lane (facing left)
+        Animated.timing(idleFlightAnim, {
+          toValue: 2,
+          duration: 1200,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: false,
         }),
-        // 2. Smooth glide back across hero sky to home position (Right to Left)
+        // Phase 3: Cruise Right to Left along lower lane (facing left)
         Animated.timing(idleFlightAnim, {
-          toValue: 0,
-          duration: 5500,
+          toValue: 3,
+          duration: 5200,
+          easing: Easing.inOut(Easing.cubic),
+          useNativeDriver: false,
+        }),
+        // Phase 4: Smooth 3D bank turn at left end to re-enter upper lane (facing right)
+        Animated.timing(idleFlightAnim, {
+          toValue: 4,
+          duration: 1200,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: false,
         }),
@@ -119,14 +133,26 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
 
   // Horizontal flight distance: Left to Right across hero header
   const idleFlightX = idleFlightAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, phone ? 55 : 160],
+    inputRange: [0, 1, 2, 3, 4],
+    outputRange: [0, phone ? 55 : 180, phone ? 55 : 180, 0, 0],
   });
 
-  // Vertical atmospheric buoyancy: gentle aerodynamic lift while cruising
+  // Vertical 2-lane circuit: Top lane (-10px) for Left->Right, Lower lane (+14px) for Right->Left
   const idleFlightY = idleFlightAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, phone ? -8 : -15, phone ? -3 : -7],
+    inputRange: [0, 1, 2, 3, 4],
+    outputRange: [
+      phone ? -6 : -10,
+      phone ? -6 : -10,
+      phone ? 8 : 14,
+      phone ? 8 : 14,
+      phone ? -6 : -10,
+    ],
+  });
+
+  // Direction facing: 1 = facing Right (Left->Right), -1 = facing Left (Right->Left)
+  const idleFlightScaleX = idleFlightAnim.interpolate({
+    inputRange: [0, 0.9, 1.1, 1.9, 2.1, 2.9, 3.1, 3.9, 4],
+    outputRange: [1, 1, 0.5, -0.5, -1, -1, -0.5, 0.5, 1],
   });
 
   const heroPlaneY = safeScrollY.interpolate({
@@ -138,13 +164,13 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
     outputRange: [0, phone ? 0 : 240],
   });
 
-  // Combined horizontal and vertical trajectories (Scroll Parallax + Continuous Idle Cruise)
+  // Combined horizontal and vertical trajectories (Scroll Parallax + Continuous 2-Lane Circuit)
   const combinedHeroPlaneX = Animated.add(heroPlaneX, idleFlightX);
   const combinedHeroPlaneY = Animated.add(heroPlaneY, idleFlightY);
 
   const heroPlaneRotate = safeScrollY.interpolate({
     inputRange: [0, 500, 1200, 2000],
-    outputRange: ['-14deg', '-8deg', '-3deg', '-1deg'],
+    outputRange: ['-1deg', '-2deg', '-3deg', '-1deg'],
   });
   const heroPlaneScale = safeScrollY.interpolate({
     inputRange: [0, 500, 1200, 2000],
@@ -289,31 +315,40 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
           },
         ]}
       >
-        {/* Contrail / Aerodynamic Jet Vapor Streak */}
+        {/* Direction-aware inner aircraft container */}
         <Animated.View
-          className="fc-parallax-contrail"
-          style={[
-            styles.contrailStreak,
-            {
-              width: phone ? 160 : 320,
-              opacity: heroContrailOpacity,
-            },
-          ]}
-        />
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            transform: [{ scaleX: idleFlightScaleX }],
+          }}
+        >
+          {/* Contrail / Aerodynamic Jet Vapor Streak */}
+          <Animated.View
+            className="fc-parallax-contrail"
+            style={[
+              styles.contrailStreak,
+              {
+                width: phone ? 160 : 320,
+                opacity: heroContrailOpacity,
+              },
+            ]}
+          />
 
-        {/* 3D Transparent Airplane */}
-        <Image
-          source={PlaneCruisingAsset}
-          resizeMode="contain"
-          className="fc-parallax-plane"
-          style={[
-            styles.airplaneImageShadow,
-            {
-              width: phone ? 270 : 450,
-              height: phone ? 170 : 280,
-            },
-          ]}
-        />
+          {/* 3D Transparent Airplane */}
+          <Image
+            source={PlaneCruisingAsset}
+            resizeMode="contain"
+            className="fc-parallax-plane"
+            style={[
+              styles.airplaneImageShadow,
+              {
+                width: phone ? 270 : 450,
+                height: phone ? 170 : 280,
+              },
+            ]}
+          />
+        </Animated.View>
       </Animated.View>
 
       {/* ========================================================= */}
@@ -465,11 +500,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     height: 6,
     left: -110,
-    bottom: '43%',
+    bottom: '46%',
     borderRadius: 3,
     background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(224,242,254,0.7) 60%, rgba(186,230,253,0.9) 100%)',
     filter: 'blur(3px)',
-    transform: [{ rotate: '-8deg' }],
+    transform: [{ rotate: '-2deg' }],
   },
   airplaneImageShadow: {
     shadowColor: '#0F172A',
