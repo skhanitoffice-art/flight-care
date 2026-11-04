@@ -28,7 +28,7 @@ SERVICES = [
         ''',
         'faqs': [
             ("What airports in Bangladesh do you cover?", "We currently operate full 24/7 VIP meet and greet services at Hazrat Shahjalal International Airport (HSIA), Dhaka, Terminal 1 and Terminal 2."),
-            ("How do I book Bangladesh Meet and Greet service?", "You can book directly on flightcaresbd.com in under 2 minutes, or call 24/7 at +880 1347-570000 / WhatsApp +880 1347-570001.")
+            ("How do I book Bangladesh Meet and Greet service?", "You can book directly on flightcaresbd.com in under 2 minutes, or call 24/7 at +880 1347-570001 / WhatsApp +880 1347-570001.")
         ]
     },
     {
@@ -403,13 +403,13 @@ SERVICES = [
         </ul>
         ''',
         'faqs': [
-            ("How do we sign a corporate agreement?", "Contact our Corporate Desk at 01347-570000 or email corporate@flightcaresbd.com for tailored proposals.")
+            ("How do we sign a corporate agreement?", "Contact our Corporate Desk at 01347-570001 or email corporate@flightcaresbd.com for tailored proposals.")
         ]
     },
     {
         'slug': 'contact',
         'title': 'Contact Flight Care | 24/7 Dhaka Airport Protocol Desk',
-        'meta_desc': 'Contact Flight Care 24/7 Airport Support Desk at Hazrat Shahjalal International Airport (HSIA). Hotline: 01347-570000, WhatsApp: 01347-570001.',
+        'meta_desc': 'Contact Flight Care 24/7 Airport Support Desk at Hazrat Shahjalal International Airport (HSIA). Hotline: 01347-570001, WhatsApp: 01347-570001.',
         'h1': 'Contact Flight Care – 24/7 Airport Assistance Hotline',
         'subtitle': '২৪/৭ হটলাইন, অফিস লোকেশন ও সরাসরি বুকিং সাপোর্ট',
         'service_type': 'Customer Support',
@@ -418,7 +418,7 @@ SERVICES = [
         'content': '''
         <p>Need urgent airport assistance, have questions regarding your upcoming flight, or want to verify booking status? Our 24/7 airport customer support team is always ready to assist you.</p>
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 20px; border-radius: 12px; margin: 20px 0;">
-            <p><strong>📞 24/7 Central Hotline:</strong> <a href="tel:+8801347570000" style="color: #0284C7; font-weight: 700;">+880 1347-570000</a></p>
+            <p><strong>📞 24/7 Central Hotline:</strong> <a href="tel:+8801347570001" style="color: #0284C7; font-weight: 700;">+880 1347-570001</a></p>
             <p><strong>💬 Front Desk WhatsApp (Primary):</strong> <a href="https://wa.me/8801347570001" style="color: #16A34A; font-weight: 700;">+880 1347-570001</a></p>
             <p><strong>💬 Front Desk WhatsApp (Secondary):</strong> <a href="https://wa.me/8801347570002" style="color: #16A34A; font-weight: 700;">+880 1347-570002</a></p>
             <p><strong>📧 Support Email:</strong> <a href="mailto:book@flightcaresbd.com" style="color: #0284C7;">book@flightcaresbd.com</a></p>
@@ -427,7 +427,7 @@ SERVICES = [
         </div>
         ''',
         'faqs': [
-            ("Are your phone numbers reachable 24 hours?", "Yes, both 01347-570000 and WhatsApp 01347-570001 / 01347-570002 operate 24 hours a day, 7 days a week.")
+            ("Are your phone numbers reachable 24 hours?", "Yes, both 01347-570001 and WhatsApp 01347-570001 / 01347-570002 operate 24 hours a day, 7 days a week.")
         ]
     }
 ]
@@ -688,14 +688,14 @@ def generate_page_html(item, is_guide=False):
             <p style="color: #15803D; font-size: 15px; margin-bottom: 16px;">Zero advance deposit required. Pay securely after service completion at Hazrat Shahjalal International Airport.</p>
             <div class="cta-btns">
                 <a href="https://flightcaresbd.com/?utm_source=cta&service={slug}" onclick="if(typeof gtag==='function'){{gtag('event','booking_form_start',{{'service':'{slug}'}});}}" class="btn-gold">Book Now in 2 Minutes</a>
-                <a href="tel:+8801347570000" onclick="if(typeof gtag==='function'){{gtag('event','call_hotline_click',{{'phone':'+8801347570000'}});}}" class="btn-wa" style="background: #0284C7;">📞 Call Hotline: 01347-570000</a>
+                <a href="tel:+8801347570002" onclick="if(typeof gtag==='function'){{gtag('event','call_hotline_click',{{'phone':'+8801347570002'}});}}" class="btn-wa" style="background: #0284C7;">📞 Call Hotline: 01347-570002</a>
             </div>
         </div>
     </main>
 
     <footer>
         <p><strong>Flight Care</strong> — Govt. Registered Commercial Protocol Facilitator at Hazrat Shahjalal International Airport (HSIA), Dhaka.</p>
-        <p>Trade License: TRAD/DNCC/004721/2024 · 24/7 Hotlines: +880 1347-570000 | WhatsApp: +880 1347-570001 / +880 1347-570002</p>
+        <p>Trade License: TRAD/DNCC/004721/2024 · 24/7 Hotlines: +880 1347-570001 | WhatsApp: +880 1347-570001 / +880 1347-570002</p>
         <div class="footer-links">
             <a href="https://flightcaresbd.com/">Home</a> |
             <a href="https://flightcaresbd.com/airport-meet-and-greet-bangladesh/">Bangladesh Meet &amp; Greet</a> |
