@@ -344,11 +344,11 @@ SERVICES = [
     {
         'slug': 'dhaka-airport-meet-greet-price',
         'title': 'Dhaka Airport Meet and Greet Price & Packages | Flight Care',
-        'meta_desc': 'Explore services and transparent BDT pricing packages for Dhaka Airport Meet and Greet. Standard ৳500, Premium ৳1,000, VIP ৳1,500. Pay after service.',
+        'meta_desc': 'Explore services and transparent pricing packages for Dhaka Airport Meet and Greet. Standard ৳500 ($4.99), Premium ৳1,000 ($8.99), VIP ৳1,500 ($12). Pay after service.',
         'h1': 'Dhaka Airport Meet and Greet Price Bangladesh – 2026 Charges',
         'subtitle': 'ঢাকা বিমানবন্দরে মিট অ্যান্ড গ্রিট ও প্রোটোকল সেবার স্বচ্ছ ও নির্ধারিত মূল্য তালিকা',
         'service_type': 'Airport Pricing',
-        'price': '৳৫০০ থেকে ৳১,৫০০ BDT',
+        'price': '৳৫০০ ($4.99) থেকে ৳১,৫০০ ($12)',
         'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Meet & Greet Price & Packages', 'https://flightcaresbd.com/dhaka-airport-meet-greet-price/')],
         'content': '''
         <p>Flight Care believes in complete price transparency. Below is our official tariff for Meet and Greet and Protocol services at Hazrat Shahjalal International Airport (HSIA), Dhaka. All rates are in Bangladeshi Taka (BDT) with no hidden fees.</p>
@@ -363,17 +363,17 @@ SERVICES = [
             <tbody>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #CBD5E1;"><strong>Standard Economy</strong></td>
-                    <td style="padding: 12px; border: 1px solid #CBD5E1;">৳৫০০ / জন</td>
+                    <td style="padding: 12px; border: 1px solid #CBD5E1;">৳৫০০ ($4.99) / জন</td>
                     <td style="padding: 12px; border: 1px solid #CBD5E1;">সাধারণ টার্মিনাল দিকনির্দেশনা, লাগেজ ট্রলি সহায়তা ও সাশ্রয়ী মিট অ্যান্ড গ্রিট</td>
                 </tr>
                 <tr style="background: #F0FDF4;">
                     <td style="padding: 12px; border: 1px solid #CBD5E1;"><strong>Premium Business ⭐</strong></td>
-                    <td style="padding: 12px; border: 1px solid #CBD5E1;">৳১,০০০ / জন</td>
+                    <td style="padding: 12px; border: 1px solid #CBD5E1;">৳১,০০০ ($8.99) / জন</td>
                     <td style="padding: 12px; border: 1px solid #CBD5E1;">এয়ারোব্রিজ গেট অভ্যর্থনা, নেম প্লাকার্ড, ফাস্ট-ট্র্যাক ইমিগ্রেশন ও লাগেজ বহন</td>
                 </tr>
                 <tr>
                     <td style="padding: 12px; border: 1px solid #CBD5E1;"><strong>VIP First Class</strong></td>
-                    <td style="padding: 12px; border: 1px solid #CBD5E1;">৳১,৫০০ / জন</td>
+                    <td style="padding: 12px; border: 1px solid #CBD5E1;">৳১,৫০০ ($12) / জন</td>
                     <td style="padding: 12px; border: 1px solid #CBD5E1;">সর্বোচ্চ অগ্রাধিকার প্রোটোকল, ভিআইপি ফাস্ট-ট্র্যাক, ডেডিকেটেড অফিসার ও ভেহিকেল এসকর্ট</td>
                 </tr>
             </tbody>
@@ -444,7 +444,7 @@ GUIDES = [
         <ol>
             <li><strong>Select Flight Direction:</strong> Choose whether you need <em>Arrival (আগমন)</em> or <em>Departure (বহির্গমন)</em> assistance.</li>
             <li><strong>Provide Flight Details:</strong> Enter your flight number (e.g. BG 028, EK 582, SQ 446) and service date.</li>
-            <li><strong>Choose Package:</strong> Select Economy (৳500), Premium Business (৳1,000), or VIP First Class (৳1,500).</li>
+            <li><strong>Choose Package:</strong> Select Economy (৳500 / $4.99), Premium Business (৳1,000 / $8.99), or VIP First Class (৳1,500 / $12).</li>
             <li><strong>Add Optional Services:</strong> Select wheelchair assistance, luggage wrapping, or visa support if required.</li>
             <li><strong>Confirm with Pay After Service:</strong> No advance payment needed! Enter passenger name and phone number to receive instant confirmation.</li>
         </ol>
@@ -459,9 +459,9 @@ GUIDES = [
         'content': '''
         <p>Understanding airport assistance costs helps passengers choose the right service level for their journey. Flight Care provides fixed-rate, transparent pricing:</p>
         <ul>
-            <li><strong>Standard Package (৳500):</strong> Affordable assistance for budget travelers and domestic connections.</li>
-            <li><strong>Premium Business Package (৳1,000):</strong> The most popular choice for international travelers with aerobridge reception and fast-track guidance.</li>
-            <li><strong>VIP First Class (৳1,500):</strong> Full priority protocol for corporate leaders, investors, and families requiring maximum care.</li>
+            <li><strong>Standard Package (৳500 / $4.99):</strong> Affordable assistance for budget travelers and domestic connections.</li>
+            <li><strong>Premium Business Package (৳1,000 / $8.99):</strong> The most popular choice for international travelers with aerobridge reception and fast-track guidance.</li>
+            <li><strong>VIP First Class (৳1,500 / $12):</strong> Full priority protocol for corporate leaders, investors, and families requiring maximum care.</li>
             <li><strong>Zero Hidden Costs:</strong> Free flight delay monitoring and transparent BDT pricing.</li>
         </ul>
         '''

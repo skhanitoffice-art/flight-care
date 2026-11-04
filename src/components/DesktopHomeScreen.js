@@ -1217,6 +1217,9 @@ export default function DesktopHomeScreen({
                   <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#0F172A', marginTop: 2 }}>
                     {lang ? '৫০০ টাকা' : '500 Tk'}
                   </Text>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#0284C7', marginTop: 1 }}>
+                    {lang ? '$৪.৯৯' : '$4.99'}
+                  </Text>
                   <View
                     style={{
                       flexDirection: 'row',
@@ -1296,6 +1299,9 @@ export default function DesktopHomeScreen({
                   <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#0F172A', marginTop: 2 }}>
                     {lang ? '১০০০ টাকা' : '1000 Tk'}
                   </Text>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#2563EB', marginTop: 1 }}>
+                    {lang ? '$৮.৯৯' : '$8.99'}
+                  </Text>
                   <View
                     style={{
                       flexDirection: 'row',
@@ -1374,6 +1380,9 @@ export default function DesktopHomeScreen({
                   </Text>
                   <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#0F172A', marginTop: 2 }}>
                     {lang ? '১৫০০ টাকা' : '1500 Tk'}
+                  </Text>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#D97706', marginTop: 1 }}>
+                    {lang ? '$১২' : '$12'}
                   </Text>
                   <View
                     style={{
@@ -2134,7 +2143,7 @@ export default function DesktopHomeScreen({
             <View style={{ gap: 12 }}>
               <View style={{ padding: 12, borderRadius: 12, backgroundColor: '#F0F9FF', borderWidth: 1, borderColor: '#BAE6FD' }}>
                 <Text style={{ fontSize: 15, fontWeight: '800', color: '#0284C7' }}>
-                  {lang ? 'স্ট্যান্ডার্ড (৫০০ টাকা)' : 'Standard (500 Tk)'}
+                  {lang ? 'স্ট্যান্ডার্ড (৫০০ টাকা / $৪.৯৯)' : 'Standard (500 Tk / $4.99)'}
                 </Text>
                 <Text style={{ fontSize: 13, color: '#334155', marginTop: 4, lineHeight: 20 }}>
                   {lang
@@ -2145,7 +2154,7 @@ export default function DesktopHomeScreen({
 
               <View style={{ padding: 12, borderRadius: 12, backgroundColor: '#F5F3FF', borderWidth: 1, borderColor: '#DDD6FE' }}>
                 <Text style={{ fontSize: 15, fontWeight: '800', color: '#6D28D9' }}>
-                  {lang ? 'প্রিমিয়াম (১০০০ টাকা)' : 'Premium (1000 Tk)'}
+                  {lang ? 'প্রিমিয়াম (১০০০ টাকা / $৮.৯৯)' : 'Premium (1000 Tk / $8.99)'}
                 </Text>
                 <Text style={{ fontSize: 13, color: '#334155', marginTop: 4, lineHeight: 20 }}>
                   {lang
@@ -2156,7 +2165,7 @@ export default function DesktopHomeScreen({
 
               <View style={{ padding: 12, borderRadius: 12, backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A' }}>
                 <Text style={{ fontSize: 15, fontWeight: '800', color: '#D97706' }}>
-                  {lang ? 'ভিআইপি (১৫০০ টাকা)' : 'VIP (1500 Tk)'}
+                  {lang ? 'ভিআইপি (১৫০০ টাকা / $১২)' : 'VIP (1500 Tk / $12)'}
                 </Text>
                 <Text style={{ fontSize: 13, color: '#334155', marginTop: 4, lineHeight: 20 }}>
                   {lang

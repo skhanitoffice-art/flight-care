@@ -276,6 +276,9 @@ export default function ComparePackagesScreen({
                     <Text style={{ fontSize: 20, fontWeight: '900', color: '#0284C7' }}>
                       ৳{pkg.p}
                     </Text>
+                    <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#0284C7', marginTop: 1 }}>
+                      ${pkg.id === 'economy' ? (isBn ? '৪.৯৯' : '4.99') : pkg.id === 'business' ? (isBn ? '৮.৯৯' : '8.99') : (isBn ? '১২' : '12')}
+                    </Text>
                     <Text style={{ fontSize: 11, color: '#94A3B8' }}>
                       {isBn ? 'প্রতি যাত্রী' : 'per passenger'}
                     </Text>
@@ -472,8 +475,8 @@ export default function ComparePackagesScreen({
                     borderLeftColor: '#E2E8F0',
                   }}
                 >
-                  <Text style={{ fontSize: 15, fontWeight: '900', color: '#00875A' }}>
-                    500 Tk
+                  <Text style={{ fontSize: 14, fontWeight: '900', color: '#00875A' }}>
+                    {isBn ? '৫০০ টাকা ($৪.৯৯)' : '500 Tk ($4.99)'}
                   </Text>
                 </View>
 
@@ -489,8 +492,8 @@ export default function ComparePackagesScreen({
                     borderLeftColor: '#E2E8F0',
                   }}
                 >
-                  <Text style={{ fontSize: 15, fontWeight: '900', color: '#0065B3' }}>
-                    1000 Tk
+                  <Text style={{ fontSize: 14, fontWeight: '900', color: '#0065B3' }}>
+                    {isBn ? '১০০০ টাকা ($৮.৯৯)' : '1000 Tk ($8.99)'}
                   </Text>
                 </View>
 
@@ -506,8 +509,8 @@ export default function ComparePackagesScreen({
                     borderLeftColor: '#E2E8F0',
                   }}
                 >
-                  <Text style={{ fontSize: 15, fontWeight: '900', color: '#C87D00' }}>
-                    1500 Tk
+                  <Text style={{ fontSize: 14, fontWeight: '900', color: '#C87D00' }}>
+                    {isBn ? '১৫০০ টাকা ($১২)' : '1500 Tk ($12)'}
                   </Text>
                 </View>
               </View>

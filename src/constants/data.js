@@ -284,9 +284,9 @@ export const DEFAULT_BOOKING_WORKFLOW = [
 ];
 
 export const PKGS = [
-  { id: 'economy', p: 500, n: ['Standard', 'স্ট্যান্ডার্ড'], d: ['Affordable standard meet & greet + general terminal navigation guidance + accessible for travelers', 'সাশ্রয়ী মূল্যে স্ট্যান্ডার্ড মিট অ্যান্ড গ্রিট + টার্মিনালে সাধারণ যাতায়াত ও দিকনির্দেশনা + যাত্রীদের জন্য সহজলভ্য'] },
-  { id: 'business', p: 1000, n: ['Premium', 'প্রিমিয়াম'], d: ['Faster priority service than Standard + dedicated immigration and baggage assistant + reduced waiting and faster formalities + ideal for travelers seeking comfort', 'স্ট্যান্ডার্ডের চেয়ে দ্রুত প্রায়োরিটি সেবা + ইমিগ্রেশন ও লাগেজে ডেডিকেটেড সহায়তা + কম অপেক্ষায় দ্রুত আনুষ্ঠানিকতা + স্বাচ্ছন্দ্যপ্রত্যাশী যাত্রীদের জন্য'] },
-  { id: 'first', p: 1500, n: ['VIP', 'ভিআইপি'], d: ['Highest-priority VIP protocol + immediate fast-track immigration assistance + priority luggage handling and airport procedures + premium care to avoid queues and hassles + ultimate comfort and service', 'সর্বোচ্চ অগ্রাধিকারসহ ভিআইপি প্রোটোকল + ফাস্ট-ট্র্যাক ইমিগ্রেশনে তাৎক্ষণিক সহায়তা + লাগেজ ও কার্যক্রমে সর্বোচ্চ গুরুত্ব + দীর্ঘ লাইন ও ঝামেলা এড়াতে প্রিমিয়াম কেয়ার + সর্বোচ্চ আরাম ও সুবিধাসম্পন্ন অভিজ্ঞতা'] },
+  { id: 'economy', p: 500, pUsd: 4.99, n: ['Standard', 'স্ট্যান্ডার্ড'], d: ['Affordable standard meet & greet + general terminal navigation guidance + accessible for travelers', 'সাশ্রয়ী মূল্যে স্ট্যান্ডার্ড মিট অ্যান্ড গ্রিট + টার্মিনালে সাধারণ যাতায়াত ও দিকনির্দেশনা + যাত্রীদের জন্য সহজলভ্য'] },
+  { id: 'business', p: 1000, pUsd: 8.99, n: ['Premium', 'প্রিমিয়াম'], d: ['Faster priority service than Standard + dedicated immigration and baggage assistant + reduced waiting and faster formalities + ideal for travelers seeking comfort', 'স্ট্যান্ডার্ডের চেয়ে দ্রুত প্রায়োরিটি সেবা + ইমিগ্রেশন ও লাগেজে ডেডিকেটেড সহায়তা + কম অপেক্ষায় দ্রুত আনুষ্ঠানিকতা + স্বাচ্ছন্দ্যপ্রত্যাশী যাত্রীদের জন্য'] },
+  { id: 'first', p: 1500, pUsd: 12, n: ['VIP', 'ভিআইপি'], d: ['Highest-priority VIP protocol + immediate fast-track immigration assistance + priority luggage handling and airport procedures + premium care to avoid queues and hassles + ultimate comfort and service', 'সর্বোচ্চ অগ্রাধিকারসহ ভিআইপি প্রোটোকল + ফাস্ট-ট্র্যাক ইমিগ্রেশনে তাৎক্ষণিক সহায়তা + লাগেজ ও কার্যক্রমে সর্বোচ্চ গুরুত্ব + দীর্ঘ লাইন ও ঝামেলা এড়াতে প্রিমিয়াম কেয়ার + সর্বোচ্চ আরাম ও সুবিধাসম্পন্ন অভিজ্ঞতা'] },
 ];
 
 export const DEFAULT_PRICING_CONFIG = {
@@ -294,9 +294,9 @@ export const DEFAULT_PRICING_CONFIG = {
   currency: 'BDT',
   currencySymbol: '৳',
   packages: {
-    economy: { id: 'economy', name: ['Standard', 'স্ট্যান্ডার্ড'], basePrice: 500, active: true },
-    business: { id: 'business', name: ['Premium', 'প্রিমিয়াম'], basePrice: 1000, active: true },
-    first: { id: 'first', name: ['VIP', 'ভিআইপি'], basePrice: 1500, active: true },
+    economy: { id: 'economy', name: ['Standard', 'স্ট্যান্ডার্ড'], basePrice: 500, basePriceUsd: 4.99, active: true },
+    business: { id: 'business', name: ['Premium', 'প্রিমিয়াম'], basePrice: 1000, basePriceUsd: 8.99, active: true },
+    first: { id: 'first', name: ['VIP', 'ভিআইপি'], basePrice: 1500, basePriceUsd: 12, active: true },
   },
   passengerRules: {
     adultMultiplier: 1.0,

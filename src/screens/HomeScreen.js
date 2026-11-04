@@ -1150,6 +1150,9 @@ export default function HomeScreen({
                 <Text style={{ fontSize: 14, fontWeight: '800', color: '#0284C7', marginTop: 3 }}>
                   {lang === 1 ? '৫০০ টাকা' : '500 Tk'}
                 </Text>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#0284C7', marginTop: 1 }}>
+                  {lang === 1 ? '$৪.৯৯' : '$4.99'}
+                </Text>
               </TouchableOpacity>
 
               {/* Premium */}
@@ -1182,6 +1185,9 @@ export default function HomeScreen({
                 <Text style={{ fontSize: 14, fontWeight: '800', color: '#7C3AED', marginTop: 3 }}>
                   {lang === 1 ? '১০০০ টাকা' : '1000 Tk'}
                 </Text>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#7C3AED', marginTop: 1 }}>
+                  {lang === 1 ? '$৮.৯৯' : '$8.99'}
+                </Text>
               </TouchableOpacity>
 
               {/* VIP */}
@@ -1213,6 +1219,9 @@ export default function HomeScreen({
                 </Text>
                 <Text style={{ fontSize: 14, fontWeight: '800', color: '#D97706', marginTop: 3 }}>
                   {lang === 1 ? '১৫০০ টাকা' : '1500 Tk'}
+                </Text>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#D97706', marginTop: 1 }}>
+                  {lang === 1 ? '$১২' : '$12'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1679,7 +1688,7 @@ export default function HomeScreen({
                             : '#D97706',
                       }}
                     >
-                      {pkg.p} {lang === 1 ? 'টাকা' : 'Tk'}
+                      {pkg.p} {lang === 1 ? 'টাকা' : 'Tk'} {pkg.pUsd ? `($${lang === 1 ? (pkg.pUsd === 4.99 ? '৪.৯৯' : pkg.pUsd === 8.99 ? '৮.৯৯' : '১২') : pkg.pUsd})` : ''}
                     </Text>
                   </View>
                   {(PACKAGE_FEATURES[pkg.id] || []).map((feat, idx) => (
