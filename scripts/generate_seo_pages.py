@@ -397,7 +397,7 @@ SERVICES = [
             <p><strong>💬 Front Desk WhatsApp (Primary):</strong> <a href="https://wa.me/8801347570001" style="color: #16A34A; font-weight: 700;">+880 1347-570001</a></p>
             <p><strong>💬 Front Desk WhatsApp (Secondary):</strong> <a href="https://wa.me/8801347570002" style="color: #16A34A; font-weight: 700;">+880 1347-570002</a></p>
             <p><strong>📧 Support Email:</strong> <a href="mailto:book@flightcaresbd.com" style="color: #0284C7;">book@flightcaresbd.com</a></p>
-            <p><strong>📍 Airport Counter:</strong> Terminal 1 & 2 Arrival Concourse, Hazrat Shahjalal International Airport (HSIA), Kurmitola, Dhaka 1229, Bangladesh.</p>
+            <p><strong>🏢 Registered Office & Airport Station:</strong> Terminal 1 & 2, Hazrat Shahjalal International Airport (HSIA), Kurmitola, Airport Road, Dhaka 1229, Bangladesh.</p>
             <p><strong>🏛️ Legal Trade License:</strong> TRAD/DNCC/004721/2024 (Dhaka North City Corporation, Bangladesh)</p>
         </div>
         ''',
