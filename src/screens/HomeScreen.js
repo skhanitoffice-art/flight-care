@@ -1150,7 +1150,7 @@ export default function HomeScreen({
                 <Text style={{ fontSize: 14, fontWeight: '800', color: '#0284C7', marginTop: 3 }}>
                   {lang === 1 ? '৫০০ টাকা' : '500 Tk'}
                 </Text>
-                <Text style={{ fontSize: 12, fontWeight: '800', color: '#0284C7', marginTop: 1 }}>
+                <Text style={{ fontSize: 15.5, fontWeight: '900', color: '#0284C7', marginTop: 2, letterSpacing: 0.3 }}>
                   {lang === 1 ? '$৪.৯৯' : '$4.99'}
                 </Text>
               </TouchableOpacity>
@@ -1185,7 +1185,7 @@ export default function HomeScreen({
                 <Text style={{ fontSize: 14, fontWeight: '800', color: '#7C3AED', marginTop: 3 }}>
                   {lang === 1 ? '১০০০ টাকা' : '1000 Tk'}
                 </Text>
-                <Text style={{ fontSize: 12, fontWeight: '800', color: '#7C3AED', marginTop: 1 }}>
+                <Text style={{ fontSize: 15.5, fontWeight: '900', color: '#7C3AED', marginTop: 2, letterSpacing: 0.3 }}>
                   {lang === 1 ? '$৮.৯৯' : '$8.99'}
                 </Text>
               </TouchableOpacity>
@@ -1220,7 +1220,7 @@ export default function HomeScreen({
                 <Text style={{ fontSize: 14, fontWeight: '800', color: '#D97706', marginTop: 3 }}>
                   {lang === 1 ? '১৫০০ টাকা' : '1500 Tk'}
                 </Text>
-                <Text style={{ fontSize: 12, fontWeight: '800', color: '#D97706', marginTop: 1 }}>
+                <Text style={{ fontSize: 15.5, fontWeight: '900', color: '#D97706', marginTop: 2, letterSpacing: 0.3 }}>
                   {lang === 1 ? '$১২.৯৯' : '$12.99'}
                 </Text>
               </TouchableOpacity>

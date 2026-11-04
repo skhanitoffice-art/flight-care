@@ -1217,7 +1217,7 @@ export default function DesktopHomeScreen({
                   <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#0F172A', marginTop: 2 }}>
                     {lang ? '৫০০ টাকা' : '500 Tk'}
                   </Text>
-                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#0284C7', marginTop: 1 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '900', color: '#0284C7', marginTop: 2, letterSpacing: 0.3 }}>
                     {lang ? '$৪.৯৯' : '$4.99'}
                   </Text>
                   <View
@@ -1299,7 +1299,7 @@ export default function DesktopHomeScreen({
                   <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#0F172A', marginTop: 2 }}>
                     {lang ? '১০০০ টাকা' : '1000 Tk'}
                   </Text>
-                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#2563EB', marginTop: 1 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '900', color: '#2563EB', marginTop: 2, letterSpacing: 0.3 }}>
                     {lang ? '$৮.৯৯' : '$8.99'}
                   </Text>
                   <View
@@ -1381,7 +1381,7 @@ export default function DesktopHomeScreen({
                   <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#0F172A', marginTop: 2 }}>
                     {lang ? '১৫০০ টাকা' : '1500 Tk'}
                   </Text>
-                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#D97706', marginTop: 1 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '900', color: '#D97706', marginTop: 2, letterSpacing: 0.3 }}>
                     {lang ? '$১২.৯৯' : '$12.99'}
                   </Text>
                   <View

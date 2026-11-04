@@ -276,7 +276,7 @@ export default function ComparePackagesScreen({
                     <Text style={{ fontSize: 20, fontWeight: '900', color: '#0284C7' }}>
                       ৳{pkg.p}
                     </Text>
-                    <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#0284C7', marginTop: 1 }}>
+                    <Text style={{ fontSize: 15, fontWeight: '900', color: '#0284C7', marginTop: 2, letterSpacing: 0.3 }}>
                       ${pkg.id === 'economy' ? (isBn ? '৪.৯৯' : '4.99') : pkg.id === 'business' ? (isBn ? '৮.৯৯' : '8.99') : (isBn ? '১২.৯৯' : '12.99')}
                     </Text>
                     <Text style={{ fontSize: 11, color: '#94A3B8' }}>
