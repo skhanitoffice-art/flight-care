@@ -277,7 +277,7 @@ export default function ComparePackagesScreen({
                       ৳{pkg.p}
                     </Text>
                     <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#0284C7', marginTop: 1 }}>
-                      ${pkg.id === 'economy' ? (isBn ? '৪.৯৯' : '4.99') : pkg.id === 'business' ? (isBn ? '৮.৯৯' : '8.99') : (isBn ? '১২' : '12')}
+                      ${pkg.id === 'economy' ? (isBn ? '৪.৯৯' : '4.99') : pkg.id === 'business' ? (isBn ? '৮.৯৯' : '8.99') : (isBn ? '১২.৯৯' : '12.99')}
                     </Text>
                     <Text style={{ fontSize: 11, color: '#94A3B8' }}>
                       {isBn ? 'প্রতি যাত্রী' : 'per passenger'}
@@ -510,7 +510,7 @@ export default function ComparePackagesScreen({
                   }}
                 >
                   <Text style={{ fontSize: 14, fontWeight: '900', color: '#C87D00' }}>
-                    {isBn ? '১৫০০ টাকা ($১২)' : '1500 Tk ($12)'}
+                    {isBn ? '১৫০০ টাকা ($১২.৯৯)' : '1500 Tk ($12.99)'}
                   </Text>
                 </View>
               </View>

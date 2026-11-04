@@ -1382,7 +1382,7 @@ export default function DesktopHomeScreen({
                     {lang ? '১৫০০ টাকা' : '1500 Tk'}
                   </Text>
                   <Text style={{ fontSize: 12, fontWeight: '800', color: '#D97706', marginTop: 1 }}>
-                    {lang ? '$১২' : '$12'}
+                    {lang ? '$১২.৯৯' : '$12.99'}
                   </Text>
                   <View
                     style={{
@@ -2165,7 +2165,7 @@ export default function DesktopHomeScreen({
 
               <View style={{ padding: 12, borderRadius: 12, backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A' }}>
                 <Text style={{ fontSize: 15, fontWeight: '800', color: '#D97706' }}>
-                  {lang ? 'ভিআইপি (১৫০০ টাকা / $১২)' : 'VIP (1500 Tk / $12)'}
+                  {lang ? 'ভিআইপি (১৫০০ টাকা / $১২.৯৯)' : 'VIP (1500 Tk / $12.99)'}
                 </Text>
                 <Text style={{ fontSize: 13, color: '#334155', marginTop: 4, lineHeight: 20 }}>
                   {lang

@@ -45,7 +45,7 @@ export default function ServiceGrid({
       icon: '👑',
       image: require('../../assets/pkg_vip.webp'),
       packageId: 'first',
-      price: lang ? '১৫০০ টাকা ($১২)' : '1500 Tk ($12)',
+      price: lang ? '১৫০০ টাকা ($১২.৯৯)' : '1500 Tk ($12.99)',
       priceColor: '#D97706',
       bg: '#FFFFFF',
       border: '#FBBF24',

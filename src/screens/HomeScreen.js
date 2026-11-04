@@ -1221,7 +1221,7 @@ export default function HomeScreen({
                   {lang === 1 ? '১৫০০ টাকা' : '1500 Tk'}
                 </Text>
                 <Text style={{ fontSize: 12, fontWeight: '800', color: '#D97706', marginTop: 1 }}>
-                  {lang === 1 ? '$১২' : '$12'}
+                  {lang === 1 ? '$১২.৯৯' : '$12.99'}
                 </Text>
               </TouchableOpacity>
             </View>
