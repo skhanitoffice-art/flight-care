@@ -8,8 +8,8 @@ DIST_DIR = os.path.join(BASE_DIR, 'dist')
 SERVICES = [
     {
         'slug': 'arrival-assistance',
-        'title': 'Dhaka Airport Arrival Meet and Greet Service | Flight Care',
-        'meta_desc': 'Professional Dhaka Airport arrival assistance at HSIA. Aerobridge welcome, baggage collection, immigration guidance, and parking escort. Book 24/7.',
+        'title': 'Arrival Assistance | Flight Care',
+        'meta_desc': 'Meet & Greet service for arriving passengers at Hazrat Shahjalal International Airport (HSIA). Fast-track immigration, luggage collection, and parking escort.',
         'h1': 'Dhaka Airport Arrival Meet and Greet Service',
         'subtitle': 'হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দরে আগমনী যাত্রীদের পেশাদার মিট অ্যান্ড গ্রিট সহায়তা',
         'service_type': 'Airport Arrival Assistance',
@@ -54,8 +54,8 @@ SERVICES = [
     },
     {
         'slug': 'departure-assistance',
-        'title': 'Dhaka Airport Departure Assistance | Fast-Track Flight Care',
-        'meta_desc': 'Stress-free departures from Dhaka Airport (HSIA). Curbside meet & greet, airline check-in support, luggage porter, and security escort. 24/7 support.',
+        'title': 'Departure Assistance | Flight Care',
+        'meta_desc': 'Airport departure support and guidance at Hazrat Shahjalal International Airport (HSIA). Airline check-in, security clearance, luggage porter, and lounge escort.',
         'h1': 'Dhaka Airport Departure Assistance – Fast-Track Service',
         'subtitle': 'ঢাকা বিমানবন্দর থেকে বিদেশগামী যাত্রীদের চেক-ইন, ইমিগ্রেশন ও নিরাপত্তা ছাড়পত্র সহায়তা',
         'service_type': 'Airport Departure Assistance',
@@ -318,8 +318,8 @@ SERVICES = [
     },
     {
         'slug': 'dhaka-airport-meet-greet-price',
-        'title': 'Dhaka Airport Meet and Greet Charges & Price List | Flight Care',
-        'meta_desc': 'Transparent pricing for Dhaka Airport Meet and Greet Services. Standard ৳500, Premium ৳1,000, VIP ৳1,500. No hidden fees. Pay after service at HSIA.',
+        'title': 'Service Packages & Pricing | Flight Care',
+        'meta_desc': 'Explore services and transparent BDT pricing packages for Dhaka Airport Meet and Greet. Standard ৳500, Premium ৳1,000, VIP ৳1,500. Pay after service.',
         'h1': 'Dhaka Airport Meet and Greet Price Bangladesh – 2026 Charges',
         'subtitle': 'ঢাকা বিমানবন্দরে মিট অ্যান্ড গ্রিট ও প্রোটোকল সেবার স্বচ্ছ ও নির্ধারিত মূল্য তালিকা',
         'service_type': 'Airport Pricing',
