@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 
@@ -8,13 +9,13 @@ DIST_DIR = os.path.join(BASE_DIR, 'dist')
 SERVICES = [
     {
         'slug': 'arrival-assistance',
-        'title': 'Arrival Assistance | Flight Care',
+        'title': 'Dhaka Airport Arrival Meet and Greet Service | Flight Care',
         'meta_desc': 'Meet & Greet service for arriving passengers at Hazrat Shahjalal International Airport (HSIA). Fast-track immigration, luggage collection, and parking escort.',
         'h1': 'Dhaka Airport Arrival Meet and Greet Service',
         'subtitle': 'হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দরে আগমনী যাত্রীদের পেশাদার মিট অ্যান্ড গ্রিট সহায়তা',
         'service_type': 'Airport Arrival Assistance',
         'price': '৳১,০০০ / যাত্রী (Standard ৳৫০০, VIP ৳১,৫০০)',
-        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Arrival Assistance', 'https://flightcaresbd.com/arrival-assistance/')],
+        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Arrival Meet & Greet', 'https://flightcaresbd.com/arrival-assistance/')],
         'content': '''
         <p>Arriving at Dhaka’s Hazrat Shahjalal International Airport (HSIA) after a long international flight can be stressful, with long immigration lines, crowded baggage carousels, and bustling terminals. Flight Care’s <strong>Dhaka Airport Arrival Meet and Greet Service</strong> is designed to provide arriving travelers, non-resident Bangladeshis (NRBs), and foreign visitors with a seamless, welcoming, and dignified arrival experience.</p>
 
@@ -54,13 +55,13 @@ SERVICES = [
     },
     {
         'slug': 'departure-assistance',
-        'title': 'Departure Assistance | Flight Care',
+        'title': 'Dhaka Airport Departure Meet and Greet Service | Flight Care',
         'meta_desc': 'Airport departure support and guidance at Hazrat Shahjalal International Airport (HSIA). Airline check-in, security clearance, luggage porter, and lounge escort.',
         'h1': 'Dhaka Airport Departure Assistance – Fast-Track Service',
         'subtitle': 'ঢাকা বিমানবন্দর থেকে বিদেশগামী যাত্রীদের চেক-ইন, ইমিগ্রেশন ও নিরাপত্তা ছাড়পত্র সহায়তা',
         'service_type': 'Airport Departure Assistance',
         'price': '৳১,০০০ / যাত্রী',
-        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Departure Assistance', 'https://flightcaresbd.com/departure-assistance/')],
+        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Departure Meet & Greet', 'https://flightcaresbd.com/departure-assistance/')],
         'content': '''
         <p>Flying out from Hazrat Shahjalal International Airport? Flight Care provides courteous, fast-track <strong>Dhaka Airport Departure Assistance</strong> to ensure you clear airline counters, security, and immigration with complete peace of mind.</p>
         <h3>Departure Services Included:</h3>
@@ -176,7 +177,7 @@ SERVICES = [
         'subtitle': 'হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দরে পেশাদার মিট অ্যান্ড গ্রিট ও ভিআইপি প্রোটোকল সার্ভিস',
         'service_type': 'Airport Meet and Greet',
         'price': '৳১,০০০ / যাত্রী (Standard ৳৫০০, VIP ৳১,৫০০)',
-        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Meet & Greet Dhaka', 'https://flightcaresbd.com/meet-and-greet-dhaka-airport/')],
+        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Dhaka Airport Meet & Greet', 'https://flightcaresbd.com/meet-and-greet-dhaka-airport/')],
         'content': '''
         <p>Flight Care offers the most trusted and reliable <strong>Dhaka Airport Meet and Greet Service</strong> at Hazrat Shahjalal International Airport (HSIA), Dhaka, Bangladesh. Whether you are arriving in Dhaka from abroad, catching an international departure, or connecting on a domestic flight, our dedicated protocol officers ensure a seamless, hassle-free airport journey.</p>
         <h3>What We Provide:</h3>
@@ -318,13 +319,13 @@ SERVICES = [
     },
     {
         'slug': 'dhaka-airport-meet-greet-price',
-        'title': 'Service Packages & Pricing | Flight Care',
+        'title': 'Dhaka Airport Meet and Greet Price & Packages | Flight Care',
         'meta_desc': 'Explore services and transparent BDT pricing packages for Dhaka Airport Meet and Greet. Standard ৳500, Premium ৳1,000, VIP ৳1,500. Pay after service.',
         'h1': 'Dhaka Airport Meet and Greet Price Bangladesh – 2026 Charges',
         'subtitle': 'ঢাকা বিমানবন্দরে মিট অ্যান্ড গ্রিট ও প্রোটোকল সেবার স্বচ্ছ ও নির্ধারিত মূল্য তালিকা',
         'service_type': 'Airport Pricing',
         'price': '৳৫০০ থেকে ৳১,৫০০ BDT',
-        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Pricing Guide', 'https://flightcaresbd.com/dhaka-airport-meet-greet-price/')],
+        'breadcrumbs': [('Home', 'https://flightcaresbd.com/'), ('Meet & Greet Price & Packages', 'https://flightcaresbd.com/dhaka-airport-meet-greet-price/')],
         'content': '''
         <p>Flight Care believes in complete price transparency. Below is our official tariff for Meet and Greet and Protocol services at Hazrat Shahjalal International Airport (HSIA), Dhaka. All rates are in Bangladeshi Taka (BDT) with no hidden fees.</p>
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
@@ -509,6 +510,13 @@ GUIDES = [
     }
 ]
 
+CORE_PAA_FAQS = [
+    ("What is a meet and greet service?", "A meet and greet service is an airport concierge service where a professional protocol officer receives passengers directly at the terminal (aerobridge exit or curbside drop-off), provides personalized luggage porterage, guides through fast-track immigration and security, and escorts travelers comfortably to their vehicle or connecting flight."),
+    ("What is meet and greet service at Dhaka airport?", "Meet and greet service at Dhaka Airport (Hazrat Shahjalal International Airport - HSIA) is a specialized passenger facilitation service provided by Flight Care. Our officer meets arriving or departing passengers with a name placard, guides through priority immigration channels, collects checked baggage from carousels, provides wheelchair assistance if needed, and escorts to parking with a 100% Payment After Service guarantee."),
+    ("What is meet and greet at the airport?", "Meet and greet at the airport is a dedicated VIP assistance service created to eliminate terminal stress. An assigned agent assists passengers through every airport touchpoint—including aerobridge welcome, airline check-in, luggage handling, immigration queue navigation, duty-free shopping, lounge access, and vehicle linkup."),
+    ("What is included in meet and greet?", "Airport meet and greet includes: (1) Personalized name placard reception at the aircraft door / aerobridge or departure drop-off; (2) Fast-track immigration, customs clearance, and visa guidance; (3) Dedicated luggage porter assistance and trolley handling; (4) Wheelchair care for seniors or sick patients; and (5) Escort to executive airport lounges or ground transportation.")
+]
+
 def generate_page_html(item, is_guide=False):
     slug = item['slug']
     title = item['title']
@@ -518,14 +526,19 @@ def generate_page_html(item, is_guide=False):
     content = item['content']
     url = f"https://flightcaresbd.com/{'guides/' if is_guide else ''}{slug}/"
 
+    all_faqs = CORE_PAA_FAQS + item.get('faqs', [])
     faq_schema = []
-    if 'faqs' in item and item['faqs']:
-        for q, a in item['faqs']:
-            faq_schema.append({
-                "@type": "Question",
-                "name": q,
-                "acceptedAnswer": {"@type": "Answer", "text": a}
-            })
+    for q, a in all_faqs:
+        faq_schema.append({
+            "@type": "Question",
+            "name": q,
+            "acceptedAnswer": {"@type": "Answer", "text": a}
+        })
+    faq_schema_json = json.dumps({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": faq_schema
+    }, ensure_ascii=False, indent=8)
 
     html = f'''<!DOCTYPE html>
 <html lang="en">
@@ -604,6 +617,9 @@ def generate_page_html(item, is_guide=False):
         ]
     }}
     </script>
+    <script type="application/ld+json">
+    {faq_schema_json}
+    </script>
 </head>
 <body>
     <header>
@@ -611,10 +627,10 @@ def generate_page_html(item, is_guide=False):
             <a href="https://flightcaresbd.com/" class="brand">✈️ Flight Care</a>
             <div class="nav-links">
                 <a href="https://flightcaresbd.com/">Home</a>
-                <a href="https://flightcaresbd.com/meet-and-greet-dhaka-airport/">Meet & Greet</a>
-                <a href="https://flightcaresbd.com/arrival-assistance-dhaka-airport/">Arrival</a>
-                <a href="https://flightcaresbd.com/departure-assistance-dhaka-airport/">Departure</a>
-                <a href="https://flightcaresbd.com/dhaka-airport-meet-greet-price/">Pricing</a>
+                <a href="https://flightcaresbd.com/meet-and-greet-dhaka-airport/">Dhaka Airport Meet &amp; Greet</a>
+                <a href="https://flightcaresbd.com/arrival-assistance/">Arrival Meet &amp; Greet</a>
+                <a href="https://flightcaresbd.com/departure-assistance/">Departure Meet &amp; Greet</a>
+                <a href="https://flightcaresbd.com/dhaka-airport-meet-greet-price/">Meet &amp; Greet Price &amp; Packages</a>
                 <a href="https://flightcaresbd.com/contact/">Contact</a>
             </div>
         </div>
@@ -638,8 +654,8 @@ def generate_page_html(item, is_guide=False):
         <div class="content-body">
             {content}
 
-            {"<h3>Frequently Asked Questions (FAQ)</h3>" if ('faqs' in item and item['faqs']) else ""}
-            {"".join([f'<div class="faq-card"><h4>{q}</h4><p>{a}</p></div>' for q, a in item.get('faqs', [])])}
+            <h3>Frequently Asked Questions (FAQ & People Also Ask)</h3>
+            {"".join([f'<div class="faq-card"><h4>{q}</h4><p>{a}</p></div>' for q, a in all_faqs])}
         </div>
 
         <div style="margin-top: 36px; padding: 24px; background: #F0FDF4; border-radius: 12px; border: 1px solid #BBF7D0; text-align: center;">
@@ -657,13 +673,13 @@ def generate_page_html(item, is_guide=False):
         <p>Trade License: TRAD/DNCC/004721/2024 · 24/7 Hotlines: +880 1347-570000 | WhatsApp: +880 1347-570001 / +880 1347-570002</p>
         <div class="footer-links">
             <a href="https://flightcaresbd.com/">Home</a> |
-            <a href="https://flightcaresbd.com/meet-and-greet-dhaka-airport/">Meet & Greet</a> |
-            <a href="https://flightcaresbd.com/arrival-assistance-dhaka-airport/">Arrival</a> |
-            <a href="https://flightcaresbd.com/departure-assistance-dhaka-airport/">Departure</a> |
+            <a href="https://flightcaresbd.com/meet-and-greet-dhaka-airport/">Dhaka Airport Meet &amp; Greet</a> |
+            <a href="https://flightcaresbd.com/arrival-assistance/">Arrival Meet &amp; Greet</a> |
+            <a href="https://flightcaresbd.com/departure-assistance/">Departure Meet &amp; Greet</a> |
+            <a href="https://flightcaresbd.com/dhaka-airport-meet-greet-price/">Meet &amp; Greet Price &amp; Packages</a> |
             <a href="https://flightcaresbd.com/baggage-assistance-dhaka-airport/">Baggage</a> |
             <a href="https://flightcaresbd.com/vip-airport-protocol-dhaka/">VIP Protocol</a> |
             <a href="https://flightcaresbd.com/wheelchair-assistance-dhaka-airport/">Wheelchair</a> |
-            <a href="https://flightcaresbd.com/dhaka-airport-meet-greet-price/">Price Guide</a> |
             <a href="https://flightcaresbd.com/corporate-airport-assistance/">Corporate</a> |
             <a href="https://flightcaresbd.com/contact/">Contact Us</a>
         </div>
