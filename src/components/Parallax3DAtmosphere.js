@@ -89,6 +89,55 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
   });
 
   // ---------------------------------------------------------
+  // CONTINUOUS ATMOSPHERIC CLOUD DRIFT (Clouds gently moving in the sky)
+  // ---------------------------------------------------------
+  const cloudDriftAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const cloudLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(cloudDriftAnim, {
+          toValue: 1,
+          duration: 16000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: false,
+        }),
+        Animated.timing(cloudDriftAnim, {
+          toValue: 0,
+          duration: 16000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    cloudLoop.start();
+    return () => cloudLoop.stop();
+  }, [cloudDriftAnim]);
+
+  // Gentle horizontal drift for background and foreground clouds
+  const bgCloudDrift1 = cloudDriftAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, phone ? -30 : -70],
+  });
+  const bgCloudDrift2 = cloudDriftAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, phone ? 35 : 80],
+  });
+  const fgHeroCloudDrift1 = cloudDriftAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, phone ? 25 : 50],
+  });
+  const fgHeroCloudDrift2 = cloudDriftAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, phone ? -20 : -45],
+  });
+
+  const combinedDistantCloud1X = Animated.add(distantCloud1X, bgCloudDrift1);
+  const combinedDistantCloud2X = Animated.add(distantCloud2X, bgCloudDrift2);
+  const combinedMidCloud1X = Animated.add(midCloud1X, bgCloudDrift2);
+  const combinedMidCloud2X = Animated.add(midCloud2X, bgCloudDrift1);
+
+  // ---------------------------------------------------------
   // 4. LAYER 3: HERO 3D AIRPLANE (Speed: ~0.81x - Dynamic 3D)
   // Continuous Full-Width Flight Across Screen (Left->Right & Right->Left)
   // ---------------------------------------------------------
@@ -250,7 +299,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
           {
             width: phone ? 280 : 500,
             height: phone ? 150 : 270,
-            transform: [{ translateY: distantCloud1Y }, { translateX: distantCloud1X }],
+            transform: [{ translateY: distantCloud1Y }, { translateX: combinedDistantCloud1X }],
           },
         ]}
       />
@@ -265,7 +314,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
           {
             width: phone ? 300 : 560,
             height: phone ? 160 : 300,
-            transform: [{ translateY: distantCloud2Y }, { translateX: distantCloud2X }],
+            transform: [{ translateY: distantCloud2Y }, { translateX: combinedDistantCloud2X }],
           },
         ]}
       />
@@ -283,7 +332,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
           {
             width: phone ? 320 : 620,
             height: phone ? 170 : 330,
-            transform: [{ translateY: midCloud1Y }, { translateX: midCloud1X }],
+            transform: [{ translateY: midCloud1Y }, { translateX: combinedMidCloud1X }],
           },
         ]}
       />
@@ -298,7 +347,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
           {
             width: phone ? 340 : 660,
             height: phone ? 180 : 350,
-            transform: [{ translateY: midCloud2Y }, { translateX: midCloud2X }],
+            transform: [{ translateY: midCloud2Y }, { translateX: combinedMidCloud2X }],
           },
         ]}
       />
@@ -313,6 +362,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
           {
             top: 0,
             left: 0,
+            zIndex: 2,
             transform: [
               { translateY: combinedHeroPlaneY },
               { translateX: combinedHeroPlaneX },
@@ -357,6 +407,39 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
           />
         </Animated.View>
       </Animated.View>
+
+      {/* ========================================================= */}
+      {/* 4.5 LAYER 3.5: FOREGROUND CLOUDS (Plane flies THROUGH these!) */}
+      {/* ========================================================= */}
+      {/* Upper flight corridor cloud puff (Plane cuts through on Left->Right) */}
+      <Animated.Image
+        source={Cloud1Asset}
+        resizeMode="contain"
+        className="fc-parallax-cloud-1"
+        style={[
+          styles.fgHeroCloud1,
+          {
+            width: phone ? 220 : 360,
+            height: phone ? 120 : 200,
+            transform: [{ translateX: fgHeroCloudDrift1 }],
+          },
+        ]}
+      />
+
+      {/* Lower flight corridor cloud puff (Plane cuts through on Right->Left) */}
+      <Animated.Image
+        source={Cloud2Asset}
+        resizeMode="contain"
+        className="fc-parallax-cloud-2"
+        style={[
+          styles.fgHeroCloud2,
+          {
+            width: phone ? 240 : 400,
+            height: phone ? 130 : 220,
+            transform: [{ translateX: fgHeroCloudDrift2 }],
+          },
+        ]}
+      />
 
       {/* ========================================================= */}
       {/* 5. LAYER 4: SECOND 3D AIRPLANE (Services Section ~0.75x)  */}
@@ -499,7 +582,7 @@ const styles = StyleSheet.create({
   // 4. Hero 3D Plane
   heroPlaneWrapper: {
     position: 'absolute',
-    zIndex: 1,
+    zIndex: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -515,6 +598,26 @@ const styles = StyleSheet.create({
   },
   airplaneImageShadow: {
     // Pure clean aircraft rendering without dark/black shadow underneath
+  },
+
+  // 4.5 Foreground Hero Clouds (Airplane cuts right THROUGH these!)
+  fgHeroCloud1: {
+    position: 'absolute',
+    top: 25,
+    left: '38%',
+    opacity: 0.65,
+    zIndex: 3,
+    pointerEvents: 'none',
+    filter: 'blur(1px) drop-shadow(0px 8px 16px rgba(186, 230, 253, 0.25))',
+  },
+  fgHeroCloud2: {
+    position: 'absolute',
+    top: 135,
+    left: '16%',
+    opacity: 0.60,
+    zIndex: 3,
+    pointerEvents: 'none',
+    filter: 'blur(1.5px) drop-shadow(0px 10px 20px rgba(186, 230, 253, 0.2))',
   },
 
   // 5. Second 3D Plane
