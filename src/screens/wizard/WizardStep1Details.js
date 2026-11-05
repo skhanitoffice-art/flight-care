@@ -6,7 +6,7 @@ import {
   TextInput,
   Image,
 } from 'react-native';
-import { ADDONS, getAddonAsset } from '../../constants/data';
+import { ADDONS, getAddonAsset, PKGS } from '../../constants/data';
 import VisaOnArrivalUploadSection from '../../components/VisaOnArrivalUploadSection';
 import {
   UserIcon,
@@ -1163,115 +1163,286 @@ export default function WizardStep1Details({
               </View>
             </View>
 
-            {/* 2. Service direction (Fixed / Read-only from previous page) */}
+            {/* 2. Service direction (Arrival / Departure toggle) */}
             <View style={{ marginBottom: 14 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>
-                  {lang ? 'সেবার ধরন (ডিরেকশন) *' : 'Service direction *'}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                  <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
-                </View>
-              </View>
-              <View
-                style={{
-                  height: 48,
-                  borderWidth: 1.5,
-                  borderColor: '#E2E8F0',
-                  borderRadius: 10,
-                  backgroundColor: '#F8FAFC',
-                  paddingHorizontal: 12,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                {isDep ? <DepartureIcon size={18} /> : <ArrivalIcon size={18} />}
-                <Text
-                  style={{ flex: 1, fontSize: 14, fontWeight: '700', color: '#0F172A' }}
-                  numberOfLines={1}
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569', marginBottom: 6 }}>
+                {lang ? 'সেবার ধরন (ডিরেকশন) *' : 'Service direction *'}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {/* Arrival Option */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setWiz(c => ({
+                      ...c,
+                      dir: 'arr',
+                      serviceDirectionText: lang ? 'আগমন প্রোটোকল (Arrival)' : 'Arrival Protocol',
+                    }));
+                  }}
+                  style={{
+                    flex: 1,
+                    height: 46,
+                    borderRadius: 10,
+                    backgroundColor: (wiz.dir || 'arr') === 'arr' ? '#0284C7' : '#F8FAFC',
+                    borderWidth: 1.5,
+                    borderColor: (wiz.dir || 'arr') === 'arr' ? '#0284C7' : '#CBD5E1',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    shadowColor: (wiz.dir || 'arr') === 'arr' ? '#0284C7' : 'transparent',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: (wiz.dir || 'arr') === 'arr' ? 0.2 : 0,
+                    shadowRadius: 4,
+                  }}
                 >
-                  {wiz.serviceDirectionText || (isDep ? (lang ? 'প্রস্থান প্রোটোকল (Departure)' : 'Departure Protocol') : (lang ? 'আগমন প্রোটোকল (Arrival)' : 'Arrival Protocol'))}
-                </Text>
+                  <ArrivalIcon size={18} color={(wiz.dir || 'arr') === 'arr' ? '#FFFFFF' : '#64748B'} />
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '700',
+                      color: (wiz.dir || 'arr') === 'arr' ? '#FFFFFF' : '#334155',
+                    }}
+                  >
+                    {lang ? 'আগমন (Arrival)' : 'Arrival'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Departure Option */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setWiz(c => ({
+                      ...c,
+                      dir: 'dep',
+                      serviceDirectionText: lang ? 'প্রস্থান প্রোটোকল (Departure)' : 'Departure Protocol',
+                    }));
+                  }}
+                  style={{
+                    flex: 1,
+                    height: 46,
+                    borderRadius: 10,
+                    backgroundColor: wiz.dir === 'dep' ? '#0284C7' : '#F8FAFC',
+                    borderWidth: 1.5,
+                    borderColor: wiz.dir === 'dep' ? '#0284C7' : '#CBD5E1',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    shadowColor: wiz.dir === 'dep' ? '#0284C7' : 'transparent',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: wiz.dir === 'dep' ? 0.2 : 0,
+                    shadowRadius: 4,
+                  }}
+                >
+                  <DepartureIcon size={18} color={wiz.dir === 'dep' ? '#FFFFFF' : '#64748B'} />
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '700',
+                      color: wiz.dir === 'dep' ? '#FFFFFF' : '#334155',
+                    }}
+                  >
+                    {lang ? 'প্রস্থান (Departure)' : 'Departure'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
 
-            {/* 3. Package (Fixed / Read-only from previous page) */}
-            <View style={{ marginBottom: 14 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>
-                  {lang ? 'প্যাকেজ *' : 'Package *'}
+            {/* 3. Package Selection (Standard, Premium, VIP) - Completely hidden if onlyAddons */}
+            {!wiz.onlyAddons && wiz.pkg?.id !== 'addons_only' && (
+              <View style={{ marginBottom: 14 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569', marginBottom: 8 }}>
+                  {lang ? 'প্যাকেজ নির্বাচন করুন *' : 'Select package *'}
                 </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                  <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
-                </View>
-              </View>
-              <View
-                style={{
-                  height: 48,
-                  borderWidth: 1.5,
-                  borderColor: '#E2E8F0',
-                  borderRadius: 10,
-                  backgroundColor: '#F8FAFC',
-                  paddingHorizontal: 12,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                <View style={{ width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
-                  {wiz.onlyAddons ? (
-                    <Image source={require('../../../assets/pkg_additional.webp')} style={{ width: 18, height: 18, resizeMode: 'contain' }} />
-                  ) : (wiz.packageChoice === 'economy' || wiz.pkg?.id === 'economy') ? (
-                    <StandardPkgIcon size={18} color="#0284C7" />
-                  ) : (wiz.packageChoice === 'first' || wiz.pkg?.id === 'first') ? (
-                    <VipPkgIcon size={18} color="#D97706" />
-                  ) : (
-                    <PremiumPkgIcon size={18} color="#2563EB" />
-                  )}
-                </View>
-                <Text
-                  style={{ flex: 1, fontSize: 14, fontWeight: '700', color: '#0F172A' }}
-                  numberOfLines={1}
-                >
-                  {wiz.onlyAddons
-                    ? (lang ? 'শুধুমাত্র অতিরিক্ত সার্ভিস (ফি: ৳০)' : 'Only Additional Services (Fee: ৳0)')
-                    : (wiz.packageText || (wiz.pkg?.n ? wiz.pkg.n[lang] || wiz.pkg.n[0] : (wiz.pkg?.t || (lang ? 'প্রিমিয়াম (১০০০৳)' : 'Premium (1000 Tk)'))))}
-                </Text>
-              </View>
-            </View>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {PKGS.map(p => {
+                    const isSelected =
+                      wiz.packageChoice === p.id ||
+                      wiz.pkg?.id === p.id ||
+                      (!wiz.packageChoice && !wiz.pkg && p.id === 'business');
+                    const iconColor =
+                      p.id === 'economy' ? '#0284C7' : p.id === 'first' ? '#D97706' : '#2563EB';
 
-            {/* 4. Flight Number (Fixed / Read-only from previous page) */}
-            <View style={{ marginBottom: 14 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>
-                  {lang ? 'ফ্লাইট নম্বর *' : 'Flight number *'}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                  <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
+                    return (
+                      <TouchableOpacity
+                        key={p.id}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          setWiz(c => ({
+                            ...c,
+                            packageChoice: p.id,
+                            pkg: p,
+                            packageText: lang ? p.n[1] : p.n[0],
+                            onlyAddons: false,
+                          }));
+                        }}
+                        style={{
+                          flex: 1,
+                          borderRadius: 12,
+                          borderWidth: isSelected ? 2 : 1,
+                          borderColor: isSelected ? '#0284C7' : '#E2E8F0',
+                          backgroundColor: isSelected ? '#F0F9FF' : '#FFFFFF',
+                          paddingVertical: 12,
+                          paddingHorizontal: 4,
+                          alignItems: 'center',
+                          position: 'relative',
+                          shadowColor: isSelected ? '#0284C7' : '#000',
+                          shadowOffset: { width: 0, height: 1 },
+                          shadowOpacity: isSelected ? 0.12 : 0.02,
+                          shadowRadius: 3,
+                        }}
+                      >
+                        {/* Radio / Selection Indicator */}
+                        <View
+                          style={{
+                            position: 'absolute',
+                            top: 6,
+                            right: 6,
+                            width: 14,
+                            height: 14,
+                            borderRadius: 7,
+                            borderWidth: 1.5,
+                            borderColor: isSelected ? '#0284C7' : '#CBD5E1',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: isSelected ? '#0284C7' : '#FFFFFF',
+                          }}
+                        >
+                          {isSelected && (
+                            <View
+                              style={{
+                                width: 5,
+                                height: 5,
+                                borderRadius: 2.5,
+                                backgroundColor: '#FFFFFF',
+                              }}
+                            />
+                          )}
+                        </View>
+
+                        {/* Icon */}
+                        <View style={{ marginBottom: 6, marginTop: 4 }}>
+                          {p.id === 'economy' ? (
+                            <StandardPkgIcon size={22} color={iconColor} />
+                          ) : p.id === 'first' ? (
+                            <VipPkgIcon size={22} color={iconColor} />
+                          ) : (
+                            <PremiumPkgIcon size={22} color={iconColor} />
+                          )}
+                        </View>
+
+                        {/* Name */}
+                        <Text
+                          style={{
+                            fontSize: 12.5,
+                            fontWeight: '800',
+                            color: isSelected ? '#0284C7' : '#0F172A',
+                            marginBottom: 2,
+                            textAlign: 'center',
+                          }}
+                          numberOfLines={1}
+                        >
+                          {p.n[lang ? 1 : 0]}
+                        </Text>
+
+                        {/* BDT Price */}
+                        <Text
+                          style={{
+                            fontSize: 13.5,
+                            fontWeight: '900',
+                            color: '#0F172A',
+                            marginBottom: 1,
+                          }}
+                        >
+                          {p.p} {lang ? 'টাকা' : 'Tk'}
+                        </Text>
+
+                        {/* USD Price */}
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            fontWeight: '800',
+                            color: '#0284C7',
+                            marginBottom: 4,
+                          }}
+                        >
+                          ${p.pUsd ? p.pUsd.toFixed(2) : (p.id === 'first' ? '12.99' : p.id === 'business' ? '8.99' : '4.99')}
+                        </Text>
+
+                        {/* Reward Points Badge */}
+                        <View
+                          style={{
+                            backgroundColor: '#FEF3C7',
+                            paddingHorizontal: 4,
+                            paddingVertical: 1,
+                            borderRadius: 4,
+                            borderWidth: 0.5,
+                            borderColor: '#FDE68A',
+                          }}
+                        >
+                          <Text style={{ fontSize: 9, fontWeight: '800', color: '#92400E' }}>
+                            +{p.id === 'first' ? 150 : p.id === 'business' ? 100 : 50} pts
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
+            )}
+
+            {/* 4. Flight Number (Editable) */}
+            <View style={{ marginBottom: 14 }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569', marginBottom: 6 }}>
+                {lang ? 'ফ্লাইট নম্বর *' : 'Flight number *'}
+              </Text>
               <View
                 style={{
                   height: 48,
                   borderWidth: 1.5,
-                  borderColor: (wiz.fno || '').trim() && isValidFlightNumber(wiz.fno) ? '#10B981' : '#E2E8F0',
+                  borderColor: errors?.flightNumber
+                    ? '#EF4444'
+                    : (wiz.fno || '').trim() && isValidFlightNumber(wiz.fno)
+                    ? '#10B981'
+                    : '#CBD5E1',
                   borderRadius: 10,
-                  backgroundColor: '#F8FAFC',
+                  backgroundColor: errors?.flightNumber ? '#FEF2F2' : '#FFFFFF',
                   paddingHorizontal: 12,
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 8,
                 }}
               >
-                <PlaneIcon size={18} color="#0284C7" />
-                <Text
-                  style={{ flex: 1, fontSize: 15, fontWeight: '800', color: '#0F172A' }}
-                  numberOfLines={1}
-                >
-                  {wiz.fno || '—'}
-                </Text>
+                <PlaneIcon size={18} color={errors?.flightNumber ? '#EF4444' : '#0284C7'} />
+                <TextInput
+                  style={{
+                    flex: 1,
+                    fontSize: 15,
+                    fontWeight: '700',
+                    color: '#0F172A',
+                  }}
+                  placeholder={lang ? 'যেমন: BG-084, EK-582' : 'e.g. BG-084, EK-582'}
+                  placeholderTextColor="#94A3B8"
+                  autoCapitalize="characters"
+                  value={wiz.fno || ''}
+                  onChangeText={v => {
+                    const upper = (v || '').toUpperCase();
+                    setWiz(c => ({ ...c, fno: upper }));
+                    if (errors?.flightNumber) {
+                      setErrors(e => ({ ...e, flightNumber: null }));
+                    }
+                  }}
+                />
+                {(wiz.fno || '').trim() && isValidFlightNumber(wiz.fno) && (
+                  <Text style={{ color: '#10B981', fontWeight: '800' }}>✓</Text>
+                )}
               </View>
+              {errors?.flightNumber ? (
+                <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4, fontWeight: '600' }}>
+                  ⚠️ {errors.flightNumber}
+                </Text>
+              ) : null}
               {(wiz.fno || '').trim() && isValidFlightNumber(wiz.fno) ? (
                 (() => {
                   const flightInfo = getLiveFlightStatus(wiz.fno, wiz.dir || 'arr');
@@ -1307,90 +1478,202 @@ export default function WizardStep1Details({
               ) : null}
             </View>
 
-            {/* 5. Service Date (Fixed / Read-only from previous page) */}
+            {/* 5. Service Date (Editable + Quick Chips) */}
             <View style={{ marginBottom: 14 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                 <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>
                   {lang ? 'সেবার তারিখ *' : 'Service date *'}
                 </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <View style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, borderWidth: 1, borderColor: '#BAE6FD' }}>
-                    <Text style={{ fontSize: 10, fontWeight: '800', color: '#0369A1' }}>🇧🇩 BST (GMT+6)</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                    <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
-                  </View>
+                <View style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, borderWidth: 1, borderColor: '#BAE6FD' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#0369A1' }}>🇧🇩 BST (GMT+6)</Text>
                 </View>
               </View>
 
-              <View
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setShowDateModal && setShowDateModal(true)}
                 style={{
                   height: 48,
                   borderWidth: 1.5,
-                  borderColor: (wiz.date && isValidFlightDate(wiz.date) ? '#10B981' : '#E2E8F0'),
+                  borderColor: errors?.serviceDate
+                    ? '#EF4444'
+                    : (wiz.date && isValidFlightDate(wiz.date) ? '#10B981' : '#CBD5E1'),
                   borderRadius: 10,
-                  backgroundColor: '#F8FAFC',
+                  backgroundColor: errors?.serviceDate ? '#FEF2F2' : '#FFFFFF',
                   paddingHorizontal: 12,
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 8,
                 }}
               >
-                <CalendarIcon size={18} color="#0284C7" />
+                <CalendarIcon size={18} color={errors?.serviceDate ? '#EF4444' : '#0284C7'} />
                 <Text
                   style={{
                     fontSize: 15,
-                    fontWeight: '800',
-                    color: '#0F172A',
+                    fontWeight: '700',
+                    color: wiz.date ? '#0F172A' : '#94A3B8',
                     flex: 1,
                   }}
                   numberOfLines={1}
                 >
-                  {wiz.date || (lang ? 'তারিখ নির্ধারিত নেই' : 'No date specified')}
+                  {wiz.date || (lang ? 'সেবার তারিখ নির্বাচন করুন' : 'Select service date')}
                 </Text>
-                <View style={{ paddingHorizontal: 6, paddingVertical: 4, borderRadius: 6, backgroundColor: '#F0F9FF', borderWidth: 1, borderColor: '#BAE6FD' }}>
+                <View style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: '#F0F9FF', borderWidth: 1, borderColor: '#BAE6FD' }}>
                   <Text style={{ fontSize: 12 }}>📅</Text>
                 </View>
+              </TouchableOpacity>
+
+              {/* Quick Date Chips */}
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                {[
+                  { label: lang ? 'আজ' : 'Today', date: getBangladeshDateString(new Date()) },
+                  { label: lang ? 'আগামীকাল' : 'Tomorrow', date: getBangladeshDateString(new Date(Date.now() + 86400000)) },
+                  { label: lang ? '+২ দিন' : '+2 Days', date: getBangladeshDateString(new Date(Date.now() + 172800000)) },
+                ].map(chip => {
+                  const isSelected = wiz.date === chip.date;
+                  return (
+                    <TouchableOpacity
+                      key={chip.label}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setWiz(c => ({ ...c, date: chip.date }));
+                        if (errors?.serviceDate) setErrors(e => ({ ...e, serviceDate: null }));
+                      }}
+                      style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderRadius: 6,
+                        borderWidth: 1,
+                        borderColor: isSelected ? '#0284C7' : '#E2E8F0',
+                        backgroundColor: isSelected ? '#E0F2FE' : '#F8FAFC',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: isSelected ? '800' : '600',
+                          color: isSelected ? '#0284C7' : '#64748B',
+                        }}
+                      >
+                        {chip.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-              {(wiz.date || '').trim() && isValidFlightDate(wiz.date) ? (
+
+              {errors?.serviceDate ? (
+                <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4, fontWeight: '600' }}>
+                  ⚠️ {errors.serviceDate}
+                </Text>
+              ) : (wiz.date || '').trim() && isValidFlightDate(wiz.date) ? (
                 <Text style={{ color: '#059669', fontSize: 11, marginTop: 4, fontWeight: '700' }}>
                   ✓ {lang ? 'বৈধ তারিখ (বাংলাদেশ সময় BST)' : 'Valid date (BST GMT+6)'}
                 </Text>
               ) : null}
             </View>
 
-            {/* 6. Passengers (Fixed / Read-only from previous page) */}
+            {/* 6. Passengers (Interactive - / + Counter) */}
             <View style={{ marginBottom: 6 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>
-                  {lang ? 'যাত্রী সংখ্যা *' : 'Passengers *'}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                  <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '700' }}>🔒 {lang ? 'স্থির' : 'Fixed'}</Text>
-                </View>
-              </View>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569', marginBottom: 6 }}>
+                {lang ? 'যাত্রী সংখ্যা *' : 'Passengers *'}
+              </Text>
               <View
                 style={{
                   height: 48,
                   borderWidth: 1.5,
-                  borderColor: '#E2E8F0',
+                  borderColor: '#CBD5E1',
                   borderRadius: 10,
-                  backgroundColor: '#F8FAFC',
+                  backgroundColor: '#FFFFFF',
                   paddingHorizontal: 12,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 8,
+                  justifyContent: 'space-between',
                 }}
               >
-                <UserIcon size={18} color="#0284C7" />
-                <Text
-                  style={{ flex: 1, fontSize: 14, fontWeight: '700', color: '#0F172A' }}
-                  numberOfLines={1}
-                >
-                  {`${wiz.a || 1} ${lang ? 'জন যাত্রী' : ((wiz.a || 1) > 1 ? 'Passengers' : 'Passenger')}`}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <UserIcon size={18} color="#0284C7" />
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#0F172A' }}>
+                    {`${wiz.a || 1} ${lang ? 'জন যাত্রী' : ((wiz.a || 1) > 1 ? 'Passengers' : 'Passenger')}`}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  {/* Minus Button */}
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setWiz(c => {
+                        const currentA = Number(c.a || 1);
+                        if (currentA <= 1) return c;
+                        return { ...c, a: currentA - 1 };
+                      });
+                    }}
+                    disabled={(wiz.a || 1) <= 1}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      backgroundColor: (wiz.a || 1) <= 1 ? '#F1F5F9' : '#E0F2FE',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: 1,
+                      borderColor: (wiz.a || 1) <= 1 ? '#E2E8F0' : '#BAE6FD',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: '900',
+                        color: (wiz.a || 1) <= 1 ? '#94A3B8' : '#0284C7',
+                        lineHeight: 20,
+                      }}
+                    >
+                      −
+                    </Text>
+                  </TouchableOpacity>
+
+                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#0F172A', minWidth: 20, textAlign: 'center' }}>
+                    {wiz.a || 1}
+                  </Text>
+
+                  {/* Plus Button */}
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setWiz(c => {
+                        const currentA = Number(c.a || 1);
+                        if (currentA >= 9) return c;
+                        return { ...c, a: currentA + 1 };
+                      });
+                    }}
+                    disabled={(wiz.a || 1) >= 9}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      backgroundColor: (wiz.a || 1) >= 9 ? '#F1F5F9' : '#E0F2FE',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: 1,
+                      borderColor: (wiz.a || 1) >= 9 ? '#E2E8F0' : '#BAE6FD',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: '900',
+                        color: (wiz.a || 1) >= 9 ? '#94A3B8' : '#0284C7',
+                        lineHeight: 20,
+                      }}
+                    >
+                      +
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
+
           </View>
 
           {/* Card 2.5: Additional Services (Optional) */}
