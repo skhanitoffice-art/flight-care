@@ -338,6 +338,32 @@ export function injectWeb3DStyles() {
           display: none !important;
         }
       }
+
+      /* Bulletproof fixed floating action button (FAB) above mobile bottom bar */
+      .flightcare-floating-fab,
+      [data-flightcare-floating-fab="true"] {
+        position: fixed !important;
+        z-index: 99998 !important;
+        pointer-events: auto !important;
+        transform: translate3d(0, 0, 0) !important;
+        -webkit-transform: translate3d(0, 0, 0) !important;
+        -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
+      }
+      @media (max-width: 767px) {
+        .flightcare-floating-fab,
+        [data-flightcare-floating-fab="true"] {
+          bottom: calc(76px + max(env(safe-area-inset-bottom, 0px), 18px)) !important;
+          right: 16px !important;
+        }
+      }
+      @media (min-width: 768px) {
+        .flightcare-floating-fab,
+        [data-flightcare-floating-fab="true"] {
+          bottom: 28px !important;
+          right: 28px !important;
+        }
+      }
     `;
   }
 }

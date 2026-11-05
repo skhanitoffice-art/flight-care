@@ -208,6 +208,8 @@ export default function FloatingHelpButton({
 
       {/* Floating Action Speed Dial Container */}
       <View
+        dataSet={{ flightcareFloatingFab: 'true' }}
+        {...(Platform.OS === 'web' ? { className: 'flightcare-floating-fab' } : {})}
         style={[
           styles.floatingContainer,
           isMobile ? styles.mobilePosition : styles.desktopPosition,
@@ -539,7 +541,7 @@ const styles = StyleSheet.create({
   },
 
   floatingContainer: {
-    position: 'fixed',
+    position: Platform.OS === 'web' ? 'fixed' : 'absolute',
     zIndex: 99998,
     alignItems: 'flex-end',
     pointerEvents: 'box-none',
@@ -549,7 +551,7 @@ const styles = StyleSheet.create({
     right: 28,
   },
   mobilePosition: {
-    bottom: 76, // Sits above mobile fixed bottom navigation bar
+    bottom: 94, // Sits comfortably above mobile fixed bottom navigation bar (62px height + safe-area padding + 22px clearance)
     right: 16,
   },
 
