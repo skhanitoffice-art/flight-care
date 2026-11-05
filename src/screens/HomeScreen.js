@@ -1871,19 +1871,6 @@ export default function HomeScreen({
                   icon: '⚖️',
                   isSubPage: 'compare_packages',
                 },
-                {
-                  key: 'sub_ranks',
-                  label: lang === 1 ? 'প্রোটোকল অফিসার র‌্যাংক' : 'Protocol Officer Ranks',
-                  sub: lang === 1 ? '১০-স্তরের পয়েন্ট ও পদোন্নতি ব্যবস্থা' : '10-Tier points & promotions ladder',
-                  icon: '🎖️',
-                  isSubPage: 'protocol_ranks',
-                },
-                {
-                  key: 'manager',
-                  label: lang === 1 ? 'ম্যানেজার পোর্টাল' : 'Manager Portal',
-                  sub: lang === 1 ? 'সোয়েল তানভীর (অপারেশনস ও অ্যাডমিন)' : 'Sohel Tanvir (Operations & Admin)',
-                  icon: '🛡️',
-                },
               ].map(item => (
                 <TouchableOpacity
                   key={item.key}
