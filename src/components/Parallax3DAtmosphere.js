@@ -29,7 +29,15 @@ const PlaneLandingAsset = require('../../assets/splash/plane_landing.png');
  */
 export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
   const { width: winWidth } = useWindowDimensions();
-  const phone = isMobile || winWidth < 720;
+  const phone =
+    isMobile ||
+    winWidth < 768 ||
+    (Platform.OS === 'web' &&
+      typeof window !== 'undefined' &&
+      (window.innerWidth < 768 ||
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          window.navigator?.userAgent || ''
+        )));
 
   // Safe fallback if scrollY is not yet initialized
   const safeScrollY = scrollY || new Animated.Value(0);
@@ -160,6 +168,7 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
   const rightOffscreen = winWidth + 30;
 
   useEffect(() => {
+    if (phone) return;
     const flightLoop = Animated.loop(
       Animated.sequence([
         // Phase 1: Cruise all the way across screen from Left to Right (Top Lane)
@@ -401,141 +410,152 @@ export default function Parallax3DAtmosphere({ scrollY, isMobile = false }) {
 
       {/* ========================================================= */}
       {/* 4. LAYER 3: HERO 3D AIRPLANE (Takeoff/Cruising ~0.81x)    */}
+      {/* Only rendered on Desktop (Hidden on Mobile WebView)      */}
       {/* ========================================================= */}
-      <Animated.View
-        className="fc-hero-plane-wrapper"
-        style={[
-          styles.heroPlaneWrapper,
-          {
-            top: 0,
-            left: 0,
-            zIndex: 2,
-            transform: [
-              { translateY: combinedHeroPlaneY },
-              { translateX: combinedHeroPlaneX },
-              { rotate: heroPlaneRotate },
-              { scale: heroPlaneScale },
-            ],
-          },
-        ]}
-      >
-        {/* Direction-aware inner aircraft container */}
+      {!phone && (
         <Animated.View
-          style={{
-            alignItems: 'center',
-            justifyContent: 'center',
-            transform: [{ scaleX: idleFlightScaleX }],
-          }}
+          className="fc-hero-plane-wrapper"
+          style={[
+            styles.heroPlaneWrapper,
+            {
+              top: 0,
+              left: 0,
+              zIndex: 2,
+              transform: [
+                { translateY: combinedHeroPlaneY },
+                { translateX: combinedHeroPlaneX },
+                { rotate: heroPlaneRotate },
+                { scale: heroPlaneScale },
+              ],
+            },
+          ]}
         >
-          {/* Contrail / Aerodynamic Jet Vapor Streak */}
+          {/* Direction-aware inner aircraft container */}
           <Animated.View
-            className="fc-parallax-contrail"
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              transform: [{ scaleX: idleFlightScaleX }],
+            }}
+          >
+            {/* Contrail / Aerodynamic Jet Vapor Streak */}
+            <Animated.View
+              className="fc-parallax-contrail"
+              style={[
+                styles.contrailStreak,
+                {
+                  width: 320,
+                  opacity: heroContrailOpacity,
+                },
+              ]}
+            />
+
+            {/* 3D Transparent Airplane */}
+            <Image
+              source={PlaneCruisingAsset}
+              resizeMode="contain"
+              className="fc-parallax-plane"
+              style={[
+                styles.airplaneImageShadow,
+                {
+                  width: 460,
+                  height: 165,
+                },
+              ]}
+            />
+          </Animated.View>
+        </Animated.View>
+      )}
+
+      {/* ========================================================= */}
+      {/* 4.5 LAYER 3.5: FOREGROUND CLOUDS (Plane flies THROUGH these!) */}
+      {/* Only rendered on Desktop alongside airplane              */}
+      {/* ========================================================= */}
+      {!phone && (
+        <>
+          {/* Upper flight corridor cloud puff (Plane cuts through on Left->Right) */}
+          <Animated.View
+            pointerEvents="none"
             style={[
-              styles.contrailStreak,
+              styles.fgHeroCloud1,
               {
-                width: phone ? 160 : 320,
-                opacity: heroContrailOpacity,
+                width: 360,
+                height: 200,
               },
             ]}
-          />
+          >
+            <Animated.Image
+              source={Cloud1Asset}
+              resizeMode="contain"
+              className="fc-cloud-drift-fg1"
+              style={{
+                width: '100%',
+                height: '100%',
+                transform: [{ translateX: fgHeroCloudDrift1 }, { translateY: fgHeroCloudBob1 }],
+              }}
+            />
+          </Animated.View>
 
-          {/* 3D Transparent Airplane */}
+          {/* Lower flight corridor cloud puff (Plane cuts through on Right->Left) */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.fgHeroCloud2,
+              {
+                width: 400,
+                height: 220,
+              },
+            ]}
+          >
+            <Animated.Image
+              source={Cloud2Asset}
+              resizeMode="contain"
+              className="fc-cloud-drift-fg2"
+              style={{
+                width: '100%',
+                height: '100%',
+                transform: [{ translateX: fgHeroCloudDrift2 }, { translateY: fgHeroCloudBob2 }],
+              }}
+            />
+          </Animated.View>
+        </>
+      )}
+
+      {/* ========================================================= */}
+      {/* 5. LAYER 4: SECOND 3D AIRPLANE (Services Section ~0.75x)  */}
+      {/* Only rendered on Desktop (Hidden on Mobile WebView)      */}
+      {/* ========================================================= */}
+      {!phone && (
+        <Animated.View
+          style={[
+            styles.secPlaneWrapper,
+            {
+              top: 960,
+              right: 40,
+              opacity: secPlaneOpacity,
+              transform: [
+                { translateY: secPlaneY },
+                { translateX: secPlaneX },
+                { rotate: secPlaneRotate },
+              ],
+            },
+          ]}
+        >
+          {/* Descending / Cruising Secondary 3D Aircraft */}
           <Image
-            source={PlaneCruisingAsset}
+            source={PlaneTakeoffAsset}
             resizeMode="contain"
             className="fc-parallax-plane"
             style={[
               styles.airplaneImageShadow,
               {
-                width: phone ? 270 : 460,
-                height: phone ? 100 : 165,
+                width: 400,
+                height: 250,
               },
             ]}
           />
         </Animated.View>
-      </Animated.View>
-
-      {/* ========================================================= */}
-      {/* 4.5 LAYER 3.5: FOREGROUND CLOUDS (Plane flies THROUGH these!) */}
-      {/* ========================================================= */}
-      {/* Upper flight corridor cloud puff (Plane cuts through on Left->Right) */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.fgHeroCloud1,
-          {
-            width: phone ? 220 : 360,
-            height: phone ? 120 : 200,
-          },
-        ]}
-      >
-        <Animated.Image
-          source={Cloud1Asset}
-          resizeMode="contain"
-          className="fc-cloud-drift-fg1"
-          style={{
-            width: '100%',
-            height: '100%',
-            transform: [{ translateX: fgHeroCloudDrift1 }, { translateY: fgHeroCloudBob1 }],
-          }}
-        />
-      </Animated.View>
-
-      {/* Lower flight corridor cloud puff (Plane cuts through on Right->Left) */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.fgHeroCloud2,
-          {
-            width: phone ? 240 : 400,
-            height: phone ? 130 : 220,
-          },
-        ]}
-      >
-        <Animated.Image
-          source={Cloud2Asset}
-          resizeMode="contain"
-          className="fc-cloud-drift-fg2"
-          style={{
-            width: '100%',
-            height: '100%',
-            transform: [{ translateX: fgHeroCloudDrift2 }, { translateY: fgHeroCloudBob2 }],
-          }}
-        />
-      </Animated.View>
-
-      {/* ========================================================= */}
-      {/* 5. LAYER 4: SECOND 3D AIRPLANE (Services Section ~0.75x)  */}
-      {/* ========================================================= */}
-      <Animated.View
-        style={[
-          styles.secPlaneWrapper,
-          {
-            top: phone ? 820 : 960,
-            right: phone ? -20 : 40,
-            opacity: secPlaneOpacity,
-            transform: [
-              { translateY: secPlaneY },
-              { translateX: secPlaneX },
-              { rotate: secPlaneRotate },
-            ],
-          },
-        ]}
-      >
-        {/* Descending / Cruising Secondary 3D Aircraft */}
-        <Image
-          source={PlaneTakeoffAsset}
-          resizeMode="contain"
-          className="fc-parallax-plane"
-          style={[
-            styles.airplaneImageShadow,
-            {
-              width: phone ? 230 : 400,
-              height: phone ? 145 : 250,
-            },
-          ]}
-        />
-      </Animated.View>
+      )}
 
       {/* ========================================================= */}
       {/* 6. LAYER 5: PASSING FOREGROUND CLOUD PUFF (~0.95x)        */}
