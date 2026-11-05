@@ -176,13 +176,13 @@ export default function ComparePackagesScreen({
                     marginBottom: 10,
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <View style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, paddingRight: 6 }}>
+                    <View style={{ width: 36, height: 36, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {pkg.id === 'economy' && <StandardPkgIcon size={34} color="#0284C7" />}
                       {pkg.id === 'business' && <PremiumPkgIcon size={34} color="#2563EB" />}
                       {pkg.id === 'first' && <VipPkgIcon size={34} color="#D97706" />}
                     </View>
-                    <View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         <Text style={{ fontSize: 17, fontWeight: '800', color: '#0F172A' }}>
                           {isBn ? pkg.n[1] : pkg.n[0]}
@@ -324,8 +324,38 @@ export default function ComparePackagesScreen({
             elevation: 3,
           }}
         >
-          <ScrollView horizontal={isMobile} showsHorizontalScrollIndicator={false}>
-            <View style={{ minWidth: isMobile ? 650 : '100%', width: '100%' }}>
+          {/* Table Top Header Banner on Mobile */}
+          {isMobile && (
+            <View
+              style={{
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                backgroundColor: '#F8FAFC',
+                borderBottomWidth: 1,
+                borderBottomColor: '#E2E8F0',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+              }}
+            >
+              <Text style={{ fontSize: 20 }}>📊</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#0F172A' }}>
+                  {isBn ? 'প্যাকেজ অনুযায়ী সেবা বিবরণ' : 'Package Feature Breakdown'}
+                </Text>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: '#64748B' }}>
+                  {isBn ? 'সব সুবিধা ও প্যাকেজের তুলনা' : 'Compare all benefits and features'}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          <ScrollView
+            horizontal={isMobile}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ minWidth: '100%' }}
+          >
+            <View style={{ width: '100%', minWidth: isMobile ? 320 : '100%' }}>
               {/* Header Row: Standard (Green), Premium (Blue), VIP (Gold) */}
               <View
                 style={{
@@ -337,37 +367,49 @@ export default function ComparePackagesScreen({
                 {/* Left Title Cell */}
                 <View
                   style={{
-                    flex: 2.6,
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
+                    flex: isMobile ? 1.5 : 2.6,
+                    paddingHorizontal: isMobile ? 8 : 16,
+                    paddingVertical: isMobile ? 8 : 12,
                     justifyContent: 'center',
+                    backgroundColor: isMobile ? '#F8FAFC' : '#FFFFFF',
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ fontSize: 24, marginRight: 2 }}>📊</Text>
-                    <View>
-                      <Text
-                        style={{
-                          fontSize: 17,
-                          fontWeight: '900',
-                          color: '#0F172A',
-                          letterSpacing: -0.2,
-                        }}
-                      >
-                        {isBn ? 'প্যাকেজ অনুযায়ী সেবা বিবরণ' : 'Package Feature Breakdown'}
+                  {isMobile ? (
+                    <View style={{ alignItems: 'flex-start' }}>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: '#475569', textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                        {isBn ? 'প্যাকেজ' : 'Packages'}
                       </Text>
-                      <Text
-                        style={{
-                          fontSize: 12.5,
-                          fontWeight: '700',
-                          color: '#64748B',
-                          marginTop: 2,
-                        }}
-                      >
-                        {isBn ? 'সব সুবিধা ও প্যাকেজের তুলনা' : 'Compare all benefits and features'}
+                      <Text style={{ fontSize: 9.5, color: '#94A3B8', marginTop: 1 }}>
+                        {isBn ? 'তুলনামূলক তালিকা' : 'Comparison'}
                       </Text>
                     </View>
-                  </View>
+                  ) : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={{ fontSize: 24, marginRight: 2 }}>📊</Text>
+                      <View>
+                        <Text
+                          style={{
+                            fontSize: 17,
+                            fontWeight: '900',
+                            color: '#0F172A',
+                            letterSpacing: -0.2,
+                          }}
+                        >
+                          {isBn ? 'প্যাকেজ অনুযায়ী সেবা বিবরণ' : 'Package Feature Breakdown'}
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 12.5,
+                            fontWeight: '700',
+                            color: '#64748B',
+                            marginTop: 2,
+                          }}
+                        >
+                          {isBn ? 'সব সুবিধা ও প্যাকেজের তুলনা' : 'Compare all benefits and features'}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
                 </View>
 
                 {/* Standard Header (Green) */}
@@ -375,8 +417,8 @@ export default function ComparePackagesScreen({
                   style={{
                     flex: 1,
                     backgroundColor: '#00875A',
-                    paddingVertical: 12,
-                    paddingHorizontal: 8,
+                    paddingVertical: isMobile ? 8 : 12,
+                    paddingHorizontal: isMobile ? 4 : 8,
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderTopLeftRadius: 6,
@@ -384,12 +426,12 @@ export default function ComparePackagesScreen({
                     marginHorizontal: 1,
                   }}
                 >
-                  <StandardPkgIcon size={24} color="#FFFFFF" />
-                  <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900', textAlign: 'center', marginTop: 4 }}>
+                  <StandardPkgIcon size={isMobile ? 18 : 24} color="#FFFFFF" />
+                  <Text style={{ color: '#FFFFFF', fontSize: isMobile ? 12 : 15, fontWeight: '900', textAlign: 'center', marginTop: 3 }}>
                     {isBn ? 'স্ট্যান্ডার্ড' : 'Standard'}
                   </Text>
-                  <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: 11.5, fontWeight: '600', marginTop: 2, textAlign: 'center' }}>
-                    {isBn ? '(বোর্ডিং পাস পর্যন্ত)' : '(Up to Boarding Pass)'}
+                  <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: isMobile ? 9 : 11.5, fontWeight: '700', marginTop: 1, textAlign: 'center' }}>
+                    {isBn ? '(বোর্ডিং পাস)' : '(Boarding Pass)'}
                   </Text>
                 </View>
 
@@ -398,8 +440,8 @@ export default function ComparePackagesScreen({
                   style={{
                     flex: 1,
                     backgroundColor: '#0065B3',
-                    paddingVertical: 12,
-                    paddingHorizontal: 8,
+                    paddingVertical: isMobile ? 8 : 12,
+                    paddingHorizontal: isMobile ? 4 : 8,
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderTopLeftRadius: 6,
@@ -407,12 +449,12 @@ export default function ComparePackagesScreen({
                     marginHorizontal: 1,
                   }}
                 >
-                  <PremiumPkgIcon size={24} color="#FFFFFF" />
-                  <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900', textAlign: 'center', marginTop: 4 }}>
+                  <PremiumPkgIcon size={isMobile ? 18 : 24} color="#FFFFFF" />
+                  <Text style={{ color: '#FFFFFF', fontSize: isMobile ? 12 : 15, fontWeight: '900', textAlign: 'center', marginTop: 3 }}>
                     {isBn ? 'প্রিমিয়াম' : 'Premium'}
                   </Text>
-                  <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: 11.5, fontWeight: '600', marginTop: 2, textAlign: 'center' }}>
-                    {isBn ? '(ইমিগ্রেশন পর্যন্ত)' : '(Up to Immigration)'}
+                  <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: isMobile ? 9 : 11.5, fontWeight: '700', marginTop: 1, textAlign: 'center' }}>
+                    {isBn ? '(ইমিগ্রেশন)' : '(Immigration)'}
                   </Text>
                 </View>
 
@@ -421,8 +463,8 @@ export default function ComparePackagesScreen({
                   style={{
                     flex: 1,
                     backgroundColor: '#C87D00',
-                    paddingVertical: 12,
-                    paddingHorizontal: 8,
+                    paddingVertical: isMobile ? 8 : 12,
+                    paddingHorizontal: isMobile ? 4 : 8,
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderTopLeftRadius: 6,
@@ -430,12 +472,12 @@ export default function ComparePackagesScreen({
                     marginHorizontal: 1,
                   }}
                 >
-                  <VipPkgIcon size={24} color="#FFFFFF" />
-                  <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '900', textAlign: 'center', marginTop: 4 }}>
+                  <VipPkgIcon size={isMobile ? 18 : 24} color="#FFFFFF" />
+                  <Text style={{ color: '#FFFFFF', fontSize: isMobile ? 12 : 15, fontWeight: '900', textAlign: 'center', marginTop: 3 }}>
                     {isBn ? 'ভিআইপি' : 'VIP'}
                   </Text>
-                  <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: 11.5, fontWeight: '600', marginTop: 2, textAlign: 'center' }}>
-                    {isBn ? '(বোর্ডিং ব্রিজ / এরোব্রিজ পর্যন্ত)' : '(Up to Boarding Bridge / Aerobridge)'}
+                  <Text style={{ color: 'rgba(255, 255, 255, 0.95)', fontSize: isMobile ? 9 : 11.5, fontWeight: '700', marginTop: 1, textAlign: 'center' }}>
+                    {isBn ? '(এরোব্রিজ)' : '(Aerobridge)'}
                   </Text>
                 </View>
               </View>
@@ -453,12 +495,12 @@ export default function ComparePackagesScreen({
               >
                 <View
                   style={{
-                    flex: 2.6,
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
+                    flex: isMobile ? 1.5 : 2.6,
+                    paddingHorizontal: isMobile ? 8 : 16,
+                    paddingVertical: isMobile ? 8 : 10,
                   }}
                 >
-                  <Text style={{ fontSize: 12.5, fontWeight: '700', color: '#64748B' }}>
+                  <Text style={{ fontSize: isMobile ? 11 : 12.5, fontWeight: '700', color: '#64748B' }}>
                     {isBn ? 'সেবা / সুবিধা' : 'Feature / Service'}
                   </Text>
                 </View>
@@ -468,15 +510,19 @@ export default function ComparePackagesScreen({
                   style={{
                     flex: 1,
                     backgroundColor: '#EAF8F1',
-                    paddingVertical: 10,
+                    paddingVertical: isMobile ? 6 : 10,
+                    paddingHorizontal: 2,
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderLeftWidth: 1,
                     borderLeftColor: '#E2E8F0',
                   }}
                 >
-                  <Text style={{ fontSize: 14, fontWeight: '900', color: '#00875A' }}>
-                    {isBn ? '৫০০ টাকা ($৪.৯৯)' : '500 Tk ($4.99)'}
+                  <Text style={{ fontSize: isMobile ? 11.5 : 14, fontWeight: '900', color: '#00875A', textAlign: 'center' }}>
+                    {isBn ? '৫০০ টাকা' : '500 Tk'}
+                  </Text>
+                  <Text style={{ fontSize: isMobile ? 10.5 : 12, fontWeight: '800', color: '#00875A', textAlign: 'center', marginTop: 1 }}>
+                    {isBn ? '($৪.৯৯)' : '($4.99)'}
                   </Text>
                 </View>
 
@@ -485,15 +531,19 @@ export default function ComparePackagesScreen({
                   style={{
                     flex: 1,
                     backgroundColor: '#EBF5FB',
-                    paddingVertical: 10,
+                    paddingVertical: isMobile ? 6 : 10,
+                    paddingHorizontal: 2,
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderLeftWidth: 1,
                     borderLeftColor: '#E2E8F0',
                   }}
                 >
-                  <Text style={{ fontSize: 14, fontWeight: '900', color: '#0065B3' }}>
-                    {isBn ? '১০০০ টাকা ($৮.৯৯)' : '1000 Tk ($8.99)'}
+                  <Text style={{ fontSize: isMobile ? 11.5 : 14, fontWeight: '900', color: '#0065B3', textAlign: 'center' }}>
+                    {isBn ? '১০০০ টাকা' : '1000 Tk'}
+                  </Text>
+                  <Text style={{ fontSize: isMobile ? 10.5 : 12, fontWeight: '800', color: '#0065B3', textAlign: 'center', marginTop: 1 }}>
+                    {isBn ? '($৮.৯৯)' : '($8.99)'}
                   </Text>
                 </View>
 
@@ -502,15 +552,19 @@ export default function ComparePackagesScreen({
                   style={{
                     flex: 1,
                     backgroundColor: '#FEF9E7',
-                    paddingVertical: 10,
+                    paddingVertical: isMobile ? 6 : 10,
+                    paddingHorizontal: 2,
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderLeftWidth: 1,
                     borderLeftColor: '#E2E8F0',
                   }}
                 >
-                  <Text style={{ fontSize: 14, fontWeight: '900', color: '#C87D00' }}>
-                    {isBn ? '১৫০০ টাকা ($১২.৯৯)' : '1500 Tk ($12.99)'}
+                  <Text style={{ fontSize: isMobile ? 11.5 : 14, fontWeight: '900', color: '#C87D00', textAlign: 'center' }}>
+                    {isBn ? '১৫০০ টাকা' : '1500 Tk'}
+                  </Text>
+                  <Text style={{ fontSize: isMobile ? 10.5 : 12, fontWeight: '800', color: '#C87D00', textAlign: 'center', marginTop: 1 }}>
+                    {isBn ? '($১২.৯৯)' : '($12.99)'}
                   </Text>
                 </View>
               </View>
@@ -530,34 +584,34 @@ export default function ComparePackagesScreen({
                   {/* Left Column: Icon + Name */}
                   <View
                     style={{
-                      flex: 2.6,
+                      flex: isMobile ? 1.5 : 2.6,
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: 10,
-                      paddingVertical: 11,
-                      paddingHorizontal: 16,
+                      gap: isMobile ? 6 : 10,
+                      paddingVertical: isMobile ? 8 : 11,
+                      paddingHorizontal: isMobile ? 8 : 16,
                     }}
                   >
                     <View
                       style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 14,
+                        width: isMobile ? 22 : 28,
+                        height: isMobile ? 22 : 28,
+                        borderRadius: isMobile ? 11 : 14,
                         backgroundColor: '#F1F5F9',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
                       }}
                     >
-                      <Text style={{ fontSize: 14 }}>{row.icon}</Text>
+                      <Text style={{ fontSize: isMobile ? 12 : 14 }}>{row.icon}</Text>
                     </View>
                     <Text
                       style={{
-                        fontSize: 13,
+                        fontSize: isMobile ? 11 : 13,
                         fontWeight: '700',
                         color: '#1E293B',
                         flex: 1,
-                        lineHeight: 18,
+                        lineHeight: isMobile ? 15 : 18,
                       }}
                     >
                       {isBn ? row.nameBn : row.name}
@@ -569,7 +623,7 @@ export default function ComparePackagesScreen({
                     style={{
                       flex: 1,
                       backgroundColor: '#F4FBF7',
-                      paddingVertical: 11,
+                      paddingVertical: isMobile ? 8 : 11,
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderLeftWidth: 1,
@@ -579,7 +633,7 @@ export default function ComparePackagesScreen({
                   >
                     <Text
                       style={{
-                        fontSize: 17,
+                        fontSize: isMobile ? 15 : 17,
                         fontWeight: '900',
                         color: row.standard ? '#00875A' : '#94A3B8',
                       }}
@@ -593,7 +647,7 @@ export default function ComparePackagesScreen({
                     style={{
                       flex: 1,
                       backgroundColor: '#F5F9FD',
-                      paddingVertical: 11,
+                      paddingVertical: isMobile ? 8 : 11,
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderLeftWidth: 1,
@@ -603,7 +657,7 @@ export default function ComparePackagesScreen({
                   >
                     <Text
                       style={{
-                        fontSize: 17,
+                        fontSize: isMobile ? 15 : 17,
                         fontWeight: '900',
                         color: row.premium ? '#00875A' : '#94A3B8',
                       }}
@@ -617,7 +671,7 @@ export default function ComparePackagesScreen({
                     style={{
                       flex: 1,
                       backgroundColor: '#FCFBF4',
-                      paddingVertical: 11,
+                      paddingVertical: isMobile ? 8 : 11,
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderLeftWidth: 1,
@@ -627,7 +681,7 @@ export default function ComparePackagesScreen({
                   >
                     <Text
                       style={{
-                        fontSize: 17,
+                        fontSize: isMobile ? 15 : 17,
                         fontWeight: '900',
                         color: row.vip ? '#00875A' : '#94A3B8',
                       }}

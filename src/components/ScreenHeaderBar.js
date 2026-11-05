@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, useWindowDimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
@@ -21,6 +21,8 @@ export default function ScreenHeaderBar({
   const isBn = lang === 1;
   const defaultBackLabel = isBn ? 'ফিরে যান' : 'Back';
   const [localUnread, setLocalUnread] = useState(unreadCount);
+  const { width: screenWidth } = useWindowDimensions();
+  const isMobile = screenWidth < 768;
 
   useEffect(() => {
     let active = true;
@@ -45,14 +47,13 @@ export default function ScreenHeaderBar({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 10,
-        paddingHorizontal: 2,
+        paddingVertical: isMobile ? 8 : 10,
         marginBottom: 14,
         borderBottomWidth: 1,
         borderBottomColor: '#E2E8F0',
         backgroundColor: '#FFFFFF',
         borderRadius: 14,
-        paddingHorizontal: 12,
+        paddingHorizontal: isMobile ? 8 : 12,
         shadowColor: '#0F172A',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.04,
@@ -67,37 +68,40 @@ export default function ScreenHeaderBar({
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 6,
+          gap: isMobile ? 4 : 6,
           backgroundColor: '#F1F5F9',
-          paddingVertical: 7,
-          paddingHorizontal: 12,
+          paddingVertical: isMobile ? 6 : 7,
+          paddingHorizontal: isMobile ? 9 : 12,
           borderRadius: 20,
           borderWidth: 1,
           borderColor: '#CBD5E1',
           cursor: 'pointer',
+          flexShrink: 0,
         }}
         accessibilityRole="button"
         accessibilityLabel={backLabel || defaultBackLabel}
       >
-        <Text style={{ fontSize: 16, color: '#0284C7', fontWeight: '900', lineHeight: 18 }}>←</Text>
-        <Text style={{ fontSize: 13, fontWeight: '700', color: '#1E293B' }}>
+        <Text style={{ fontSize: isMobile ? 15 : 16, color: '#0284C7', fontWeight: '900', lineHeight: 18 }}>←</Text>
+        <Text style={{ fontSize: isMobile ? 12 : 13, fontWeight: '700', color: '#1E293B' }}>
           {backLabel || defaultBackLabel}
         </Text>
       </TouchableOpacity>
 
       {/* 2. Center Title & Subtitle */}
       {title ? (
-        <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 8 }}>
+        <View style={{ flex: 1, minWidth: 0, alignItems: 'center', paddingHorizontal: isMobile ? 4 : 8, overflow: 'hidden' }}>
           <Text
-            style={{ fontSize: 15, fontWeight: '800', color: '#0F172A', textAlign: 'center' }}
+            style={{ fontSize: isMobile ? 13.5 : 15, fontWeight: '800', color: '#0F172A', textAlign: 'center' }}
             numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {title}
           </Text>
           {subtitle ? (
             <Text
-              style={{ fontSize: 11, color: '#64748B', marginTop: 1, textAlign: 'center' }}
+              style={{ fontSize: isMobile ? 10 : 11, color: '#64748B', marginTop: 1, textAlign: 'center' }}
               numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {subtitle}
             </Text>
@@ -108,7 +112,7 @@ export default function ScreenHeaderBar({
       )}
 
       {/* 3. Right Action, Notification Bell & Home Shortcut */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: isMobile ? 6 : 8, flexShrink: 0 }}>
         {showNotifications && (
           <TouchableOpacity
             activeOpacity={0.75}
@@ -122,8 +126,8 @@ export default function ScreenHeaderBar({
               }
             }}
             style={{
-              width: 34,
-              height: 34,
+              width: isMobile ? 32 : 34,
+              height: isMobile ? 32 : 34,
               borderRadius: 10,
               backgroundColor: localUnread > 0 ? '#EFF6FF' : '#F8FAFC',
               borderWidth: 1.5,
