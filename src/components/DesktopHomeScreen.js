@@ -30,6 +30,7 @@ import {
   GiftIcon,
   CheckCircleIcon,
   AdditionalServicesIcon,
+  WhatsAppIcon,
 } from './Icons';
 import { SERVICES, getAddonAsset } from '../constants/data';
 import DatePickerModal from './DatePickerModal';
@@ -1942,7 +1943,7 @@ export default function DesktopHomeScreen({
                       shadowRadius: 5,
                     }}
                   >
-                    <Text style={{ fontSize: 16 }}>💬</Text>
+                    <WhatsAppIcon size={18} color="#FFFFFF" />
                     <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#FFFFFF' }}>
                       {lang ? 'করপোরেট WhatsApp ডেস্ক' : 'Corporate WhatsApp Desk'}
                     </Text>

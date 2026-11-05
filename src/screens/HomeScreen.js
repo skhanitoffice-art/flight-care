@@ -29,6 +29,7 @@ import {
   ChevronRight,
   BellIcon,
   MenuIcon,
+  WhatsAppIcon,
 } from '../components/Icons';
 import DesktopHomeScreen from '../components/DesktopHomeScreen';
 import DesktopFooter from '../components/DesktopFooter';
@@ -1518,7 +1519,7 @@ export default function HomeScreen({
                 cursor: 'pointer',
               }}
             >
-              <Text style={{ fontSize: 16 }}>💬</Text>
+              <WhatsAppIcon size={18} color="#FFFFFF" />
               <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.3 }}>
                 {lang === 1 ? 'করপোরেট WhatsApp ডেস্ক' : 'B2B WhatsApp Desk'}
               </Text>

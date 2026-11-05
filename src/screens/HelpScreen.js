@@ -12,6 +12,7 @@ import { s } from '../styles/styles';
 import { FAQ } from '../constants/data';
 import { SUPPORT_PHONE, SUPPORT_PHONE_2, SUPPORT_EMAIL } from '../constants/theme';
 import ScreenHeaderBar from '../components/ScreenHeaderBar';
+import { WhatsAppIcon, EmailIcon } from '../components/Icons';
 
 export default function HelpScreen({
   pagePadding,
@@ -94,46 +95,204 @@ export default function HelpScreen({
       {/* Direct Contact Panel */}
       <View style={s.supportContactPanel}>
         <Text style={s.widgetTitle}>{t('contactSupport')}</Text>
-        <Text style={s.supportContactHint}>{t('contactSupportHint')}</Text>
+        <Text style={[s.supportContactHint, { marginBottom: 14 }]}>{t('contactSupportHint')}</Text>
         
         {/* WhatsApp Support Button 1 */}
         <TouchableOpacity
           accessibilityRole="link"
-          style={s.supportContactAction}
+          activeOpacity={0.8}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: '#F0FDF4',
+            borderWidth: 1.5,
+            borderColor: '#86EFAC',
+            borderRadius: 14,
+            paddingVertical: 12,
+            paddingHorizontal: 14,
+            marginBottom: 10,
+            gap: 12,
+            shadowColor: '#22C55E',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 4,
+          }}
           onPress={() => openContact(whatsappUrl1)}
         >
-          <Text style={s.supportContactIcon}>💬</Text>
-          <Text style={s.supportContactText}>
-            {t('wa')} · {phone1}
-          </Text>
-          <Text style={s.searchResultArrow}>›</Text>
+          {/* WhatsApp Round Green Icon Badge */}
+          <View
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: '#25D366',
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: '#16A34A',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3,
+            }}
+          >
+            <WhatsAppIcon size={22} color="#FFFFFF" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 14.5, fontWeight: '800', color: '#166534' }}>
+                {t('wa')}
+              </Text>
+              <View style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4 }}>
+                <Text style={{ fontSize: 10, fontWeight: '800', color: '#15803D' }}>24/7</Text>
+              </View>
+            </View>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: '#15803D', marginTop: 2 }}>
+              {phone1}
+            </Text>
+          </View>
+          <View
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 14,
+              backgroundColor: '#DCFCE7',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 15, fontWeight: '800', color: '#166534' }}>›</Text>
+          </View>
         </TouchableOpacity>
 
         {/* WhatsApp Support Button 2 */}
         <TouchableOpacity
           accessibilityRole="link"
-          style={s.supportContactAction}
+          activeOpacity={0.8}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: '#F0FDF4',
+            borderWidth: 1.5,
+            borderColor: '#86EFAC',
+            borderRadius: 14,
+            paddingVertical: 12,
+            paddingHorizontal: 14,
+            marginBottom: 10,
+            gap: 12,
+            shadowColor: '#22C55E',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 4,
+          }}
           onPress={() => openContact(whatsappUrl2)}
         >
-          <Text style={s.supportContactIcon}>💬</Text>
-          <Text style={s.supportContactText}>
-            {t('wa')} · {phone2}
-          </Text>
-          <Text style={s.searchResultArrow}>›</Text>
+          {/* WhatsApp Round Green Icon Badge */}
+          <View
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: '#25D366',
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: '#16A34A',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3,
+            }}
+          >
+            <WhatsAppIcon size={22} color="#FFFFFF" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 14.5, fontWeight: '800', color: '#166534' }}>
+                {t('wa')}
+              </Text>
+              <View style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4 }}>
+                <Text style={{ fontSize: 10, fontWeight: '800', color: '#15803D' }}>24/7</Text>
+              </View>
+            </View>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: '#15803D', marginTop: 2 }}>
+              {phone2}
+            </Text>
+          </View>
+          <View
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 14,
+              backgroundColor: '#DCFCE7',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 15, fontWeight: '800', color: '#166534' }}>›</Text>
+          </View>
         </TouchableOpacity>
 
         {/* Email Support Button */}
         {emailUrl ? (
           <TouchableOpacity
             accessibilityRole="link"
-            style={s.supportContactAction}
+            activeOpacity={0.8}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: '#FEF2F2',
+              borderWidth: 1.5,
+              borderColor: '#FECACA',
+              borderRadius: 14,
+              paddingVertical: 12,
+              paddingHorizontal: 14,
+              gap: 12,
+              shadowColor: '#EF4444',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 4,
+            }}
             onPress={() => openContact(emailUrl)}
           >
-            <Text style={s.supportContactIcon}>✉</Text>
-            <Text style={s.supportContactText}>
-              {t('supportEmail')} · {SUPPORT_EMAIL}
-            </Text>
-            <Text style={s.searchResultArrow}>›</Text>
+            {/* Email Round Red Icon Badge */}
+            <View
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 19,
+                backgroundColor: '#EA4335',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#DC2626',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3,
+              }}
+            >
+              <EmailIcon size={20} color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 14.5, fontWeight: '800', color: '#991B1B' }}>
+                  {t('supportEmail')}
+                </Text>
+                <View style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#DC2626' }}>Desk</Text>
+                </View>
+              </View>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#DC2626', marginTop: 2 }}>
+                {SUPPORT_EMAIL}
+              </Text>
+            </View>
+            <View
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                backgroundColor: '#FEE2E2',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 15, fontWeight: '800', color: '#991B1B' }}>›</Text>
+            </View>
           </TouchableOpacity>
         ) : null}
       </View>

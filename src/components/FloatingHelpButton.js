@@ -11,6 +11,7 @@ import {
   Modal,
   useWindowDimensions,
 } from 'react-native';
+import { WhatsAppIcon } from './Icons';
 
 /**
  * FloatingHelpButton
@@ -487,7 +488,7 @@ export default function FloatingHelpButton({
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <View style={[styles.optionIconDisc, styles.waDisc, { width: 34, height: 34 }]}>
-                    <Text style={{ fontSize: 15 }}>💬</Text>
+                    <WhatsAppIcon size={18} color="#FFFFFF" />
                   </View>
                   <View>
                     <Text style={[styles.selectorActionNum, { color: '#15803D' }]}>01347-570001</Text>
@@ -510,7 +511,7 @@ export default function FloatingHelpButton({
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <View style={[styles.optionIconDisc, styles.waDisc, { width: 34, height: 34 }]}>
-                    <Text style={{ fontSize: 15 }}>💬</Text>
+                    <WhatsAppIcon size={18} color="#FFFFFF" />
                   </View>
                   <View>
                     <Text style={[styles.selectorActionNum, { color: '#15803D' }]}>01347-570002</Text>

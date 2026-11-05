@@ -17,6 +17,7 @@ import {
   UserIcon,
   CalendarIcon,
   LocationPinIcon,
+  WhatsAppIcon,
 } from '../../components/Icons';
 import LiveTrackingModal from '../../components/LiveTrackingModal';
 import BookingInvoiceModal from '../../components/BookingInvoiceModal';
@@ -590,7 +591,7 @@ https://flightcare.app/track/${bookingCode}
                 elevation: 2,
               }}
             >
-              <Text style={{ fontSize: 15, color: '#FFFFFF' }}>💬</Text>
+              <WhatsAppIcon size={18} color="#FFFFFF" />
               <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF', textAlign: 'center' }}>
                 {isBn ? 'WhatsApp ০১\n01347-570001' : 'WhatsApp 01\n01347-570001'}
               </Text>
@@ -617,7 +618,7 @@ https://flightcare.app/track/${bookingCode}
                 elevation: 2,
               }}
             >
-              <Text style={{ fontSize: 15, color: '#FFFFFF' }}>💬</Text>
+              <WhatsAppIcon size={18} color="#FFFFFF" />
               <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#FFFFFF', textAlign: 'center' }}>
                 {isBn ? 'WhatsApp ০২\n01347-570002' : 'WhatsApp 02\n01347-570002'}
               </Text>

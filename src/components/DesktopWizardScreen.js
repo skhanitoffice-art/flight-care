@@ -42,6 +42,8 @@ import {
   BanglaQrBadge,
   SslCommerzLogo,
   SslCommerzBadge,
+  WhatsAppIcon,
+  EmailIcon,
 } from './Icons';
 import CountryCodeModal from './CountryCodeModal';
 import CheckoutAuthSection from './CheckoutAuthSection';
@@ -2975,7 +2977,7 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                         elevation: 2,
                       }}
                     >
-                      <Text style={{ fontSize: 16, color: '#FFFFFF' }}>💬</Text>
+                      <WhatsAppIcon size={18} color="#FFFFFF" />
                       <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>
                         {lang ? 'WhatsApp ০১ (01347-570001)' : 'WhatsApp 01 (01347-570001)'}
                       </Text>
@@ -3002,7 +3004,7 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
                         elevation: 2,
                       }}
                     >
-                      <Text style={{ fontSize: 16, color: '#FFFFFF' }}>💬</Text>
+                      <WhatsAppIcon size={18} color="#FFFFFF" />
                       <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>
                         {lang ? 'WhatsApp ০২ (01347-570002)' : 'WhatsApp 02 (01347-570002)'}
                       </Text>
@@ -3970,14 +3972,53 @@ https://flightcaresbd.com/?trackBooking=${bookingCode}
             </Text>
 
             <View style={{ gap: 10 }}>
-              <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }}>
-                <Text style={{ fontSize: 12, color: '#64748B' }}>{lang ? 'হটলাইন ও WhatsApp' : 'Hotline & WhatsApp'}</Text>
-                <Text style={{ fontSize: 15, fontWeight: '800', color: '#0284C7' }}>01347-570001 / 01347-570002</Text>
-              </View>
-              <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }}>
-                <Text style={{ fontSize: 12, color: '#64748B' }}>{lang ? 'ইমেইল' : 'Email'}</Text>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#0F172A' }}>support@flightcare.app</Text>
-              </View>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => Linking.openURL('https://wa.me/8801347570001?text=Hello%20FlightCare%20Support').catch(() => {})}
+                style={{
+                  padding: 12,
+                  borderRadius: 12,
+                  backgroundColor: '#F0FDF4',
+                  borderWidth: 1.5,
+                  borderColor: '#86EFAC',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#25D366', alignItems: 'center', justifyContent: 'center' }}>
+                  <WhatsAppIcon size={20} color="#FFFFFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: '#166534', fontWeight: '700' }}>{lang ? 'হটলাইন ও WhatsApp' : 'Hotline & WhatsApp'}</Text>
+                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#15803D' }}>01347-570001 / 01347-570002</Text>
+                </View>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#166534' }}>›</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => Linking.openURL('mailto:support@flightcare.app').catch(() => {})}
+                style={{
+                  padding: 12,
+                  borderRadius: 12,
+                  backgroundColor: '#FEF2F2',
+                  borderWidth: 1.5,
+                  borderColor: '#FECACA',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EA4335', alignItems: 'center', justifyContent: 'center' }}>
+                  <EmailIcon size={18} color="#FFFFFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: '#991B1B', fontWeight: '700' }}>{lang ? 'ইমেইল সাপোর্ট' : 'Email Support'}</Text>
+                  <Text style={{ fontSize: 15, fontWeight: '800', color: '#DC2626' }}>support@flightcare.app</Text>
+                </View>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#991B1B' }}>›</Text>
+              </TouchableOpacity>
               <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }}>
                 <Text style={{ fontSize: 12, color: '#64748B' }}>{lang ? 'এয়ারপোর্ট ডেস্ক' : 'Airport Desk'}</Text>
                 <Text style={{ fontSize: 13.5, fontWeight: '600', color: '#334155' }}>
